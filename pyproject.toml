@@ -1,0 +1,30 @@
+[tool.poetry]
+name = "transit-data-analytics-demo"
+version = "0.1.0"
+description = ""
+authors = ["Andrew Vaccaro <atvaccaro@gmail.com>"]
+readme = "README.md"
+packages = [{include = "transit_data_analytics_demo"}]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+requests = "^2.31.0"
+huey = "^2.4.5"
+redis = "^4.6.0"
+google-cloud-storage = "^2.10.0"
+pydantic = "^1.10.9"
+backoff = "^2.2.1"
+prometheus-client = "^0.17.0"
+schedule = "^1.2.0"
+
+
+[tool.poetry.group.dev.dependencies]
+mypy = "^1.4.1"
+ruff = "^0.0.275"
+
+[tool.ruff]
+line-length = 88
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
