@@ -10,7 +10,7 @@ import pendulum
 
 from archiver.metrics import HUEY_TASK_SIGNALS
 
-huey = SqliteHuey(filename='/tmp/demo.db')
+huey = SqliteHuey(filename="/tmp/demo.db")
 
 
 @huey.signal()
@@ -40,11 +40,13 @@ class FetchedFile(BaseModel):
 
     @property
     def gcs_key(self) -> str:
-        hive_str = "/".join([
-            f"dt={self.ts.to_date_string()}",
-            f"ts={self.ts.to_iso8601_string()}",
-            f"base64url={base64.urlsafe_b64encode(self.config.url.encode('utf-8')).decode('utf-8')}",
-        ])
+        hive_str = "/".join(
+            [
+                f"dt={self.ts.to_date_string()}",
+                f"ts={self.ts.to_iso8601_string()}",
+                f"base64url={base64.urlsafe_b64encode(self.config.url.encode('utf-8')).decode('utf-8')}",
+            ]
+        )
         return f"{self.bucket}/{self.table}/{hive_str}/{self.filename}"
 
     @validator("bucket")

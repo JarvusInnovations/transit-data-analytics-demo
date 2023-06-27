@@ -21,12 +21,12 @@ def main():
     config.validate()
 
     # Set up logging for the "huey" namespace.
-    logger = logging.getLogger('huey')
+    logger = logging.getLogger("huey")
     config.setup_logger(logger)
 
     consumer = huey.create_consumer(**config.values)
     consumer.run()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     typer.run(main)

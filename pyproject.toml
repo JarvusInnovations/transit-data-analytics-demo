@@ -26,8 +26,11 @@ humanize = "^4.7.0"
 mypy = "^1.4.1"
 ruff = "^0.0.275"
 
+[tool.black]
+line-length = 120
+
 [tool.ruff]
-line-length = 88
+line-length = 120
 
 [build-system]
 requires = ["poetry-core"]
