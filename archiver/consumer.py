@@ -6,7 +6,7 @@ import logging
 import os
 
 import typer
-from huey.consumer_options import ConsumerConfig
+from huey.consumer_options import ConsumerConfig  # type: ignore
 from prometheus_client import start_http_server
 
 from archiver.tasks import huey

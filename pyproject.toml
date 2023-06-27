@@ -25,6 +25,8 @@ humanize = "^4.7.0"
 [tool.poetry.group.dev.dependencies]
 mypy = "^1.4.1"
 ruff = "^0.0.275"
+types-requests = "^2.31.0.1"
+types-pyyaml = "^6.0.12.10"
 
 [tool.black]
 line-length = 120

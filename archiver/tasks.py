@@ -4,7 +4,7 @@ from typing import Dict, Optional
 import humanize
 import requests
 import typer
-from huey import SqliteHuey
+from huey import SqliteHuey  # type: ignore
 from pydantic import BaseModel, HttpUrl, validator
 import pendulum
 
