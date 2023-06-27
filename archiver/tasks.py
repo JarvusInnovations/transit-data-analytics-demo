@@ -8,7 +8,19 @@ from huey import SqliteHuey
 from pydantic import BaseModel, HttpUrl, validator
 import pendulum
 
+from archiver.metrics import HUEY_TASK_SIGNALS
+
 huey = SqliteHuey(filename='/tmp/demo.db')
+
+
+@huey.signal()
+def all_signal_handler(signal, task, exc=None):
+    HUEY_TASK_SIGNALS.labels(
+        signal=signal,
+        name=task.kwargs["config"].name,
+        url=task.kwargs["config"].url,
+        exc_type=type(exc).__name__,
+    ).inc()
 
 
 class FetchConfig(BaseModel):
@@ -47,7 +59,7 @@ class FetchedFile(BaseModel):
 @huey.task(
     expires=5,
 )
-def fetch_config(tick: pendulum.DateTime, config: FetchConfig):
+def fetch_config(tick: pendulum.DateTime, config: FetchConfig, dry: bool = False):
     print(tick, config, flush=True)
 
     resp = requests.get(config.url)
@@ -62,4 +74,10 @@ def fetch_config(tick: pendulum.DateTime, config: FetchConfig):
         contents=resp.content,
     )
 
-    typer.secho(f"Would be saving {humanize.naturalsize(len(fetched_file.contents))} to {fetched_file.gcs_key}")
+    msg = f"Saving {humanize.naturalsize(len(fetched_file.contents))} to {fetched_file.gcs_key}"
+    if dry:
+        typer.secho(f"DRY RUN: {msg}")
+    else:
+        typer.secho(msg)
+        # TODO: implement me
+        pass

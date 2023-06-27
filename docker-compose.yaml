@@ -1,0 +1,19 @@
+services:
+  ticker:
+    build: .
+    volumes:
+      - shared:/tmp
+    command:
+      - python
+      - -m
+      - archiver.ticker
+  consumer:
+    build: .
+    volumes:
+      - shared:/tmp
+    command:
+      - python
+      - -m
+      - archiver.consumer
+volumes:
+  shared:

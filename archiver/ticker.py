@@ -7,6 +7,7 @@ import pendulum
 import schedule
 import typer
 import yaml
+from prometheus_client import start_http_server
 from pydantic import parse_obj_as
 
 from archiver.tasks import FetchConfig, fetch_config
@@ -30,6 +31,8 @@ def tick(seconds, dry):
 
 
 def main(dry: bool = False):
+    start_http_server(8000)
+
     schedule.every().minute.at(":00").do(tick, seconds=0, dry=dry)
 
     while True:
