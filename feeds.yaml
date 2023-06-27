@@ -1,0 +1,4 @@
+- name: SEPTA TrainView
+  url: https://www3.septa.org/api/TrainView/index.php
+- name: SEPTA TransitViewAll
+  url: https://www3.septa.org/api/TransitViewAll/index.php
