@@ -1,4 +1,13 @@
 - name: SEPTA TrainView
+  agency: SEPTA
+  feed_type: realtime
+  is_gtfs: false
   url: https://www3.septa.org/api/TrainView/index.php
+  table: septa__train_view
+
 - name: SEPTA TransitViewAll
+  agency: SEPTA
+  feed_type: realtime
+  is_gtfs: false
   url: https://www3.septa.org/api/TransitViewAll/index.php
+  table: septa__transit_view_all

@@ -20,6 +20,7 @@ pyyaml = "^6.0"
 pendulum = "^2.1.2"
 typer = "^0.9.0"
 humanize = "^4.7.0"
+python-dotenv = "^1.0.0"
 
 
 [tool.poetry.group.dev.dependencies]
@@ -27,6 +28,10 @@ mypy = "^1.4.1"
 ruff = "^0.0.275"
 types-requests = "^2.31.0.1"
 types-pyyaml = "^6.0.12.10"
+pytest = "^7.4.0"
+pytest-spec = "^3.2.0"
+polyfactory = "^2.4.0"
+pytest-dotenv = "^0.5.2"
 
 [tool.black]
 line-length = 120

@@ -1,7 +1,15 @@
 services:
+  redis:
+    image: redis:6.2-alpine
+    restart: always
   ticker:
     build: .
+    env_file:
+      - .env # this really should just be read automatically?
+    environment:
+      GOOGLE_APPLICATION_CREDENTIALS: /creds/google_application_credentials.json
     volumes:
+      - ~/.jarvus/dev_archiver_key.json:/creds/google_application_credentials.json
       - shared:/tmp
     command:
       - python
@@ -9,7 +17,13 @@ services:
       - archiver.ticker
   consumer:
     build: .
+    env_file:
+      - .env # this really should just be read automatically?
+    environment:
+      HUEY_WORKERS: 8
+      GOOGLE_APPLICATION_CREDENTIALS: /creds/google_application_credentials.json
     volumes:
+      - ~/.jarvus/dev_archiver_key.json:/creds/google_application_credentials.json
       - shared:/tmp
     command:
       - python

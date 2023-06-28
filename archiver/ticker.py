@@ -34,6 +34,7 @@ def main(dry: bool = False):
     start_http_server(8000)
 
     schedule.every().minute.at(":00").do(tick, seconds=0, dry=dry)
+    schedule.every().day.at("00:00").do(tick)
 
     while True:
         schedule.run_pending()
