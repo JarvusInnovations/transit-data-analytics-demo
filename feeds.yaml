@@ -1,13 +1,40 @@
-- name: SEPTA TrainView
+# SEPTA non-GTFS
+- name: SEPTA Arrivals
   agency: SEPTA
-  feed_type: realtime
-  is_gtfs: false
-  url: https://www3.septa.org/api/TrainView/index.php
-  table: septa__train_view
+  feed_type: septa__arrivals
+  url: https://www3.septa.org/api/Arrivals/index.php
+  pages:
+    # https://www3.septa.org/VIRegionalRail.html
+    - key: station
+      values:
+        - 9th St
+        - 30th Street Station
+        - 49th St
+#- name: SEPTA TrainView
+#  agency: SEPTA
+#  feed_type: septa__train_view
+#  url: https://www3.septa.org/api/TrainView/index.php
+#- name: SEPTA TransitViewAll
+#  agency: SEPTA
+#  feed_type: septa__transit_view_all
+#  url: https://www3.septa.org/api/TransitViewAll/index.php
 
-- name: SEPTA TransitViewAll
-  agency: SEPTA
-  feed_type: realtime
-  is_gtfs: false
-  url: https://www3.septa.org/api/TransitViewAll/index.php
-  table: septa__transit_view_all
+# SEPTA GTFS
+#- name: SEPTA Bus Trip Updates
+#  url: https://www3.septa.org/gtfsrt/septa-pa-us/Trip/rtTripUpdates.pb
+#  feed_type: gtfs_trip_updates
+#- name: SEPTA Bus Vehicle Positions
+#  url: https://www3.septa.org/gtfsrt/septa-pa-us/Vehicle/rtVehiclePosition.pb
+#  feed_type: gtfs_vehicle_positions
+#- name: SEPTA Bus Service Alerts
+#  url: https://www3.septa.org/gtfsrt/septa-pa-us/Service/rtServiceAlerts.pb
+#  feed_type: gtfs_service_alerts
+#- name: SEPTA Rail Trip Updates
+#  url: https://www3.septa.org/gtfsrt/septarail-pa-us/Trip/rtTripUpdates.pb
+#  feed_type: gtfs_trip_updates
+#- name: SEPTA Rail Vehicle Positions
+#  url: https://www3.septa.org/gtfsrt/septarail-pa-us/Vehicle/rtVehiclePosition.pb
+#  feed_type: gtfs_vehicle_positions
+#- name: SEPTA Rail Service Alerts
+#  url: https://www3.septa.org/gtfsrt/septarail-pa-us/Service/rtServiceAlerts.pb
+#  feed_type: gtfs_service_alerts

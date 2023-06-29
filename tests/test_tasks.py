@@ -3,7 +3,7 @@ from typing import Dict, Type, Any
 import pendulum
 from polyfactory.factories.pydantic_factory import ModelFactory
 
-from archiver.tasks import RawFetchedFile, FetchConfig, FeedType
+from archiver.tasks import RawFetchedFile, FeedConfig, FeedType
 
 
 # TODO: get this working
@@ -22,14 +22,11 @@ class RawFetchedFileFactory(ModelFactory[RawFetchedFile]):
 
 def test_fetched_raw_file_serializes():
     RawFetchedFile(
-        table="whatever",
         ts=pendulum.now(),
-        config=FetchConfig(
+        config=FeedConfig(
             name="whatever",
-            feed_type=FeedType.realtime,
-            is_gtfs=False,
+            feed_type=FeedType.gtfs_vehicle_positions,
             url="https://whatever.com",
-            table="something",
         ),
         response_code=200,
         response_headers={},

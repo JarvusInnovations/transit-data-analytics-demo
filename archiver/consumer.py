@@ -7,7 +7,7 @@ import os
 import sys
 
 import typer
-from huey.constants import WORKER_THREAD
+from huey.constants import WORKER_THREAD  # type: ignore
 from huey.consumer_options import ConsumerConfig  # type: ignore
 from prometheus_client import start_http_server
 
