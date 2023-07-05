@@ -5,4 +5,5 @@ metadata:
 data:
   GOOGLE_APPLICATION_CREDENTIALS: /etc/gcs-secret/google_application_credentials.json
   HUEY_REDIS_HOST: redis
+  HUEY_WORKERS: "8"
   RAW_BUCKET: gs://test-jarvus-transit-data-demo-raw
