@@ -11,7 +11,7 @@ from google.cloud import storage  # type: ignore
 from huey import RedisHuey  # type: ignore
 from pydantic import BaseModel, HttpUrl, validator, root_validator, Extra
 
-from archiver.metrics import (
+from fetcher.metrics import (
     HUEY_TASK_SIGNALS,
     FETCH_REQUEST_DELAY_SECONDS,
     COMMON_LABELNAMES,

@@ -10,7 +10,7 @@ import yaml
 from prometheus_client import start_http_server
 from pydantic import parse_obj_as
 
-from archiver.tasks import FeedConfig, fetch_feed, FeedType, KeyValue
+from fetcher.tasks import FeedConfig, fetch_feed, FeedType, KeyValue
 
 
 def configs_to_urls(configs: List[FeedConfig]) -> List[Tuple[FeedConfig, List[KeyValue]]]:

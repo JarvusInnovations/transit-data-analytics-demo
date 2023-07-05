@@ -14,7 +14,7 @@ services:
     command:
       - python
       - -m
-      - archiver.ticker
+      - fetcher.ticker
   consumer:
     build: .
     env_file:
@@ -28,6 +28,6 @@ services:
     command:
       - python
       - -m
-      - archiver.consumer
+      - fetcher.consumer
 volumes:
   shared:
