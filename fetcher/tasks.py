@@ -20,7 +20,6 @@ from fetcher.metrics import (
 )
 
 RAW_BUCKET = os.environ["RAW_BUCKET"]
-PARSED_BUCKET = os.environ["PARSED_BUCKET"]
 
 huey = RedisHuey(
     host=os.environ["HUEY_REDIS_HOST"],

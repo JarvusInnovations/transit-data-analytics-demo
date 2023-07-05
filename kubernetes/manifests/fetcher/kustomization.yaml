@@ -1,0 +1,4 @@
+resources:
+  - consumer.yaml
+  - redis.yaml
+  - ticker.yaml
