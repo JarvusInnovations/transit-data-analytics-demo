@@ -23,3 +23,12 @@ spec:
           envFrom:
             - configMapRef:
                 name: fetcher-config
+          # TODO: doing this since we instantiate a storage client when importing tasks.py
+          volumeMounts:
+            - name: gcs-secret
+              mountPath: /etc/gcs-secret
+              readOnly: true
+      volumes:
+        - name: gcs-secret
+          secret:
+            secretName: fetcher-secret
