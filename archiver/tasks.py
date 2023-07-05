@@ -136,10 +136,10 @@ class RawFetchedFile(BaseModel):
     @property
     def filename(self) -> str:
         params_with_page = {
-            **{kv.key: kv.value for kv in self.config.query},
+            **{kv.key: kv.value for kv in self.config.query if kv.value},  # exclude secrets
             **{kv.key: kv.value for kv in self.page},
         }
-        url = requests.Request(url=self.config.url, params=params_with_page).url
+        url = requests.Request(url=self.config.url, params=params_with_page).prepare().url
         b64url = base64.urlsafe_b64encode(url.encode("utf-8")).decode("utf-8")
         return f"{b64url}.json"
 
