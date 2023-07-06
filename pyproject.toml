@@ -22,6 +22,7 @@ typer = "^0.9.0"
 humanize = "^4.7.0"
 python-dotenv = "^1.0.0"
 gtfs-realtime-bindings = "^1.0.0"
+tqdm = "^4.65.0"
 
 
 [tool.poetry.group.dev.dependencies]

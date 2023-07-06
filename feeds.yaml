@@ -1,4 +1,4 @@
-# SEPTA non-GTFS
+# SEPTA non-GTFS https://www3.septa.org/
 - name: SEPTA Arrivals
   agency: SEPTA
   feed_type: septa__arrivals
