@@ -172,7 +172,7 @@ class FetchedRecord(BaseModel):
 class FeedTypeExtractContents(BaseModel, abc.ABC):
     @property
     @abc.abstractmethod
-    def feed_type(self) -> FeedType:
+    def feed_types(self) -> List[FeedType]:
         ...
 
     @property
@@ -181,8 +181,10 @@ class FeedTypeExtractContents(BaseModel, abc.ABC):
         raise NotImplementedError
 
 
-class SeptaTrainView(FeedTypeExtractContents):
-    feed_type: ClassVar[FeedType] = FeedType.septa__train_view
+class ListOfDicts(FeedTypeExtractContents):
+    feed_types: ClassVar[List[FeedType]] = [
+        FeedType.septa__train_view,
+    ]
     __root__: List[Dict]
 
     @property
@@ -190,8 +192,26 @@ class SeptaTrainView(FeedTypeExtractContents):
         return self.__root__
 
 
+class GtfsRealtime(FeedTypeExtractContents):
+    feed_types: ClassVar[List[FeedType]] = [
+        FeedType.gtfs_vehicle_positions,
+        FeedType.gtfs_trip_updates,
+        FeedType.gtfs_service_alerts,
+    ]
+    header: Dict
+    entity: List[Dict]
+
+    @property
+    def records(self) -> Iterator[Dict]:
+        for entity in self.entity:
+            yield dict(
+                header=self.header,
+                entity=entity,
+            )
+
+
 class SeptaArrivals(FeedTypeExtractContents):
-    feed_type: ClassVar[FeedType] = FeedType.septa__arrivals
+    feed_types: ClassVar[List[FeedType]] = [FeedType.septa__arrivals]
     __root__: Dict[str, List[Dict[str, List[Dict]]]]
 
     @property
@@ -209,7 +229,7 @@ class SeptaArrivals(FeedTypeExtractContents):
 
 
 class SeptaTransitViewAll(FeedTypeExtractContents):
-    feed_type: ClassVar[FeedType] = FeedType.septa__transit_view_all
+    feed_types: ClassVar[List[FeedType]] = [FeedType.septa__transit_view_all]
     routes: List[Dict[str, List[Dict]]]
 
     @property
@@ -222,5 +242,8 @@ class SeptaTransitViewAll(FeedTypeExtractContents):
 
 
 FEED_TYPES: Dict[FeedType, Type[FeedTypeExtractContents]] = {
-    kls.feed_type: kls for kls in FeedTypeExtractContents.__subclasses__()
+    feed_type: kls for kls in FeedTypeExtractContents.__subclasses__() for feed_type in kls.feed_types
 }
+
+missing_feed_types = [feed_type.value for feed_type in FeedType if feed_type not in FEED_TYPES]
+# assert not missing_feed_types, f"Missing parse configurations for {missing_feed_types}"

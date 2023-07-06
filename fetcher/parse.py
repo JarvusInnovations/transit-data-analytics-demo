@@ -12,6 +12,8 @@ import pendulum
 import typer
 import yaml
 from google.cloud import storage
+from google.protobuf.json_format import MessageToDict
+from google.transit import gtfs_realtime_pb2
 from pydantic import parse_obj_as
 from tqdm import tqdm
 
@@ -24,6 +26,7 @@ from fetcher.common import (
     FeedType,
     FeedConfig,
     FEED_TYPES,
+    GtfsRealtime,
 )
 
 HourKey = namedtuple("HourKey", ["hour", "base64url"])
@@ -43,7 +46,7 @@ def handle_hour(key: HourKey, blobs: List[storage.Blob], pbar: Optional[tqdm] = 
     records: List[FetchedRecord] = []
 
     # we could do this streaming, but data should be small enough
-    for blob in blobs:
+    for blob in tqdm(blobs, leave=False):
         bio = BytesIO()
         client.download_blob_to_file(blob, file_obj=bio)
         bio.seek(0)
@@ -53,7 +56,12 @@ def handle_hour(key: HourKey, blobs: List[storage.Blob], pbar: Optional[tqdm] = 
             first_file = file
 
         pydantic_type = FEED_TYPES[file.config.feed_type]
-        parsed_response = parse_obj_as(pydantic_type, json.loads(file.contents))
+        if pydantic_type == GtfsRealtime:
+            feed = gtfs_realtime_pb2.FeedMessage()
+            feed.ParseFromString(file.contents)
+            parsed_response = GtfsRealtime(**MessageToDict(feed))
+        else:
+            parsed_response = pydantic_type(**json.loads(file.contents))
         records.extend([FetchedRecord(file=file, record=record) for record in parsed_response.records])
 
     agg = HourAgg(first_file=first_file)
@@ -97,7 +105,7 @@ def main(
         for blob in blobs:
             aggs[hour_key(blob)].append(blob)
 
-        subitr = tqdm(aggs.items())
+        subitr = tqdm(aggs.items(), leave=False)
         for key, blobs in subitr:
             subitr.set_description(str(key))
             subitr.write(f"Handling {len(blobs)=} for {key}")
