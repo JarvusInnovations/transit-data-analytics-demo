@@ -18,6 +18,22 @@
   agency: SEPTA
   feed_type: septa__transit_view_all
   url: https://www3.septa.org/api/TransitViewAll/index.php
+- name: SEPTA Bus Detours
+  agency: SEPTA
+  feed_type: septa__bus_detours
+  url: https://www3.septa.org/api/BusDetours/index.php
+- name: SEPTA Alerts without message
+  agency: SEPTA
+  feed_type: septa__alerts_without_message
+  url: https://www3.septa.org/api/Alerts/index.php
+- name: SEPTA Alerts
+  agency: SEPTA
+  feed_type: septa__alerts
+  url: https://www3.septa.org/api/get_alert_data.php
+- name: SEPTA Elevator Outages
+  agency: SEPTA
+  feed_type: septa__elevator_outages
+  url: https://www3.septa.org/api/elevator/index.php
 
 # SEPTA GTFS
 - name: SEPTA Bus Trip Updates
