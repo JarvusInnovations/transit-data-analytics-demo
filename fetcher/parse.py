@@ -5,29 +5,39 @@ import datetime
 import json
 from collections import defaultdict, namedtuple
 from io import BytesIO
-from typing import Optional, List
+from typing import Optional, List, Annotated
 
 import humanize
 import pendulum
 import typer
+import yaml
 from google.cloud import storage
+from pydantic import parse_obj_as
 from tqdm import tqdm
 
-from fetcher.common import SERIALIZERS, RAW_BUCKET, HourAgg, FetchedRecord, RawFetchedFile, FeedType
-from fetcher.feed_types import SeptaTransitViewAll
+from fetcher.common import (
+    SERIALIZERS,
+    RAW_BUCKET,
+    HourAgg,
+    FetchedRecord,
+    RawFetchedFile,
+    FeedType,
+    FeedConfig,
+    FEED_TYPES,
+)
 
 HourKey = namedtuple("HourKey", ["hour", "base64url"])
 
 
 def hour_key(blob: storage.Blob) -> HourKey:
-    _, dtequals, hourequals, tsequals, base64urlequals, filename = blob.name.split("/")
+    feed_type, dtequals, hourequals, tsequals, base64urlequals, filename = blob.name.split("/")
     _, hour = hourequals.split("=")
-    _, base64url = base64urlequals.split("=")
+    _, base64url = base64urlequals.split("=", maxsplit=1)
     return HourKey(hour, base64url)
 
 
 # TODO: handle protos
-def handle_hour(key: HourKey, blobs: List[storage.Blob]):
+def handle_hour(key: HourKey, blobs: List[storage.Blob], pbar: Optional[tqdm] = None):
     client = storage.Client()
     first_file = None
     records: List[FetchedRecord] = []
@@ -42,45 +52,56 @@ def handle_hour(key: HourKey, blobs: List[storage.Blob]):
         if not first_file:
             first_file = file
 
-        match file.config.feed_type.value:
-            case FeedType.septa__transit_view_all:
-                resp = SeptaTransitViewAll(**json.loads(file.contents))
-                assert len(resp.routes) == 1
-                for route, vehicles in resp.routes[0].items():
-                    records.extend([FetchedRecord(file=file, record=vehicle) for vehicle in vehicles])
-            case _:
-                raise NotImplementedError
+        pydantic_type = FEED_TYPES[file.config.feed_type]
+        parsed_response = parse_obj_as(pydantic_type, json.loads(file.contents))
+        records.extend([FetchedRecord(file=file, record=record) for record in parsed_response.records])
 
     agg = HourAgg(first_file=first_file)
     # TODO: add asserts to check all same hour/url/etc.
 
     contents = "\n".join([record.json(exclude={"file": {"contents"}}) for record in records])
 
-    typer.secho(f"Saving {humanize.naturalsize(len(contents))} to {agg.bucket}/{agg.gcs_key}")
-    # client.bucket(agg.bucket.removeprefix("gs://")).blob(agg.gcs_key).upload_from_string(contents, client=client)
+    msg = f"Saving {len(records)} records ({humanize.naturalsize(len(contents))}) to {agg.bucket}/{agg.gcs_key}"
+    if pbar:
+        pbar.write(msg)
+    else:
+        typer.secho(msg)
+    client.bucket(agg.bucket.removeprefix("gs://")).blob(agg.gcs_key).upload_from_string(contents, client=client)
 
 
 def main(
-    table: str,
     dt: datetime.datetime,
+    table: Annotated[Optional[List[FeedType]], typer.Option()] = None,
     bucket: Optional[str] = RAW_BUCKET,
 ):
     client = storage.Client()
 
-    prefix = f"{table}/dt={SERIALIZERS[pendulum.Date](pendulum.instance(dt).date())}/"
+    if table:
+        tables = table
+    else:
+        with open("./feeds.yaml") as f:
+            configs = parse_obj_as(List[FeedConfig], yaml.safe_load(f))
+        tables = set(config.feed_type for config in configs)
 
-    typer.secho(f"Listing items in {bucket}/{prefix}...", fg=typer.colors.MAGENTA)
-    blobs: List[storage.Blob] = list(client.list_blobs(bucket.removeprefix("gs://"), prefix=prefix))
-    typer.secho(f"Found {len(blobs)=}.")
+    itr = tqdm(tables)
+    for tbl in itr:
+        itr.set_description(tbl.value)
+        prefix = f"{tbl.value}/dt={SERIALIZERS[pendulum.Date](pendulum.instance(dt).date())}/"
 
-    aggs = defaultdict(list)
+        itr.write(f"Listing items in {bucket}/{prefix}...")
+        blobs: List[storage.Blob] = list(client.list_blobs(bucket.removeprefix("gs://"), prefix=prefix))
+        itr.write(f"Found {len(blobs)=}.")
 
-    for blob in blobs:
-        aggs[hour_key(blob)].append(blob)
+        aggs = defaultdict(list)
 
-    for key, blobs in tqdm(aggs.items()):
-        typer.secho(f"Handling {len(blobs)=} for {key}")
-        handle_hour(key, blobs)
+        for blob in blobs:
+            aggs[hour_key(blob)].append(blob)
+
+        subitr = tqdm(aggs.items())
+        for key, blobs in subitr:
+            subitr.set_description(str(key))
+            subitr.write(f"Handling {len(blobs)=} for {key}")
+            handle_hour(key, blobs, pbar=subitr)
 
 
 if __name__ == "__main__":

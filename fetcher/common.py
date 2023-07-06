@@ -1,13 +1,14 @@
+import abc
 import base64
 import datetime
 import os
-from typing import Dict, Optional, List, ClassVar, Any
+from enum import Enum
+from typing import Dict, Optional, List, ClassVar, Any, Type, Iterator
 
 import pendulum
 import requests
 from pydantic import BaseModel, HttpUrl, validator, root_validator, Extra
 
-from fetcher.feed_types import FeedType
 from fetcher.metrics import (
     COMMON_LABELNAMES,
 )
@@ -20,6 +21,22 @@ SERIALIZERS = {
     pendulum.Date: lambda dt: dt.to_date_string(),
     pendulum.DateTime: lambda ts: ts.to_iso8601_string(),
 }
+
+
+class FeedType(str, Enum):
+    # gtfs/other standards
+    gtfs_schedule = "gtfs_schedule"
+    gtfs_vehicle_positions = "gtfs_vehicle_positions"
+    gtfs_trip_updates = "gtfs_trip_updates"
+    gtfs_service_alerts = "gtfs_service_alerts"
+    # agency/vendor-specific
+    septa__arrivals = "septa__arrivals"
+    septa__train_view = "septa__train_view"
+    septa__transit_view_all = "septa__transit_view_all"
+    septa__bus_detours = "septa__bus_detours"
+    septa__alerts_without_message = "septa__alerts_without_message"
+    septa__alerts = "septa__alerts"
+    septa__elevator_outages = "septa__elevator_outages"
 
 
 class KeyValues(BaseModel):
@@ -121,7 +138,7 @@ class RawFetchedFile(BaseModel):
         return v
 
 
-# TODO: dedupe this with above
+# TODO: dedupe this with above, and maybe __root__ should be List[FetchedRecord]?
 class HourAgg(BaseModel):
     bucket: ClassVar[str] = PARSED_BUCKET
     partitions: ClassVar[List[str]] = ["dt", "hour"]
@@ -137,7 +154,7 @@ class HourAgg(BaseModel):
 
     @property
     def filename(self):
-        return f"{self.first_file.base64url}.json"
+        return f"{self.first_file.base64url}.jsonl"
 
     @property
     def gcs_key(self) -> str:
@@ -150,3 +167,60 @@ class HourAgg(BaseModel):
 class FetchedRecord(BaseModel):
     file: RawFetchedFile
     record: Dict[str, Any]
+
+
+class FeedTypeExtractContents(BaseModel, abc.ABC):
+    @property
+    @abc.abstractmethod
+    def feed_type(self) -> FeedType:
+        ...
+
+    @property
+    @abc.abstractmethod
+    def records(self) -> Iterator[Dict]:
+        raise NotImplementedError
+
+
+class SeptaTrainView(FeedTypeExtractContents):
+    feed_type: ClassVar[FeedType] = FeedType.septa__train_view
+    __root__: List[Dict]
+
+    @property
+    def records(self) -> List[Dict]:
+        return self.__root__
+
+
+class SeptaArrivals(FeedTypeExtractContents):
+    feed_type: ClassVar[FeedType] = FeedType.septa__arrivals
+    __root__: Dict[str, List[Dict[str, List[Dict]]]]
+
+    @property
+    def records(self) -> Iterator[Dict]:
+        for key, directions in self.__root__.items():
+            for direction_dict in directions:
+                assert len(direction_dict) == 1
+                for direction, updates in direction_dict.items():
+                    for update in updates:
+                        yield dict(
+                            key=key,
+                            direction_key=direction,
+                            **update,
+                        )
+
+
+class SeptaTransitViewAll(FeedTypeExtractContents):
+    feed_type: ClassVar[FeedType] = FeedType.septa__transit_view_all
+    routes: List[Dict[str, List[Dict]]]
+
+    @property
+    def records(self) -> List[Dict]:
+        records = []
+        assert len(self.routes) == 1
+        for route, vehicles in self.routes[0].items():
+            records.extend(vehicles)
+        return records
+
+
+FEED_TYPES: Dict[FeedType, Type[FeedTypeExtractContents]] = {
+    kls.feed_type: kls for kls in FeedTypeExtractContents.__subclasses__()
+}

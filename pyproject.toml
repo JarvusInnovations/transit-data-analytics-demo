@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "transit-data-analytics-demo"
-version = "23.6.5"
+version = "23.6.6"
 description = ""
 authors = ["Andrew Vaccaro <atvaccaro@gmail.com>"]
 readme = "README.md"

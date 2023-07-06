@@ -29,7 +29,7 @@
 - name: SEPTA Alerts
   agency: SEPTA
   feed_type: septa__alerts
-  url: https://www3.septa.org/api/get_alert_data.php
+  url: https://www3.septa.org/api/Alerts/get_alert_data.php
 - name: SEPTA Elevator Outages
   agency: SEPTA
   feed_type: septa__elevator_outages
@@ -53,4 +53,25 @@
   feed_type: gtfs_vehicle_positions
 - name: SEPTA Rail Service Alerts
   url: https://www3.septa.org/gtfsrt/septarail-pa-us/Service/rtServiceAlerts.pb
+  feed_type: gtfs_service_alerts
+
+# Pittsburgh GTFS bus https://truetime.portauthority.org/gtfsrt-bus/
+# Pittsburgh GTFS train https://truetime.portauthority.org/gtfsrt-train/
+- name: Pittsburgh Train Vehicle Positions
+  url: https://truetime.portauthority.org/gtfsrt-train/vehicles
+  feed_type: gtfs_vehicle_positions
+- name: Pittsburgh Train Trip Updates
+  url: https://truetime.portauthority.org/gtfsrt-train/trips
+  feed_type: gtfs_trip_updates
+- name: Pittsburgh Train Service Alerts
+  url: https://truetime.portauthority.org/gtfsrt-train/alerts
+  feed_type: gtfs_service_alerts
+- name: Pittsburgh Bus Vehicle Positions
+  url: https://truetime.portauthority.org/gtfsrt-bus/vehicles
+  feed_type: gtfs_vehicle_positions
+- name: Pittsburgh Bus Trip Updates
+  url: https://truetime.portauthority.org/gtfsrt-bus/trips
+  feed_type: gtfs_trip_updates
+- name: Pittsburgh Bus Service Alerts
+  url: https://truetime.portauthority.org/gtfsrt-bus/alerts
   feed_type: gtfs_service_alerts
