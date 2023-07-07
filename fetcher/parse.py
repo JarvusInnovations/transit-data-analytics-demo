@@ -19,7 +19,6 @@ from tqdm import tqdm
 
 from fetcher.common import (
     SERIALIZERS,
-    RAW_BUCKET,
     HourAgg,
     FetchedRecord,
     RawFetchedFile,
@@ -102,11 +101,21 @@ def handle_hour(key: HourKey, blobs: List[storage.Blob], pbar: Optional[tqdm] = 
 
 
 def main(
-    dt: datetime.datetime,
+    dt: Annotated[
+        datetime.datetime,
+        typer.Argument(
+            formats=["%Y-%m-%d"],
+        ),
+    ] = datetime.date.today(),
     table: Annotated[Optional[List[FeedType]], typer.Option()] = None,
-    bucket: str = RAW_BUCKET,
+    bucket: str = RawFetchedFile.bucket,
     base64url: Optional[str] = None,
 ):
+    """
+    Parse a collect on of raw data files and save in hourly-partitioned JSONL files named by base64-encoded URL.
+
+    E.g. gs://test-jarvus-transit-data-demo-parsed/gtfs_vehicle_positions/dt=2023-07-07/hour=2023-07-07T01:00:00+00:00/aHR0cHM6Ly90cnVldGltZS5wb3J0YXV0aG9yaXR5Lm9yZy9ndGZzcnQtdHJhaW4vdmVoaWNsZXM=.jsonl
+    """
     client = storage.Client()
 
     if table:

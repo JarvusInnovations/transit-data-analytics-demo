@@ -249,4 +249,5 @@ FEED_TYPES: Dict[FeedType, Type[FeedTypeExtractContents]] = {
 }
 
 missing_feed_types = [feed_type.value for feed_type in FeedType if feed_type not in FEED_TYPES]
+# TODO: add this assert once the rest have been implemented
 # assert not missing_feed_types, f"Missing parse configurations for {missing_feed_types}"
