@@ -88,16 +88,24 @@ def handle_hour(key: HourKey, blobs: List[storage.Blob], pbar: Optional[tqdm] = 
     # TODO: add asserts to check all same hour/url/etc.
 
     contents = "\n".join([record.json(exclude={"file": {"contents"}}) for record in records])
+    content_size = humanize.naturalsize(len(contents))
+    agg_path = f"{agg.bucket}/{agg.gcs_key}"
 
     if contents:
-        msg = f"Saving {len(records)} records ({humanize.naturalsize(len(contents))}) to {agg.bucket}/{agg.gcs_key}"
+        msg = f"Saving {len(records)} records ({content_size}) to {agg_path}"
         if pbar:
             pbar.write(msg)
         else:
             typer.secho(msg)
-        client.bucket(agg.bucket.removeprefix("gs://")).blob(agg.gcs_key).upload_from_string(
-            contents, timeout=300, client=client
-        )
+        start = pendulum.now()
+        blob = client.bucket(agg.bucket.removeprefix("gs://")).blob(agg.gcs_key)
+        blob.upload_from_string(contents, timeout=300, client=client)
+        start.diff()
+        msg = f"Took {humanize.naturaldelta(start.diff().total_seconds())} to save {content_size} to {agg_path}"
+        if pbar:
+            pbar.write(msg)
+        else:
+            typer.secho(msg)
     else:
         msg = f"WARNING: no records found for {key}"
         if pbar:
