@@ -1,0 +1,26 @@
+version: 2
+
+sources:
+  - name: gtfs_rt
+    database: transit-data-analytics-demo
+    loader: gcloud storage
+
+    tables:
+      - name: vehicle_positions
+        description: "External table of Snowplow events, stored as CSV files in Cloud Storage"
+        external:
+          location: "gs://{{ var('external_data_bucket') }}/gtfs_vehicle_positions/*"
+          options:
+            format: NEWLINE_DELIMITED_JSON
+            hive_partition_uri_prefix: "gs://{{ var('external_data_bucket') }}/gtfs_vehicle_positions/"
+          partitions:
+            - name: dt
+              data_type: date
+            - name: hour
+              data_type: timestamp
+
+        columns:
+          - name: file
+            data_type: JSON
+          - name: record
+            data_type: JSON

@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: consumer
+  labels:
+    app: consumer
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: consumer
+  template:
+    metadata:
+      labels:
+        app: consumer
+    spec:
+      containers:
+        - name: consumer
+          image: ghcr.io/jarvusinnovations/transit-data-analytics-demo/fetcher:23.7.7
+          ports:
+            - containerPort: 8080
+          command: [ python, -m, fetcher.consumer ]
+          envFrom:
+            - configMapRef:
+                name: fetcher-config
+          volumeMounts:
+            - name: gcs-secret
+              mountPath: /etc/gcs-secret
+              readOnly: true
+      volumes:
+        - name: gcs-secret
+          secret:
+            secretName: fetcher-secret
