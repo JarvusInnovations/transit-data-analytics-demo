@@ -14,7 +14,7 @@ import yaml
 from google.cloud import storage
 from google.protobuf.json_format import MessageToDict
 from google.transit import gtfs_realtime_pb2
-from pydantic import parse_obj_as
+from pydantic import parse_obj_as, ValidationError
 from tqdm import tqdm
 
 from fetcher.common import (
@@ -56,13 +56,28 @@ def handle_hour(key: HourKey, blobs: List[storage.Blob], pbar: Optional[tqdm] = 
             first_file = file
 
         pydantic_type = FEED_TYPES[file.config.feed_type]
-        if pydantic_type == GtfsRealtime:
-            feed = gtfs_realtime_pb2.FeedMessage()
-            feed.ParseFromString(file.contents)
-            parsed_response = GtfsRealtime(**MessageToDict(feed))
+        try:
+            if pydantic_type == GtfsRealtime:
+                feed = gtfs_realtime_pb2.FeedMessage()
+                feed.ParseFromString(file.contents)
+                parsed_response = GtfsRealtime(**MessageToDict(feed))
+            else:
+                parsed_response = pydantic_type(**json.loads(file.contents))
+        except ValidationError:
+            msg = f"Validation error occurred on {blob.path}"
+            if pbar:
+                pbar.write(msg)
+            else:
+                typer.secho(msg, fg=typer.colors.RED)
+            raise
+        if parsed_response.records:
+            records.extend([FetchedRecord(file=file, record=record) for record in parsed_response.records])
         else:
-            parsed_response = pydantic_type(**json.loads(file.contents))
-        records.extend([FetchedRecord(file=file, record=record) for record in parsed_response.records])
+            msg = f"WARNING: no records found for {blob.path}"
+            if pbar:
+                pbar.write(msg)
+            else:
+                typer.secho(msg, fg=typer.colors.YELLOW)
 
     agg = HourAgg(first_file=first_file)
     # TODO: add asserts to check all same hour/url/etc.
@@ -81,6 +96,7 @@ def main(
     dt: datetime.datetime,
     table: Annotated[Optional[List[FeedType]], typer.Option()] = None,
     bucket: Optional[str] = RAW_BUCKET,
+    base64url: Optional[str] = None,
 ):
     client = storage.Client()
 
@@ -103,7 +119,9 @@ def main(
         aggs = defaultdict(list)
 
         for blob in blobs:
-            aggs[hour_key(blob)].append(blob)
+            blob_key = hour_key(blob)
+            if not base64url or base64url == blob_key.base64url:
+                aggs[blob_key].append(blob)
 
         subitr = tqdm(aggs.items(), leave=False)
         for key, blobs in subitr:

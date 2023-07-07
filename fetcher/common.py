@@ -199,7 +199,7 @@ class GtfsRealtime(FeedTypeExtractContents):
         FeedType.gtfs_service_alerts,
     ]
     header: Dict
-    entity: List[Dict]
+    entity: List[Dict] = []
 
     @property
     def records(self) -> Iterator[Dict]:
