@@ -42,7 +42,7 @@ def hour_key(blob: storage.Blob) -> HourKey:
 
 
 # TODO: handle protos
-def handle_hour(key: HourKey, blobs: List[storage.Blob], pbar: Optional[tqdm] = None):
+def handle_hour(key: HourKey, blobs: List[storage.Blob], pbar: Optional[tqdm] = None) -> int:
     if pbar:
         pbar.write(f"Handling {len(blobs)=} for {key}")
     client = storage.Client()
@@ -95,13 +95,16 @@ def handle_hour(key: HourKey, blobs: List[storage.Blob], pbar: Optional[tqdm] = 
             pbar.write(msg)
         else:
             typer.secho(msg)
-        client.bucket(agg.bucket.removeprefix("gs://")).blob(agg.gcs_key).upload_from_string(contents, client=client)
+        client.bucket(agg.bucket.removeprefix("gs://")).blob(agg.gcs_key).upload_from_string(
+            contents, timeout=300, client=client
+        )
     else:
         msg = f"WARNING: no records found for {key}"
         if pbar:
             pbar.write(msg)
         else:
             typer.secho(msg, fg=typer.colors.YELLOW)
+    return len(contents)
 
 
 def main(
@@ -115,7 +118,7 @@ def main(
     exclude: Annotated[Optional[List[FeedType]], typer.Option()] = None,
     bucket: str = RawFetchedFile.bucket,
     base64url: Optional[str] = None,
-    workers: int = 4,
+    workers: int = 8,
 ):
     """
     Parse a collect on of raw data files and save in hourly-partitioned JSONL files named by base64-encoded URL.
@@ -170,7 +173,6 @@ def main(
                     future.result()
                 except Exception:
                     typer.secho(f"Exception returned for {key}: {traceback.format_exc()}", fg=typer.colors.RED)
-                    raise
 
 
 if __name__ == "__main__":
