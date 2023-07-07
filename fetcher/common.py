@@ -2,8 +2,8 @@ import abc
 import base64
 import datetime
 import os
-from enum import Enum
-from typing import Dict, Optional, List, ClassVar, Any, Type, Iterable, Callable
+from enum import StrEnum
+from typing import Dict, Optional, List, ClassVar, Any, Type, Iterable, Callable, Union
 
 import pendulum
 import requests
@@ -23,7 +23,7 @@ SERIALIZERS: Dict[Type, Callable] = {
 }
 
 
-class FeedType(str, Enum):
+class FeedType(StrEnum):
     # gtfs/other standards
     gtfs_schedule = "gtfs_schedule"
     gtfs_vehicle_positions = "gtfs_vehicle_positions"
@@ -170,7 +170,8 @@ class FetchedRecord(BaseModel):
     record: Dict[str, Any]
 
 
-class FeedTypeExtractContents(BaseModel, abc.ABC):
+# https://github.com/pydantic/pydantic/discussions/2410
+class FeedContents(BaseModel, abc.ABC):
     @property
     @abc.abstractmethod
     def feed_types(self) -> List[FeedType]:
@@ -182,18 +183,15 @@ class FeedTypeExtractContents(BaseModel, abc.ABC):
         raise NotImplementedError
 
 
-class ListOfDicts(FeedTypeExtractContents):
-    feed_types: ClassVar[List[FeedType]] = [
-        FeedType.septa__train_view,
-    ]
-    __root__: List[Dict]
+class GtfsSchedule(FeedContents):
+    feed_types: ClassVar[List[FeedType]] = [FeedType.gtfs_schedule]
 
     @property
     def records(self) -> Iterable[Dict]:
-        return self.__root__
+        raise NotImplementedError
 
 
-class GtfsRealtime(FeedTypeExtractContents):
+class GtfsRealtime(FeedContents):
     feed_types: ClassVar[List[FeedType]] = [
         FeedType.gtfs_vehicle_positions,
         FeedType.gtfs_trip_updates,
@@ -211,7 +209,20 @@ class GtfsRealtime(FeedTypeExtractContents):
             )
 
 
-class SeptaArrivals(FeedTypeExtractContents):
+class ListOfDicts(FeedContents):
+    feed_types: ClassVar[List[FeedType]] = [
+        FeedType.septa__train_view,
+        FeedType.septa__alerts_without_message,
+        FeedType.septa__alerts,
+    ]
+    __root__: List[Dict]
+
+    @property
+    def records(self) -> Iterable[Dict]:
+        return self.__root__
+
+
+class SeptaArrivals(FeedContents):
     feed_types: ClassVar[List[FeedType]] = [FeedType.septa__arrivals]
     __root__: Dict[str, List[Dict[str, List[Dict]]]]
 
@@ -229,7 +240,7 @@ class SeptaArrivals(FeedTypeExtractContents):
                         )
 
 
-class SeptaTransitViewAll(FeedTypeExtractContents):
+class SeptaTransitViewAll(FeedContents):
     feed_types: ClassVar[List[FeedType]] = [FeedType.septa__transit_view_all]
     routes: List[Dict[str, List[Dict]]]
 
@@ -242,12 +253,41 @@ class SeptaTransitViewAll(FeedTypeExtractContents):
         return records
 
 
+class SeptaBusDetours(FeedContents):
+    feed_types: ClassVar[List[FeedType]] = [FeedType.septa__bus_detours]
+    __root__: List[Dict[str, Union[str, Dict[str, Any]]]]
+
+    @property
+    def records(self) -> Iterable[Dict]:
+        for route in self.__root__:
+            # could create a type for this
+            for detour in route["route_info"]:
+                assert isinstance(detour, dict)
+                yield dict(
+                    route_id=route["route_id"],
+                    **detour,
+                )
+
+
+class SeptaElevatorOutages(FeedContents):
+    feed_types: ClassVar[List[FeedType]] = [FeedType.septa__elevator_outages]
+    meta: Dict[str, Any]
+    results: List[Dict[str, str]]
+
+    @property
+    def records(self) -> Iterable[Dict]:
+        for result in self.results:
+            yield dict(
+                meta=self.meta,
+                **result,
+            )
+
+
 # this is type ignored because mypy does not understand that feed_types
 # will be a ClassVar[List]
-FEED_TYPES: Dict[FeedType, Type[FeedTypeExtractContents]] = {
-    feed_type: kls for kls in FeedTypeExtractContents.__subclasses__() for feed_type in kls.feed_types  # type: ignore
+FEED_TYPES: Dict[FeedType, Type[FeedContents]] = {
+    feed_type: kls for kls in FeedContents.__subclasses__() for feed_type in kls.feed_types  # type: ignore
 }
 
 missing_feed_types = [feed_type.value for feed_type in FeedType if feed_type not in FEED_TYPES]
-# TODO: add this assert once the rest have been implemented
-# assert not missing_feed_types, f"Missing parse configurations for {missing_feed_types}"
+assert not missing_feed_types, f"Missing parse configurations for {missing_feed_types}"

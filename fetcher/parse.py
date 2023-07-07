@@ -26,7 +26,7 @@ from fetcher.common import (
     FeedConfig,
     FEED_TYPES,
     GtfsRealtime,
-    FeedTypeExtractContents,
+    FeedContents,
 )
 
 HourKey = namedtuple("HourKey", ["hour", "base64url"])
@@ -56,7 +56,7 @@ def handle_hour(key: HourKey, blobs: List[storage.Blob], pbar: Optional[tqdm] = 
             first_file = file
 
         pydantic_type = FEED_TYPES[file.config.feed_type]
-        parsed_response: FeedTypeExtractContents
+        parsed_response: FeedContents
         try:
             if pydantic_type == GtfsRealtime:
                 feed = gtfs_realtime_pb2.FeedMessage()
@@ -108,6 +108,7 @@ def main(
         ),
     ] = datetime.date.today(),
     table: Annotated[Optional[List[FeedType]], typer.Option()] = None,
+    exclude: Annotated[Optional[List[FeedType]], typer.Option()] = None,
     bucket: str = RawFetchedFile.bucket,
     base64url: Optional[str] = None,
 ):
@@ -116,6 +117,9 @@ def main(
 
     E.g. gs://test-jarvus-transit-data-demo-parsed/gtfs_vehicle_positions/dt=2023-07-07/hour=2023-07-07T01:00:00+00:00/aHR0cHM6Ly90cnVldGltZS5wb3J0YXV0aG9yaXR5Lm9yZy9ndGZzcnQtdHJhaW4vdmVoaWNsZXM=.jsonl
     """
+    if table and exclude:
+        raise ValueError("cannot specify both table and exclude")
+
     client = storage.Client()
 
     if table:
@@ -123,7 +127,7 @@ def main(
     else:
         with open("./feeds.yaml") as f:
             configs = parse_obj_as(List[FeedConfig], yaml.safe_load(f))
-        tables = list(set(config.feed_type for config in configs))
+        tables = list(set(config.feed_type for config in configs) - set(exclude))
 
     itr = tqdm(tables)
     for tbl in itr:
