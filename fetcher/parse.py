@@ -3,7 +3,9 @@ Parses fetched data and groups hourly to reduce the number of files for external
 """
 import datetime
 import json
+import traceback
 from collections import defaultdict, namedtuple
+from concurrent.futures import ProcessPoolExecutor, as_completed
 from io import BytesIO
 from typing import Optional, List, Annotated
 
@@ -41,12 +43,14 @@ def hour_key(blob: storage.Blob) -> HourKey:
 
 # TODO: handle protos
 def handle_hour(key: HourKey, blobs: List[storage.Blob], pbar: Optional[tqdm] = None):
+    if pbar:
+        pbar.write(f"Handling {len(blobs)=} for {key}")
     client = storage.Client()
     first_file = None
     records: List[FetchedRecord] = []
 
     # we could do this streaming, but data should be small enough
-    for blob in tqdm(blobs, leave=False):
+    for blob in blobs:
         bio = BytesIO()
         client.download_blob_to_file(blob, file_obj=bio)
         bio.seek(0)
@@ -111,6 +115,7 @@ def main(
     exclude: Annotated[Optional[List[FeedType]], typer.Option()] = None,
     bucket: str = RawFetchedFile.bucket,
     base64url: Optional[str] = None,
+    workers: int = 4,
 ):
     """
     Parse a collect on of raw data files and save in hourly-partitioned JSONL files named by base64-encoded URL.
@@ -129,14 +134,14 @@ def main(
             configs = parse_obj_as(List[FeedConfig], yaml.safe_load(f))
         tables = list(set(config.feed_type for config in configs) - set(exclude))
 
-    itr = tqdm(tables)
-    for tbl in itr:
-        itr.set_description(tbl.value)
+    for tbl in tables:
         prefix = f"{tbl.value}/dt={SERIALIZERS[pendulum.Date](pendulum.instance(dt).date())}/"
-
-        itr.write(f"Listing items in {bucket}/{prefix}...")
+        typer.secho(f"Listing items in {bucket}/{prefix}...", fg=typer.colors.MAGENTA)
         blobs: List[storage.Blob] = list(client.list_blobs(bucket.removeprefix("gs://"), prefix=prefix))
-        itr.write(f"Found {len(blobs)=}.")
+
+        # remove client from blob
+        for blob in blobs:
+            blob.bucket._client = None
 
         aggs = defaultdict(list)
 
@@ -145,11 +150,27 @@ def main(
             if not base64url or base64url == blob_key.base64url:
                 aggs[blob_key].append(blob)
 
-        subitr = tqdm(aggs.items(), leave=False)
-        for key, blobs in subitr:
-            subitr.set_description(str(key))
-            subitr.write(f"Handling {len(blobs)=} for {key}")
-            handle_hour(key, blobs, pbar=subitr)
+        typer.secho(f"Found {len(blobs)=} grouped into {len(aggs)=}.", fg=typer.colors.MAGENTA)
+
+        pbar = tqdm(total=len(aggs), leave=False, desc=tbl)
+        with ProcessPoolExecutor(max_workers=workers) as pool:
+            futures = {
+                pool.submit(
+                    handle_hour,
+                    key=key,
+                    blobs=blobs,
+                ): key
+                for key, blobs in aggs.items()
+            }
+
+            for future in as_completed(futures):
+                key = futures[future]
+                try:
+                    pbar.update(1)
+                    future.result()
+                except Exception:
+                    typer.secho(f"Exception returned for {key}: {traceback.format_exc()}", fg=typer.colors.RED)
+                    raise
 
 
 if __name__ == "__main__":
