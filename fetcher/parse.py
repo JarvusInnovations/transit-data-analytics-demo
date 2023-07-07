@@ -84,12 +84,19 @@ def handle_hour(key: HourKey, blobs: List[storage.Blob], pbar: Optional[tqdm] = 
 
     contents = "\n".join([record.json(exclude={"file": {"contents"}}) for record in records])
 
-    msg = f"Saving {len(records)} records ({humanize.naturalsize(len(contents))}) to {agg.bucket}/{agg.gcs_key}"
-    if pbar:
-        pbar.write(msg)
+    if contents:
+        msg = f"Saving {len(records)} records ({humanize.naturalsize(len(contents))}) to {agg.bucket}/{agg.gcs_key}"
+        if pbar:
+            pbar.write(msg)
+        else:
+            typer.secho(msg)
+        client.bucket(agg.bucket.removeprefix("gs://")).blob(agg.gcs_key).upload_from_string(contents, client=client)
     else:
-        typer.secho(msg)
-    client.bucket(agg.bucket.removeprefix("gs://")).blob(agg.gcs_key).upload_from_string(contents, client=client)
+        msg = f"WARNING: no records found for {key}"
+        if pbar:
+            pbar.write(msg)
+        else:
+            typer.secho(msg, fg=typer.colors.YELLOW)
 
 
 def main(
