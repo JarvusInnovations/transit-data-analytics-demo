@@ -11,9 +11,9 @@ import humanize
 import pendulum
 import typer
 import yaml
-from google.cloud import storage
+from google.cloud import storage  # type: ignore
 from google.protobuf.json_format import MessageToDict
-from google.transit import gtfs_realtime_pb2
+from google.transit import gtfs_realtime_pb2  # type: ignore
 from pydantic import parse_obj_as, ValidationError
 from tqdm import tqdm
 
@@ -27,6 +27,7 @@ from fetcher.common import (
     FeedConfig,
     FEED_TYPES,
     GtfsRealtime,
+    FeedTypeExtractContents,
 )
 
 HourKey = namedtuple("HourKey", ["hour", "base64url"])
@@ -56,6 +57,7 @@ def handle_hour(key: HourKey, blobs: List[storage.Blob], pbar: Optional[tqdm] = 
             first_file = file
 
         pydantic_type = FEED_TYPES[file.config.feed_type]
+        parsed_response: FeedTypeExtractContents
         try:
             if pydantic_type == GtfsRealtime:
                 feed = gtfs_realtime_pb2.FeedMessage()
@@ -102,7 +104,7 @@ def handle_hour(key: HourKey, blobs: List[storage.Blob], pbar: Optional[tqdm] = 
 def main(
     dt: datetime.datetime,
     table: Annotated[Optional[List[FeedType]], typer.Option()] = None,
-    bucket: Optional[str] = RAW_BUCKET,
+    bucket: str = RAW_BUCKET,
     base64url: Optional[str] = None,
 ):
     client = storage.Client()
@@ -112,7 +114,7 @@ def main(
     else:
         with open("./feeds.yaml") as f:
             configs = parse_obj_as(List[FeedConfig], yaml.safe_load(f))
-        tables = set(config.feed_type for config in configs)
+        tables = list(set(config.feed_type for config in configs))
 
     itr = tqdm(tables)
     for tbl in itr:

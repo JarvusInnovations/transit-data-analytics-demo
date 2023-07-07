@@ -3,7 +3,7 @@ import base64
 import datetime
 import os
 from enum import Enum
-from typing import Dict, Optional, List, ClassVar, Any, Type, Iterator
+from typing import Dict, Optional, List, ClassVar, Any, Type, Iterable, Callable
 
 import pendulum
 import requests
@@ -16,7 +16,7 @@ from fetcher.metrics import (
 RAW_BUCKET = os.environ["RAW_BUCKET"]
 PARSED_BUCKET = os.environ["PARSED_BUCKET"]
 
-SERIALIZERS = {
+SERIALIZERS: Dict[Type, Callable] = {
     str: str,
     pendulum.Date: lambda dt: dt.to_date_string(),
     pendulum.DateTime: lambda ts: ts.to_iso8601_string(),
@@ -114,6 +114,7 @@ class RawFetchedFile(BaseModel):
             **{kv.key: kv.value for kv in self.page},
         }
         url = requests.Request(url=self.config.url, params=params_with_page).prepare().url
+        assert url is not None
         b64url = base64.urlsafe_b64encode(url.encode("utf-8")).decode("utf-8")
         return f"{b64url}.json"
 
@@ -177,7 +178,7 @@ class FeedTypeExtractContents(BaseModel, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def records(self) -> Iterator[Dict]:
+    def records(self) -> Iterable[Dict]:
         raise NotImplementedError
 
 
@@ -188,7 +189,7 @@ class ListOfDicts(FeedTypeExtractContents):
     __root__: List[Dict]
 
     @property
-    def records(self) -> List[Dict]:
+    def records(self) -> Iterable[Dict]:
         return self.__root__
 
 
@@ -202,7 +203,7 @@ class GtfsRealtime(FeedTypeExtractContents):
     entity: List[Dict] = []
 
     @property
-    def records(self) -> Iterator[Dict]:
+    def records(self) -> Iterable[Dict]:
         for entity in self.entity:
             yield dict(
                 header=self.header,
@@ -215,7 +216,7 @@ class SeptaArrivals(FeedTypeExtractContents):
     __root__: Dict[str, List[Dict[str, List[Dict]]]]
 
     @property
-    def records(self) -> Iterator[Dict]:
+    def records(self) -> Iterable[Dict]:
         for key, directions in self.__root__.items():
             for direction_dict in directions:
                 assert len(direction_dict) == 1
@@ -233,7 +234,7 @@ class SeptaTransitViewAll(FeedTypeExtractContents):
     routes: List[Dict[str, List[Dict]]]
 
     @property
-    def records(self) -> List[Dict]:
+    def records(self) -> Iterable[Dict]:
         records = []
         assert len(self.routes) == 1
         for route, vehicles in self.routes[0].items():
@@ -241,8 +242,10 @@ class SeptaTransitViewAll(FeedTypeExtractContents):
         return records
 
 
+# this is type ignored because mypy does not understand that feed_types
+# will be a ClassVar[List]
 FEED_TYPES: Dict[FeedType, Type[FeedTypeExtractContents]] = {
-    feed_type: kls for kls in FeedTypeExtractContents.__subclasses__() for feed_type in kls.feed_types
+    feed_type: kls for kls in FeedTypeExtractContents.__subclasses__() for feed_type in kls.feed_types  # type: ignore
 }
 
 missing_feed_types = [feed_type.value for feed_type in FeedType if feed_type not in FEED_TYPES]
