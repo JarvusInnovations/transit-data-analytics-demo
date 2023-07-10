@@ -191,6 +191,7 @@ def main(
                     future.result()
                 except Exception:
                     typer.secho(f"Exception returned for {key}: {traceback.format_exc()}", fg=typer.colors.RED)
+                    raise
 
 
 if __name__ == "__main__":
