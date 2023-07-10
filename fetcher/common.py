@@ -155,7 +155,7 @@ class HourAgg(BaseModel):
 
     @property
     def filename(self):
-        return f"{self.first_file.base64url}.jsonl"
+        return f"{self.first_file.base64url}.jsonl.gz"
 
     @property
     def gcs_key(self) -> str:

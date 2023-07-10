@@ -2,6 +2,7 @@
 Parses fetched data and groups hourly to reduce the number of files for external tables.
 """
 import datetime
+import gzip
 import json
 import traceback
 from collections import defaultdict, namedtuple
@@ -42,7 +43,12 @@ def hour_key(blob: storage.Blob) -> HourKey:
 
 
 # TODO: handle protos
-def handle_hour(key: HourKey, blobs: List[storage.Blob], pbar: Optional[tqdm] = None) -> int:
+def handle_hour(
+    key: HourKey,
+    blobs: List[storage.Blob],
+    pbar: Optional[tqdm] = None,
+    timeout: int = 60,
+) -> int:
     if pbar:
         pbar.write(f"Handling {len(blobs)=} for {key}")
     client = storage.Client()
@@ -67,7 +73,7 @@ def handle_hour(key: HourKey, blobs: List[storage.Blob], pbar: Optional[tqdm] = 
                 feed.ParseFromString(file.contents)
                 parsed_response = GtfsRealtime(**MessageToDict(feed))
             else:
-                parsed_response = pydantic_type(**json.loads(file.contents))
+                parsed_response = parse_obj_as(pydantic_type, json.loads(file.contents))
         except ValidationError:
             msg = f"Validation error occurred on {blob.path}"
             if pbar:
@@ -87,7 +93,9 @@ def handle_hour(key: HourKey, blobs: List[storage.Blob], pbar: Optional[tqdm] = 
     agg = HourAgg(first_file=first_file)
     # TODO: add asserts to check all same hour/url/etc.
 
-    contents = "\n".join([record.json(exclude={"file": {"contents"}}) for record in records])
+    contents = gzip.compress(
+        "\n".join([record.json(exclude={"file": {"contents"}}) for record in records]).encode("utf-8")
+    )
     content_size = humanize.naturalsize(len(contents))
     agg_path = f"{agg.bucket}/{agg.gcs_key}"
 
@@ -99,7 +107,7 @@ def handle_hour(key: HourKey, blobs: List[storage.Blob], pbar: Optional[tqdm] = 
             typer.secho(msg)
         start = pendulum.now()
         blob = client.bucket(agg.bucket.removeprefix("gs://")).blob(agg.gcs_key)
-        blob.upload_from_string(contents, timeout=300, client=client)
+        blob.upload_from_string(contents, timeout=timeout, client=client)
         start.diff()
         msg = f"Took {humanize.naturaldelta(start.diff().total_seconds())} to save {content_size} to {agg_path}"
         if pbar:
@@ -127,6 +135,7 @@ def main(
     bucket: str = RawFetchedFile.bucket,
     base64url: Optional[str] = None,
     workers: int = 8,
+    timeout: int = 60,
 ):
     """
     Parse a collect on of raw data files and save in hourly-partitioned JSONL files named by base64-encoded URL.
@@ -170,6 +179,7 @@ def main(
                     handle_hour,
                     key=key,
                     blobs=blobs,
+                    timeout=timeout,
                 ): key
                 for key, blobs in aggs.items()
             }
