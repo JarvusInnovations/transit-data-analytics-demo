@@ -75,7 +75,7 @@ def handle_hour(
             else:
                 parsed_response = parse_obj_as(pydantic_type, json.loads(file.contents))
         except ValidationError:
-            msg = f"Validation error occurred on {blob.path}"
+            msg = f"Validation error occurred on gs://{blob.bucket.name}/{blob.name}"
             if pbar:
                 pbar.write(msg)
             else:

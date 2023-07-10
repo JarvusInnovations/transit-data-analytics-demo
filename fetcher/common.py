@@ -255,7 +255,7 @@ class SeptaTransitViewAll(FeedContents):
 
 class SeptaBusDetours(FeedContents):
     feed_types: ClassVar[List[FeedType]] = [FeedType.septa__bus_detours]
-    __root__: List[Dict[str, Union[str, Dict[str, Any]]]]
+    __root__: List[Dict[str, Union[str, List[Dict[str, Any]]]]]
 
     @property
     def records(self) -> Iterable[Dict]:
