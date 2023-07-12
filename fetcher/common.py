@@ -7,6 +7,7 @@ from typing import Dict, Optional, List, ClassVar, Any, Type, Iterable, Callable
 
 import pendulum
 import requests
+from google.cloud import storage
 from pydantic import BaseModel, HttpUrl, validator, root_validator, Extra
 
 from fetcher.metrics import (
@@ -291,3 +292,22 @@ FEED_TYPES: Dict[FeedType, Type[FeedContents]] = {
 
 missing_feed_types = [feed_type.value for feed_type in FeedType if feed_type not in FEED_TYPES]
 assert not missing_feed_types, f"Missing parse configurations for {missing_feed_types}"
+
+if __name__ == "__main__":
+    config = FeedConfig(
+        name="SEPTA GTFS Schedule",
+        url="https://www3.septa.org/developer/gtfs_public.zip",
+        feed_type="gtfs_schedule",
+    )
+    response = requests.get(config.url)
+    response.raise_for_status()
+    raw = RawFetchedFile(
+        ts=pendulum.now().replace(microsecond=0),
+        config=config,
+        page=[],
+        response_code=response.status_code,
+        response_headers=response.headers,
+        contents=response.content,
+    )
+    client = storage.Client()
+    client.bucket(raw.bucket.removeprefix("gs://")).blob(raw.gcs_key).upload_from_string(raw.json(), client=client)
