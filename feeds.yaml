@@ -36,8 +36,11 @@
   url: https://www3.septa.org/api/elevator/index.php
 
 # SEPTA GTFS
-- name: SEPTA GTFS Schedule
-  url: https://www3.septa.org/developer/gtfs_public.zip
+- name: SEPTA Bus Schedule
+  url: https://www3.septa.org/developer/google_bus.zip
+  feed_type: gtfs_schedule
+- name: SEPTA Rail Schedule
+  url: https://www3.septa.org/developer/google_rail.zip
   feed_type: gtfs_schedule
 - name: SEPTA Bus Trip Updates
   url: https://www3.septa.org/gtfsrt/septa-pa-us/Trip/rtTripUpdates.pb
