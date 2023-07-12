@@ -7,6 +7,7 @@ from typing import Dict, Optional, List, ClassVar, Any, Type, Iterable, Callable
 
 import pendulum
 import requests
+import typer.colors
 from google.cloud import storage
 from pydantic import BaseModel, HttpUrl, validator, root_validator, Extra
 
@@ -184,14 +185,6 @@ class FeedContents(BaseModel, abc.ABC):
         raise NotImplementedError
 
 
-class GtfsSchedule(FeedContents):
-    feed_types: ClassVar[List[FeedType]] = [FeedType.gtfs_schedule]
-
-    @property
-    def records(self) -> Iterable[Dict]:
-        raise NotImplementedError
-
-
 class GtfsRealtime(FeedContents):
     feed_types: ClassVar[List[FeedType]] = [
         FeedType.gtfs_vehicle_positions,
@@ -212,6 +205,7 @@ class GtfsRealtime(FeedContents):
 
 class ListOfDicts(FeedContents):
     feed_types: ClassVar[List[FeedType]] = [
+        FeedType.gtfs_schedule,  # requires special handling
         FeedType.septa__train_view,
         FeedType.septa__alerts_without_message,
         FeedType.septa__alerts,
@@ -296,7 +290,7 @@ assert not missing_feed_types, f"Missing parse configurations for {missing_feed_
 if __name__ == "__main__":
     config = FeedConfig(
         name="SEPTA GTFS Schedule",
-        url="https://www3.septa.org/developer/gtfs_public.zip",
+        url="https://www3.septa.org/developer/google_bus.zip",
         feed_type="gtfs_schedule",
     )
     response = requests.get(config.url)
@@ -310,4 +304,5 @@ if __name__ == "__main__":
         contents=response.content,
     )
     client = storage.Client()
+    typer.secho(f"Saving to {raw.bucket}/{raw.gcs_key}", fg=typer.colors.MAGENTA)
     client.bucket(raw.bucket.removeprefix("gs://")).blob(raw.gcs_key).upload_from_string(raw.json(), client=client)

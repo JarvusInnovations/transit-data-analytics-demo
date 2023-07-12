@@ -5,6 +5,7 @@ import datetime
 import gzip
 import json
 import traceback
+import zipfile
 from collections import defaultdict, namedtuple
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from io import BytesIO
@@ -67,7 +68,11 @@ def handle_hour(
         pydantic_type = FEED_TYPES[file.config.feed_type]
         parsed_response: FeedContents
         try:
-            if pydantic_type == GtfsRealtime:
+            if file.config.feed_type == FeedType.gtfs_schedule:
+                with zipfile.ZipFile(BytesIO(file.contents)) as zip:
+                    for file in zip.namelist():
+                        print(file)
+            elif pydantic_type == GtfsRealtime:
                 feed = gtfs_realtime_pb2.FeedMessage()
                 feed.ParseFromString(file.contents)
                 parsed_response = GtfsRealtime(**MessageToDict(feed))
