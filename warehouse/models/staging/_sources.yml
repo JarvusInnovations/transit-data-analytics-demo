@@ -2,24 +2,28 @@ version: 2
 
 sources:
   - name: gtfs_rt
+    schema: "{% if target.schema == 'prod' -%} external_gtfs_rt {%- else -%} {{ target.schema }}_external_gtfs_rt {%- endif %}"
     database: transit-data-analytics-demo
     loader: gcloud storage
 
     tables:
       - name: vehicle_positions
-        description: "External table of Snowplow events, stored as CSV files in Cloud Storage"
+        description: "External table of GTFS RT vehicle positions data; data is stored in GCS as gzipped JSON files"
         external:
           location: "gs://{{ var('external_data_bucket') }}/gtfs_rt__vehicle_positions/*"
           options:
             format: NEWLINE_DELIMITED_JSON
             hive_partition_uri_prefix: "gs://{{ var('external_data_bucket') }}/gtfs_rt__vehicle_positions/"
-          partitions:
+            # TODO: BigQuery doesn't recognize this option when creating external table via SQL
+            # we need to figure something out 
+            # require_partition_filter: true
+          partitions: &partitions
             - name: dt
               data_type: date
             - name: hour
               data_type: timestamp
 
-        columns:
+        columns: &columns
           - name: file
             data_type: JSON
           - name: record
