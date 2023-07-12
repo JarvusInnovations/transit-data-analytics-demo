@@ -36,6 +36,9 @@
   url: https://www3.septa.org/api/elevator/index.php
 
 # SEPTA GTFS
+- name: SEPTA GTFS Schedule
+  url: https://www3.septa.org/developer/gtfs_public.zip
+  feed_type: gtfs_schedule
 - name: SEPTA Bus Trip Updates
   url: https://www3.septa.org/gtfsrt/septa-pa-us/Trip/rtTripUpdates.pb
   feed_type: gtfs_trip_updates
@@ -57,6 +60,9 @@
 
 # Pittsburgh GTFS bus https://truetime.portauthority.org/gtfsrt-bus/
 # Pittsburgh GTFS train https://truetime.portauthority.org/gtfsrt-train/
+- name: Pittsburgh GTFS Schedule
+  url: https://www.rideprt.org/developerresources/GTFS.zip
+  feed_type: gtfs_schedule
 - name: Pittsburgh Train Vehicle Positions
   url: https://truetime.portauthority.org/gtfsrt-train/vehicles
   feed_type: gtfs_vehicle_positions
