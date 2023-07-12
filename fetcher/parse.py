@@ -42,7 +42,6 @@ def hour_key(blob: storage.Blob) -> HourKey:
     return HourKey(hour, base64url)
 
 
-# TODO: handle protos
 def handle_hour(
     key: HourKey,
     blobs: List[storage.Blob],
