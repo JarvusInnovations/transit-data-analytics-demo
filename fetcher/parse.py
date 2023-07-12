@@ -2,8 +2,11 @@
 Parses fetched data and groups hourly to reduce the number of files for external tables.
 """
 import datetime
+import gzip
 import json
+import traceback
 from collections import defaultdict, namedtuple
+from concurrent.futures import ProcessPoolExecutor, as_completed
 from io import BytesIO
 from typing import Optional, List, Annotated
 
@@ -26,7 +29,7 @@ from fetcher.common import (
     FeedConfig,
     FEED_TYPES,
     GtfsRealtime,
-    FeedTypeExtractContents,
+    FeedContents,
 )
 
 HourKey = namedtuple("HourKey", ["hour", "base64url"])
@@ -39,14 +42,20 @@ def hour_key(blob: storage.Blob) -> HourKey:
     return HourKey(hour, base64url)
 
 
-# TODO: handle protos
-def handle_hour(key: HourKey, blobs: List[storage.Blob], pbar: Optional[tqdm] = None):
+def handle_hour(
+    key: HourKey,
+    blobs: List[storage.Blob],
+    pbar: Optional[tqdm] = None,
+    timeout: int = 60,
+) -> int:
+    if pbar:
+        pbar.write(f"Handling {len(blobs)=} for {key}")
     client = storage.Client()
     first_file = None
     records: List[FetchedRecord] = []
 
     # we could do this streaming, but data should be small enough
-    for blob in tqdm(blobs, leave=False):
+    for blob in blobs:
         bio = BytesIO()
         client.download_blob_to_file(blob, file_obj=bio)
         bio.seek(0)
@@ -56,16 +65,16 @@ def handle_hour(key: HourKey, blobs: List[storage.Blob], pbar: Optional[tqdm] = 
             first_file = file
 
         pydantic_type = FEED_TYPES[file.config.feed_type]
-        parsed_response: FeedTypeExtractContents
+        parsed_response: FeedContents
         try:
             if pydantic_type == GtfsRealtime:
                 feed = gtfs_realtime_pb2.FeedMessage()
                 feed.ParseFromString(file.contents)
                 parsed_response = GtfsRealtime(**MessageToDict(feed))
             else:
-                parsed_response = pydantic_type(**json.loads(file.contents))
+                parsed_response = parse_obj_as(pydantic_type, json.loads(file.contents))
         except ValidationError:
-            msg = f"Validation error occurred on {blob.path}"
+            msg = f"Validation error occurred on gs://{blob.bucket.name}/{blob.name}"
             if pbar:
                 pbar.write(msg)
             else:
@@ -83,21 +92,34 @@ def handle_hour(key: HourKey, blobs: List[storage.Blob], pbar: Optional[tqdm] = 
     agg = HourAgg(first_file=first_file)
     # TODO: add asserts to check all same hour/url/etc.
 
-    contents = "\n".join([record.json(exclude={"file": {"contents"}}) for record in records])
+    contents = gzip.compress(
+        "\n".join([record.json(exclude={"file": {"contents"}}) for record in records]).encode("utf-8")
+    )
+    content_size = humanize.naturalsize(len(contents))
+    agg_path = f"{agg.bucket}/{agg.gcs_key}"
 
     if contents:
-        msg = f"Saving {len(records)} records ({humanize.naturalsize(len(contents))}) to {agg.bucket}/{agg.gcs_key}"
+        msg = f"Saving {len(records)} records ({content_size}) to {agg_path}"
         if pbar:
             pbar.write(msg)
         else:
             typer.secho(msg)
-        client.bucket(agg.bucket.removeprefix("gs://")).blob(agg.gcs_key).upload_from_string(contents, client=client)
+        start = pendulum.now()
+        blob = client.bucket(agg.bucket.removeprefix("gs://")).blob(agg.gcs_key)
+        blob.upload_from_string(contents, timeout=timeout, client=client)
+        start.diff()
+        msg = f"Took {humanize.naturaldelta(start.diff().total_seconds())} to save {content_size} to {agg_path}"
+        if pbar:
+            pbar.write(msg)
+        else:
+            typer.secho(msg)
     else:
         msg = f"WARNING: no records found for {key}"
         if pbar:
             pbar.write(msg)
         else:
             typer.secho(msg, fg=typer.colors.YELLOW)
+    return len(contents)
 
 
 def main(
@@ -108,14 +130,20 @@ def main(
         ),
     ] = datetime.date.today(),
     table: Annotated[Optional[List[FeedType]], typer.Option()] = None,
+    exclude: Annotated[Optional[List[FeedType]], typer.Option()] = None,
     bucket: str = RawFetchedFile.bucket,
     base64url: Optional[str] = None,
+    workers: int = 8,
+    timeout: int = 60,
 ):
     """
     Parse a collect on of raw data files and save in hourly-partitioned JSONL files named by base64-encoded URL.
 
     E.g. gs://test-jarvus-transit-data-demo-parsed/gtfs_vehicle_positions/dt=2023-07-07/hour=2023-07-07T01:00:00+00:00/aHR0cHM6Ly90cnVldGltZS5wb3J0YXV0aG9yaXR5Lm9yZy9ndGZzcnQtdHJhaW4vdmVoaWNsZXM=.jsonl
     """
+    if table and exclude:
+        raise ValueError("cannot specify both table and exclude")
+
     client = storage.Client()
 
     if table:
@@ -123,16 +151,16 @@ def main(
     else:
         with open("./feeds.yaml") as f:
             configs = parse_obj_as(List[FeedConfig], yaml.safe_load(f))
-        tables = list(set(config.feed_type for config in configs))
+        tables = list(set(config.feed_type for config in configs) - set(exclude))
 
-    itr = tqdm(tables)
-    for tbl in itr:
-        itr.set_description(tbl.value)
+    for tbl in tables:
         prefix = f"{tbl.value}/dt={SERIALIZERS[pendulum.Date](pendulum.instance(dt).date())}/"
-
-        itr.write(f"Listing items in {bucket}/{prefix}...")
+        typer.secho(f"Listing items in {bucket}/{prefix}...", fg=typer.colors.MAGENTA)
         blobs: List[storage.Blob] = list(client.list_blobs(bucket.removeprefix("gs://"), prefix=prefix))
-        itr.write(f"Found {len(blobs)=}.")
+
+        # remove client from blob
+        for blob in blobs:
+            blob.bucket._client = None
 
         aggs = defaultdict(list)
 
@@ -141,11 +169,28 @@ def main(
             if not base64url or base64url == blob_key.base64url:
                 aggs[blob_key].append(blob)
 
-        subitr = tqdm(aggs.items(), leave=False)
-        for key, blobs in subitr:
-            subitr.set_description(str(key))
-            subitr.write(f"Handling {len(blobs)=} for {key}")
-            handle_hour(key, blobs, pbar=subitr)
+        typer.secho(f"Found {len(blobs)=} grouped into {len(aggs)=}.", fg=typer.colors.MAGENTA)
+
+        pbar = tqdm(total=len(aggs), leave=False, desc=tbl)
+        with ProcessPoolExecutor(max_workers=workers) as pool:
+            futures = {
+                pool.submit(
+                    handle_hour,
+                    key=key,
+                    blobs=blobs,
+                    timeout=timeout,
+                ): key
+                for key, blobs in aggs.items()
+            }
+
+            for future in as_completed(futures):
+                key = futures[future]
+                try:
+                    pbar.update(1)
+                    future.result()
+                except Exception:
+                    typer.secho(f"Exception returned for {key}: {traceback.format_exc()}", fg=typer.colors.RED)
+                    raise
 
 
 if __name__ == "__main__":
