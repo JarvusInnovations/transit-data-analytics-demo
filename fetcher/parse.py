@@ -95,7 +95,7 @@ def save_hour_agg(
         else:
             typer.secho(msg)
     else:
-        msg = f"WARNING: no records found for {agg}"
+        msg = f"WARNING: no records found for aggregation {agg}"
         if pbar:
             pbar.write(msg)
         else:
@@ -135,7 +135,7 @@ def handle_hour(
                     ]
                 )
             else:
-                write(f"WARNING: no records found for {blob.path}", fg=typer.colors.YELLOW)
+                write(f"WARNING: no records found for {feed_type} {blob.self_link}", fg=typer.colors.YELLOW)
 
     written = 0
     for feed_type, records in aggs.items():
