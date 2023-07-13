@@ -9,8 +9,9 @@ import pendulum
 import requests
 import typer.colors
 import yaml
-from google.cloud import storage
+from google.cloud import storage  # type: ignore
 from pydantic import BaseModel, HttpUrl, validator, root_validator, Extra, parse_obj_as
+from pydantic.dataclasses import dataclass
 
 from fetcher.metrics import (
     COMMON_LABELNAMES,
@@ -40,6 +41,32 @@ class FeedType(StrEnum):
     septa__alerts_without_message = "septa__alerts_without_message"
     septa__alerts = "septa__alerts"
     septa__elevator_outages = "septa__elevator_outages"
+
+
+class GtfsScheduleFileType(StrEnum):
+    agency_txt = "agency.txt"
+    stops_txt = "stops.txt"
+    routes_txt = "routes.txt"
+    trips_txt = "trips.txt"
+    stop_times_txt = "stop_times.txt"
+    calendar_txt = "calendar.txt"
+    calendar_dates_txt = "calendar_dates.txt"
+    fare_attributes_txt = "fare_attributes.txt"
+    fare_rules_txt = "fare_rules.txt"
+    fare_media_txt = "fare_media.txt"
+    fare_products_txt = "fare_products.txt"
+    fare_leg_rules_txt = "fare_leg_rules.txt"
+    fare_transfer_rules_txt = "fare_transfer_rules.txt"
+    areas_txt = "areas.txt"
+    stop_areas_txt = "stop_areas.txt"
+    shapes_txt = "shapes.txt"
+    frequencies_txt = "frequencies.txt"
+    transfers_txt = "transfers.txt"
+    pathways_txt = "pathways.txt"
+    levels_txt = "levels.txt"
+    translations_txt = "translations.txt"
+    feed_info_txt = "feed_info.txt"
+    attributions_txt = "attributions.txt"
 
 
 class KeyValues(BaseModel):
@@ -122,11 +149,15 @@ class RawFetchedFile(BaseModel):
         return f"{b64url}.json"
 
     @property
+    def table(self) -> str:
+        return self.config.feed_type.value
+
+    @property
     def gcs_key(self) -> str:
         hive_str = "/".join(
             [f"{key}={SERIALIZERS[type(getattr(self, key))](getattr(self, key))}" for key in self.partitions]
         )
-        return f"{self.config.feed_type.value}/{hive_str}/{self.filename}"
+        return f"{self.table}/{hive_str}/{self.filename}"
 
     @validator("ts")
     def parse_ts(cls, v):
@@ -143,34 +174,39 @@ class RawFetchedFile(BaseModel):
 
 
 # TODO: dedupe this with above, and maybe __root__ should be List[FetchedRecord]?
+# this is a dataclass so we can use it as a dictionary key
+@dataclass(eq=True, frozen=True)
 class HourAgg(BaseModel):
     bucket: ClassVar[str] = PARSED_BUCKET
     partitions: ClassVar[List[str]] = ["dt", "hour"]
-    first_file: RawFetchedFile
+    table: Union[FeedType, GtfsScheduleFileType]
+    base64url: str
+    hour: pendulum.DateTime
+
+    @validator("hour")
+    def convert_hour(cls, v) -> pendulum.DateTime:
+        return pendulum.instance(v)
 
     @property
     def dt(self):
-        return self.first_file.dt
-
-    @property
-    def hour(self):
-        return self.first_file.hour
+        return self.hour.date()
 
     @property
     def filename(self):
-        return f"{self.first_file.base64url}.jsonl.gz"
+        return f"{self.base64url}.jsonl.gz"
 
     @property
     def gcs_key(self) -> str:
         hive_str = "/".join(
             [f"{key}={SERIALIZERS[type(getattr(self, key))](getattr(self, key))}" for key in self.partitions]
         )
-        return f"{self.first_file.config.feed_type.value}/{hive_str}/{self.filename}"
+        return f"{self.table}/{hive_str}/{self.filename}"
 
 
 class FetchedRecord(BaseModel):
     file: RawFetchedFile
     record: Dict[str, Any]
+    line_number: Optional[int]
 
 
 # https://github.com/pydantic/pydantic/discussions/2410
