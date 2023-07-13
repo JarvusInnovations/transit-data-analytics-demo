@@ -8,8 +8,9 @@ from typing import Dict, Optional, List, ClassVar, Any, Type, Iterable, Callable
 import pendulum
 import requests
 import typer.colors
+import yaml
 from google.cloud import storage
-from pydantic import BaseModel, HttpUrl, validator, root_validator, Extra
+from pydantic import BaseModel, HttpUrl, validator, root_validator, Extra, parse_obj_as
 
 from fetcher.metrics import (
     COMMON_LABELNAMES,
@@ -288,21 +289,22 @@ missing_feed_types = [feed_type.value for feed_type in FeedType if feed_type not
 assert not missing_feed_types, f"Missing parse configurations for {missing_feed_types}"
 
 if __name__ == "__main__":
-    config = FeedConfig(
-        name="SEPTA GTFS Schedule",
-        url="https://www3.septa.org/developer/google_bus.zip",
-        feed_type="gtfs_schedule",
-    )
-    response = requests.get(config.url)
-    response.raise_for_status()
-    raw = RawFetchedFile(
-        ts=pendulum.now().replace(microsecond=0),
-        config=config,
-        page=[],
-        response_code=response.status_code,
-        response_headers=response.headers,
-        contents=response.content,
-    )
-    client = storage.Client()
-    typer.secho(f"Saving to {raw.bucket}/{raw.gcs_key}", fg=typer.colors.MAGENTA)
-    client.bucket(raw.bucket.removeprefix("gs://")).blob(raw.gcs_key).upload_from_string(raw.json(), client=client)
+    with open("./feeds.yaml") as f:
+        configs = parse_obj_as(List[FeedConfig], yaml.safe_load(f))
+    for config in configs:
+        if config.feed_type == FeedType.gtfs_schedule:
+            response = requests.get(config.url)
+            response.raise_for_status()
+            raw = RawFetchedFile(
+                ts=pendulum.now().replace(microsecond=0),
+                config=config,
+                page=[],
+                response_code=response.status_code,
+                response_headers=response.headers,
+                contents=response.content,
+            )
+            client = storage.Client()
+            typer.secho(f"Saving to {raw.bucket}/{raw.gcs_key}", fg=typer.colors.MAGENTA)
+            client.bucket(raw.bucket.removeprefix("gs://")).blob(raw.gcs_key).upload_from_string(
+                raw.json(), client=client
+            )
