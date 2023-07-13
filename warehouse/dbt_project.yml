@@ -34,6 +34,5 @@ vars:
 # files using the `{{ config(...) }}` macro.
 models:
   transit_data_analytics_demo:
-    # Config indicated by + and applies to all files under models/example/
-    example:
+    staging:
       +materialized: view

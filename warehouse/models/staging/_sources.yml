@@ -1,13 +1,13 @@
 version: 2
 
 sources:
-  - name: gtfs_rt
-    schema: "{% if target.schema == 'prod' -%} external_gtfs_rt {%- else -%} {{ target.schema }}_external_gtfs_rt {%- endif %}"
+  - name: transit_data
+    schema: "{% if target.schema == 'prod' -%} external_transit_data {%- else -%} {{ target.schema }}_external_transit_data {%- endif %}"
     database: transit-data-analytics-demo
     loader: gcloud storage
 
     tables:
-      - name: vehicle_positions
+      - name: gtfs_vehicle_positions
         description: "External table of GTFS RT vehicle positions data; data is stored in GCS as gzipped JSON files"
         external:
           location: "gs://{{ var('external_data_bucket') }}/gtfs_rt__vehicle_positions/*"
@@ -15,16 +15,95 @@ sources:
             format: NEWLINE_DELIMITED_JSON
             hive_partition_uri_prefix: "gs://{{ var('external_data_bucket') }}/gtfs_rt__vehicle_positions/"
             # TODO: BigQuery doesn't recognize this option when creating external table via SQL
-            # we need to figure something out 
+            # we need to figure something out (and apply to all realtime/large data)
             # require_partition_filter: true
           partitions: &partitions
             - name: dt
               data_type: date
             - name: hour
               data_type: timestamp
-
         columns: &columns
           - name: file
             data_type: JSON
           - name: record
             data_type: JSON
+
+      - name: gtfs_trip_updates
+        description: "External table of GTFS RT trip updates data; data is stored in GCS as gzipped JSON files"
+        external:
+          location: "gs://{{ var('external_data_bucket') }}/gtfs_trip_updates/*"
+          options:
+            format: NEWLINE_DELIMITED_JSON
+            hive_partition_uri_prefix: "gs://{{ var('external_data_bucket') }}/gtfs_trip_updates/"
+          partitions: *partitions
+        columns: *columns
+
+      - name: gtfs_service_alerts
+        description: "External table of GTFS RT service alerts data; data is stored in GCS as gzipped JSON files"
+        external:
+          location: "gs://{{ var('external_data_bucket') }}/gtfs_service_alerts/*"
+          options:
+            format: NEWLINE_DELIMITED_JSON
+            hive_partition_uri_prefix: "gs://{{ var('external_data_bucket') }}/gtfs_service_alerts/"
+          partitions: *partitions
+        columns: *columns
+
+      - name: septa__alerts
+        description: "External table of SEPTA alerts data from https://www3.septa.org/#/Real%20Time%20Data/MessageAlert; data is stored in GCS as gzipped JSON files"
+        external:
+          location: "gs://{{ var('external_data_bucket') }}/septa__alerts/*"
+          options:
+            format: NEWLINE_DELIMITED_JSON
+            hive_partition_uri_prefix: "gs://{{ var('external_data_bucket') }}/septa__alerts/"
+          partitions: *partitions
+        columns: *columns
+
+      - name: septa__alerts_without_message
+        description: "External table of SEPTA alerts data from https://www3.septa.org/#/Real%20Time%20Data/NoMessageAlert; data is stored in GCS as gzipped JSON files"
+        external:
+          location: "gs://{{ var('external_data_bucket') }}/septa__alerts_without_message/*"
+          options:
+            format: NEWLINE_DELIMITED_JSON
+            hive_partition_uri_prefix: "gs://{{ var('external_data_bucket') }}/septa__alerts_without_message/"
+          partitions: *partitions
+        columns: *columns
+
+      - name: septa__arrivals
+        description: "External table of SEPTA arrivals data from https://www3.septa.org/#/Real%20Time%20Data/NoMessageAlert; data is stored in GCS as gzipped JSON files"
+        external:
+          location: "gs://{{ var('external_data_bucket') }}/septa__arrivals/*"
+          options:
+            format: NEWLINE_DELIMITED_JSON
+            hive_partition_uri_prefix: "gs://{{ var('external_data_bucket') }}/septa__arrivals/"
+          partitions: *partitions
+        columns: *columns
+
+      - name: septa__bus_detours
+        description: "External table of SEPTA bus detours data from https://www3.septa.org/#/Real%20Time%20Data/BusDetours; data is stored in GCS as gzipped JSON files"
+        external:
+          location: "gs://{{ var('external_data_bucket') }}/septa__bus_detours/*"
+          options:
+            format: NEWLINE_DELIMITED_JSON
+            hive_partition_uri_prefix: "gs://{{ var('external_data_bucket') }}/septa__bus_detours/"
+          partitions: *partitions
+        columns: *columns
+
+      - name: septa__elevator_outages
+        description: "External table of SEPTA elevator outages data from https://www3.septa.org/#/Real%20Time%20Data/ElevatorOutages; data is stored in GCS as gzipped JSON files"
+        external:
+          location: "gs://{{ var('external_data_bucket') }}/septa__elevator_outages/*"
+          options:
+            format: NEWLINE_DELIMITED_JSON
+            hive_partition_uri_prefix: "gs://{{ var('external_data_bucket') }}/septa__elevator_outages/"
+          partitions: *partitions
+        columns: *columns
+
+      - name: septa__train_view
+        description: "External table of SEPTA train view data from https://www3.septa.org/#/Real%20Time%20Data/trainView; data is stored in GCS as gzipped JSON files"
+        external:
+          location: "gs://{{ var('external_data_bucket') }}/septa__train_view/*"
+          options:
+            format: NEWLINE_DELIMITED_JSON
+            hive_partition_uri_prefix: "gs://{{ var('external_data_bucket') }}/septa__train_view/"
+          partitions: *partitions
+        columns: *columns
