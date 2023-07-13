@@ -1,5 +1,9 @@
 # transit-data-analytics-demo
-A demonstration project showcasing modern transit data analytics practices
+A demonstration project showcasing modern transit data analytics practices.
+
+## pre-commit
+
+Before contributing to the warehouse, please run `pre-commit install` in the root directory of the repository to configure pre-commit linting/style checks.
 
 ## Inspecting saved files
 For raw files, we save the contents as a base64-encoded string within a JSON

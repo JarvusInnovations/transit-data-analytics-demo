@@ -1,15 +1,17 @@
-Welcome to your new dbt project!
+This directory contains the [dbt](https://www.getdbt.com/) project for this demonstration project.
 
-### Using the starter project
+## Setup
 
-Try running the following commands:
-- dbt run
-- dbt test
+### Happy path
 
+To run this project for the first time, run the following in this directory:
 
-### Resources:
-- Learn more about dbt [in the docs](https://docs.getdbt.com/docs/introduction)
-- Check out [Discourse](https://discourse.getdbt.com/) for commonly asked questions and answers
-- Join the [chat](https://community.getdbt.com/) on Slack for live discussions and support
-- Find [dbt events](https://events.getdbt.com) near you
-- Check out [the blog](https://blog.getdbt.com/) for the latest news on dbt's development and best practices
+1. `poetry install` to [use Poetry to install](https://python-poetry.org/docs/cli/#install) project dependencies
+2. `poetry run dbt deps` to [install dbt packages](https://docs.getdbt.com/reference/commands/deps)
+3. `poetry run dbt compile` to [confirm that the project compiles]
+
+### Troubleshooting
+
+If any of the above commands do not work, you may need to try the following:
+
+* [Update Poetry](https://python-poetry.org/docs/cli/#self-update) with `poetry self update`
