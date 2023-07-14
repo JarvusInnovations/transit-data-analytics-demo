@@ -12,10 +12,12 @@ import yaml
 from google.cloud import storage  # type: ignore
 from pydantic import BaseModel, HttpUrl, validator, root_validator, Extra, parse_obj_as
 from pydantic.dataclasses import dataclass
+from slugify import slugify
 
 from fetcher.metrics import (
     COMMON_LABELNAMES,
 )
+
 
 RAW_BUCKET = os.environ["RAW_BUCKET"]
 PARSED_BUCKET = os.environ["PARSED_BUCKET"]
@@ -200,7 +202,12 @@ class HourAgg(BaseModel):
         hive_str = "/".join(
             [f"{key}={SERIALIZERS[type(getattr(self, key))](getattr(self, key))}" for key in self.partitions]
         )
-        return f"{self.table}/{hive_str}/{self.filename}"
+        hive_table = (
+            f"gtfs_schedule__{slugify(self.table, separator='_')}"
+            if isinstance(self.table, GtfsScheduleFileType)
+            else self.table
+        )
+        return f"{hive_table}/{hive_str}/{self.filename}"
 
 
 class FetchedRecord(BaseModel):

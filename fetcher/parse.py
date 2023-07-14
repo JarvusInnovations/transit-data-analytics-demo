@@ -55,6 +55,9 @@ def file_to_records(file: RawFetchedFile) -> Iterable[Tuple[Union[FeedType, Gtfs
                     # https://stackoverflow.com/a/60918920
                     with io.TextIOWrapper(zipf.open(zipf_file), encoding="utf-8") as f:
                         reader = csv.DictReader(f)
+                        # TODO: this will throw an error if attempting to parse a file we don't enumerate
+                        #  we probably want to just throw a warning/generate an outcome rather than stop
+                        #  further processing
                         # looking up the enum by value not name
                         yield GtfsScheduleFileType(zipf_file), parse_obj_as(ListOfDicts, list(reader)).records
         elif pydantic_type == GtfsRealtime:
