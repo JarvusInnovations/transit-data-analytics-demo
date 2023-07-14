@@ -53,6 +53,7 @@ def parse_jarvus_config(c: Context):
 def hdiff(c, name=None):
     for deployment in c.config.jarvus_config.deployments:
         if not name or name == deployment.name:
+            c.run(f"helm dependency build ../{deployment.chart}")
             c.run(
                 f"helm diff upgrade {deployment.name} ../{deployment.chart} {deployment.namespace_cli} {deployment.values_cli}"
             )
