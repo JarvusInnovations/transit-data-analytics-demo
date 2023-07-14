@@ -1,0 +1,6 @@
+run:
+  echo: false
+jarvus:
+  deployments:
+    - name:
+      helm_chart:
