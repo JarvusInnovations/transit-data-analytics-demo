@@ -1,11 +1,13 @@
 run:
   echo_format: "{command}"
+  echo: true
 jarvus:
   deployments:
-    - name: cert-manager
-      namespace: cert-manager
-      driver: helm
-      chart: kubernetes/charts/cert-manager
+#    - name: cert-manager
+#      namespace: cert-manager
+#      driver: helm
+#      chart: kubernetes/charts/cert-manager
+#      dependency: false
     - name: grafana
       namespace: grafana
       driver: helm

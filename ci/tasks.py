@@ -21,6 +21,7 @@ class Deployment(BaseModel):
 
     # helm specific
     chart: Optional[Path] = None
+    dependency: bool = True
     values: List[Path] = []
 
     # kustomize specific
@@ -53,7 +54,8 @@ def parse_jarvus_config(c: Context):
 def hdiff(c, name=None):
     for deployment in c.config.jarvus_config.deployments:
         if not name or name == deployment.name:
-            c.run(f"helm dependency build ../{deployment.chart}")
+            if deployment.dependency:
+                c.run(f"helm dependency build ../{deployment.chart}")
             c.run(
                 f"helm diff upgrade {deployment.name} ../{deployment.chart} {deployment.namespace_cli} {deployment.values_cli} --allow-unreleased"
             )
@@ -61,16 +63,12 @@ def hdiff(c, name=None):
 
 @task(helm_plugins, parse_jarvus_config)
 def happly(c, name=None):
+    deployment: Deployment
     for deployment in c.config.jarvus_config.deployments:
         if not name or name == deployment.name:
-            c.run(f"helm dependency build ../{deployment.chart}")
-
-            res: Result = c.run(f"kubectl get ns {deployment.namespace}", warn=True)
-
-            if res.exited:
-                assert f'namespaces "{deployment.namespace}" not found' in res.stderr
-                c.run(f"kubectl create ns {deployment.namespace}")
+            if deployment.dependency:
+                c.run(f"helm dependency build ../{deployment.chart}")
 
             c.run(
-                f"helm upgrade --install {deployment.name} ../{deployment.chart} {deployment.namespace_cli} {deployment.values_cli}"
+                f"helm upgrade --install --create-namespace  {deployment.name} ../{deployment.chart} {deployment.namespace_cli} {deployment.values_cli}"
             )
