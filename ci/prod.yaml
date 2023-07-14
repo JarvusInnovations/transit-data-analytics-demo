@@ -1,6 +1,10 @@
 run:
-  echo: false
+  echo_format: "{command}"
+  echo: true
+  hide: true
 jarvus:
   deployments:
-    - name:
-      helm_chart:
+    - name: prometheus
+      namespace: prometheus
+      driver: helm
+      chart: kubernetes/charts/prometheus
