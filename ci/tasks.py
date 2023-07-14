@@ -55,7 +55,7 @@ def hdiff(c, name=None):
         if not name or name == deployment.name:
             c.run(f"helm dependency build ../{deployment.chart}")
             c.run(
-                f"helm diff upgrade {deployment.name} ../{deployment.chart} {deployment.namespace_cli} {deployment.values_cli}"
+                f"helm diff upgrade {deployment.name} ../{deployment.chart} {deployment.namespace_cli} {deployment.values_cli} --allow-unreleased"
             )
 
 
