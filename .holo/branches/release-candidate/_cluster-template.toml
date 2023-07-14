@@ -1,4 +1,0 @@
-[holomapping]
-holosource = "=>k8s-common"
-files = "**"
-before = "*"
