@@ -44,22 +44,22 @@
   feed_type: gtfs_schedule
 - name: SEPTA Bus Trip Updates
   url: https://www3.septa.org/gtfsrt/septa-pa-us/Trip/rtTripUpdates.pb
-  feed_type: gtfs_trip_updates
+  feed_type: gtfs_rt__trip_updates
 - name: SEPTA Bus Vehicle Positions
   url: https://www3.septa.org/gtfsrt/septa-pa-us/Vehicle/rtVehiclePosition.pb
-  feed_type: gtfs_vehicle_positions
+  feed_type: gtfs_rt__vehicle_positions
 - name: SEPTA Bus Service Alerts
   url: https://www3.septa.org/gtfsrt/septa-pa-us/Service/rtServiceAlerts.pb
-  feed_type: gtfs_service_alerts
+  feed_type: gtfs_rt__service_alerts
 - name: SEPTA Rail Trip Updates
   url: https://www3.septa.org/gtfsrt/septarail-pa-us/Trip/rtTripUpdates.pb
-  feed_type: gtfs_trip_updates
+  feed_type: gtfs_rt__trip_updates
 - name: SEPTA Rail Vehicle Positions
   url: https://www3.septa.org/gtfsrt/septarail-pa-us/Vehicle/rtVehiclePosition.pb
-  feed_type: gtfs_vehicle_positions
+  feed_type: gtfs_rt__vehicle_positions
 - name: SEPTA Rail Service Alerts
   url: https://www3.septa.org/gtfsrt/septarail-pa-us/Service/rtServiceAlerts.pb
-  feed_type: gtfs_service_alerts
+  feed_type: gtfs_rt__service_alerts
 
 # Pittsburgh GTFS bus https://truetime.portauthority.org/gtfsrt-bus/
 # Pittsburgh GTFS train https://truetime.portauthority.org/gtfsrt-train/
@@ -68,19 +68,19 @@
   feed_type: gtfs_schedule
 - name: Pittsburgh Train Vehicle Positions
   url: https://truetime.portauthority.org/gtfsrt-train/vehicles
-  feed_type: gtfs_vehicle_positions
+  feed_type: gtfs_rt__vehicle_positions
 - name: Pittsburgh Train Trip Updates
   url: https://truetime.portauthority.org/gtfsrt-train/trips
-  feed_type: gtfs_trip_updates
+  feed_type: gtfs_rt__trip_updates
 - name: Pittsburgh Train Service Alerts
   url: https://truetime.portauthority.org/gtfsrt-train/alerts
-  feed_type: gtfs_service_alerts
+  feed_type: gtfs_rt__service_alerts
 - name: Pittsburgh Bus Vehicle Positions
   url: https://truetime.portauthority.org/gtfsrt-bus/vehicles
-  feed_type: gtfs_vehicle_positions
+  feed_type: gtfs_rt__vehicle_positions
 - name: Pittsburgh Bus Trip Updates
   url: https://truetime.portauthority.org/gtfsrt-bus/trips
-  feed_type: gtfs_trip_updates
+  feed_type: gtfs_rt__trip_updates
 - name: Pittsburgh Bus Service Alerts
   url: https://truetime.portauthority.org/gtfsrt-bus/alerts
-  feed_type: gtfs_service_alerts
+  feed_type: gtfs_rt__service_alerts

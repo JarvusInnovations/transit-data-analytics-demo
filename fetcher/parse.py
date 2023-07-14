@@ -166,7 +166,7 @@ def main(
     """
     Parse a collect on of raw data files and save in hourly-partitioned JSONL files named by base64-encoded URL.
 
-    E.g. gs://test-jarvus-transit-data-demo-parsed/gtfs_vehicle_positions/dt=2023-07-07/hour=2023-07-07T01:00:00+00:00/aHR0cHM6Ly90cnVldGltZS5wb3J0YXV0aG9yaXR5Lm9yZy9ndGZzcnQtdHJhaW4vdmVoaWNsZXM=.jsonl
+    E.g. gs://test-jarvus-transit-data-demo-parsed/gtfs_rt__vehicle_positions/dt=2023-07-07/hour=2023-07-07T01:00:00+00:00/aHR0cHM6Ly90cnVldGltZS5wb3J0YXV0aG9yaXR5Lm9yZy9ndGZzcnQtdHJhaW4vdmVoaWNsZXM=.jsonl
     """
     if table and exclude:
         raise ValueError("cannot specify both table and exclude")

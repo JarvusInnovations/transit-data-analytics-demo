@@ -30,9 +30,9 @@ SERIALIZERS: Dict[Type, Callable] = {
 class FeedType(StrEnum):
     # gtfs/other standards
     gtfs_schedule = "gtfs_schedule"
-    gtfs_vehicle_positions = "gtfs_vehicle_positions"
-    gtfs_trip_updates = "gtfs_trip_updates"
-    gtfs_service_alerts = "gtfs_service_alerts"
+    gtfs_rt__vehicle_positions = "gtfs_rt__vehicle_positions"
+    gtfs_rt__trip_updates = "gtfs_rt__trip_updates"
+    gtfs_rt__service_alerts = "gtfs_rt__service_alerts"
     # agency/vendor-specific
     septa__arrivals = "septa__arrivals"
     septa__train_view = "septa__train_view"
@@ -224,9 +224,9 @@ class FeedContents(BaseModel, abc.ABC):
 
 class GtfsRealtime(FeedContents):
     feed_types: ClassVar[List[FeedType]] = [
-        FeedType.gtfs_vehicle_positions,
-        FeedType.gtfs_trip_updates,
-        FeedType.gtfs_service_alerts,
+        FeedType.gtfs_rt__vehicle_positions,
+        FeedType.gtfs_rt__trip_updates,
+        FeedType.gtfs_rt__service_alerts,
     ]
     header: Dict
     entity: List[Dict] = []

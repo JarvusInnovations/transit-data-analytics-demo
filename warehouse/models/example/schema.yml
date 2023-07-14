@@ -9,10 +9,10 @@ sources:
       - name: vehicle_positions
         description: "External table of Snowplow events, stored as CSV files in Cloud Storage"
         external:
-          location: "gs://{{ var('external_data_bucket') }}/gtfs_vehicle_positions/*"
+          location: "gs://{{ var('external_data_bucket') }}/gtfs_rt__vehicle_positions/*"
           options:
             format: NEWLINE_DELIMITED_JSON
-            hive_partition_uri_prefix: "gs://{{ var('external_data_bucket') }}/gtfs_vehicle_positions/"
+            hive_partition_uri_prefix: "gs://{{ var('external_data_bucket') }}/gtfs_rt__vehicle_positions/"
           partitions:
             - name: dt
               data_type: date
