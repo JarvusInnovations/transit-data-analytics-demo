@@ -2,7 +2,29 @@ run:
   echo_format: "{command}"
 jarvus:
   deployments:
+    - name: cert-manager
+      namespace: cert-manager
+      driver: helm
+      chart: kubernetes/charts/cert-manager
+    - name: grafana
+      namespace: grafana
+      driver: helm
+      chart: kubernetes/charts/grafana
+      values:
+        - kubernetes/values/prod-grafana.yml
+    - name: ingress-nginx
+      namespace: ingress-nginx
+      driver: helm
+      chart: kubernetes/charts/ingress-nginx
+    - name: loki
+      namespace: loki
+      driver: helm
+      chart: kubernetes/charts/loki
     - name: prometheus
       namespace: prometheus
       driver: helm
       chart: kubernetes/charts/prometheus
+    - name: promtail
+      namespace: promtail
+      driver: helm
+      chart: kubernetes/charts/promtail

@@ -9,6 +9,7 @@ readme = "README.md"
 python = "^3.11"
 pydantic = "^2.0.2"
 invoke = "^2.2.0"
+gitpython = "^3.1.32"
 
 
 [build-system]
