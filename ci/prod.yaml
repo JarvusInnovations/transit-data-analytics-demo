@@ -1,7 +1,5 @@
 run:
   echo_format: "{command}"
-  echo: true
-  hide: true
 jarvus:
   deployments:
     - name: prometheus

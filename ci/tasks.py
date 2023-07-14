@@ -2,7 +2,7 @@ from enum import StrEnum
 from pathlib import Path
 from typing import List, Optional
 
-from invoke import task, Context
+from invoke import task, Context, UnexpectedExit
 from pydantic import BaseModel, parse_obj_as
 
 
@@ -50,17 +50,12 @@ def hdiff(c):
 @task(parse_jarvus_config)
 def happly(c):
     for deployment in c.config.jarvus_config.deployments:
-        cmd_str = " ".join(
-            map(
-                str,
-                [
-                    "helm",
-                    "upgrade",
-                    deployment.name,
-                    deployment.chart,
-                    deployment.namespace_cli,
-                    deployment.values_cli,
-                ],
-            )
-        )
-        c.run(cmd_str)
+        c.run(f"helm dependency build ../{deployment.chart}")
+
+        try:
+            c.run(f"kubectl get ns {deployment.namespace}")
+            # c.run(f"helm upgrade {deployment.name} ../{deployment.chart} {deployment.namespace_cli} {deployment.values_cli}")
+        except UnexpectedExit as e:
+            assert f'namespaces "{deployment.namespace}" not found' in e
+            c.run(f"kubectl create ns {deployment.namespace}")
+            # c.run(f"helm install {deployment.name} ../{deployment.chart} {deployment.namespace_cli} {deployment.values_cli}")
