@@ -1,4 +1,4 @@
 [holomapping]
 holosource = "cluster-template=>k8s-blueprint"
-root = "ingress-nginx/helm-chart"
+root = "ingress-nginx"
 files = "**"

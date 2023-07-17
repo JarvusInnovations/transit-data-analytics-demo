@@ -1,4 +1,4 @@
 [holomapping]
 holosource = "cluster-template=>k8s-blueprint"
-root = "cert-manager/helm-chart"
+root = "cert-manager"
 files = "**"
