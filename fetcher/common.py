@@ -193,7 +193,8 @@ class HourAgg(BaseModel):
 
     @validator("hour")
     def convert_hour(cls, v) -> pendulum.DateTime:
-        return pendulum.instance(v)
+        assert isinstance(v, datetime.datetime)
+        return pendulum.instance(v).in_tz("UTC")
 
     @property
     def dt(self):
