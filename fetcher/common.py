@@ -265,11 +265,16 @@ class SeptaArrivals(FeedContents):
     feed_types: ClassVar[List[FeedType]] = [FeedType.septa__arrivals]
     __root__: Dict[str, List[Dict[str, List[Dict]]]]
 
+    @validator("__root__")
+    def direction_has_one_entry(cls, v):
+        for key, directions in v.items():
+            for direction_dict in directions:
+                assert len(direction_dict) == 1
+
     @property
     def records(self) -> Iterable[Dict]:
         for key, directions in self.__root__.items():
             for direction_dict in directions:
-                assert len(direction_dict) == 1
                 for direction, updates in direction_dict.items():
                     for update in updates:
                         yield dict(

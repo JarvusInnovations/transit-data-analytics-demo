@@ -159,7 +159,7 @@ def main(
             formats=["%Y-%m-%d"],
         ),
     ] = datetime.date.today(),  # type: ignore[assignment]
-    table: Annotated[Optional[List[FeedType]], typer.Option()] = None,
+    feed_type: Annotated[Optional[List[FeedType]], typer.Option()] = None,
     exclude: Annotated[Optional[List[FeedType]], typer.Option()] = None,
     bucket: str = RawFetchedFile.bucket,
     base64url: Optional[str] = None,
@@ -171,23 +171,23 @@ def main(
 
     E.g. gs://test-jarvus-transit-data-demo-parsed/gtfs_rt__vehicle_positions/dt=2023-07-07/hour=2023-07-07T01:00:00+00:00/aHR0cHM6Ly90cnVldGltZS5wb3J0YXV0aG9yaXR5Lm9yZy9ndGZzcnQtdHJhaW4vdmVoaWNsZXM=.jsonl
     """
-    if table and exclude:
+    if feed_type and exclude:
         raise ValueError("cannot specify both table and exclude")
 
     client = storage.Client()
 
-    if table:
-        tables = table
+    if feed_type:
+        feed_types = feed_type
     else:
         with open("./feeds.yaml") as f:
             configs = parse_obj_as(List[FeedConfig], yaml.safe_load(f))
         feed_types = set(config.feed_type for config in configs)
         if exclude:
             feed_types = feed_types - set(exclude)
-        tables = list(feed_types)
+        feed_types = list(feed_types)
 
-    for tbl in tables:
-        prefix = f"{tbl.value}/dt={SERIALIZERS[pendulum.Date](pendulum.instance(dt).date())}/"
+    for feed_type in feed_types:
+        prefix = f"{feed_type.value}/dt={SERIALIZERS[pendulum.Date](pendulum.instance(dt).date())}/"
         typer.secho(f"Listing items in {bucket}/{prefix}...", fg=typer.colors.MAGENTA)
         blobs: List[storage.Blob] = list(client.list_blobs(bucket.removeprefix("gs://"), prefix=prefix))
 
@@ -204,7 +204,7 @@ def main(
 
         typer.secho(f"Found {len(blobs)=} grouped into {len(aggs)=}.", fg=typer.colors.MAGENTA)
 
-        pbar = tqdm(total=len(aggs), leave=False, desc=tbl)
+        pbar = tqdm(total=len(aggs), leave=False, desc=feed_type)
         with ProcessPoolExecutor(max_workers=workers) as pool:
             futures = {
                 pool.submit(
