@@ -2,7 +2,7 @@ from enum import StrEnum
 from pathlib import Path
 from typing import List, Optional
 
-from invoke import task, Context, Result
+from invoke import task, Context
 from pydantic import BaseModel, parse_obj_as
 
 
@@ -51,24 +51,34 @@ def parse_jarvus_config(c: Context):
 
 
 @task(helm_plugins, parse_jarvus_config)
-def hdiff(c, name=None):
+def diff(c, name=None):
     for deployment in c.config.jarvus_config.deployments:
         if not name or name == deployment.name:
-            if deployment.dependency:
-                c.run(f"helm dependency build ../{deployment.chart}")
-            c.run(
-                f"helm diff upgrade {deployment.name} ../{deployment.chart} {deployment.namespace_cli} {deployment.values_cli} --allow-unreleased"
-            )
+            if deployment.driver == Driver.helm:
+                if deployment.dependency:
+                    c.run(f"helm dependency build ../{deployment.chart}")
+                c.run(
+                    f"helm diff upgrade {deployment.name} ../{deployment.chart} {deployment.namespace_cli} {deployment.values_cli} --allow-unreleased"
+                )
+            elif deployment.driver == Driver.kustomize:
+                pass
+            else:
+                raise RuntimeError
 
 
 @task(helm_plugins, parse_jarvus_config)
-def happly(c, name=None):
+def apply(c, name=None):
     deployment: Deployment
     for deployment in c.config.jarvus_config.deployments:
         if not name or name == deployment.name:
-            if deployment.dependency:
-                c.run(f"helm dependency build ../{deployment.chart}")
+            if deployment.driver == Driver.helm:
+                if deployment.dependency:
+                    c.run(f"helm dependency build ../{deployment.chart}")
 
-            c.run(
-                f"helm upgrade --install --create-namespace  {deployment.name} ../{deployment.chart} {deployment.namespace_cli} {deployment.values_cli}"
-            )
+                c.run(
+                    f"helm upgrade --install --create-namespace  {deployment.name} ../{deployment.chart} {deployment.namespace_cli} {deployment.values_cli}"
+                )
+            elif deployment.driver == Driver.kustomize:
+                c.run(f"kubectl apply -k ../{deployment.path}")
+            else:
+                raise RuntimeError

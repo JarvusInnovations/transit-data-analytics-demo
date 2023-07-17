@@ -3,6 +3,13 @@ run:
   echo: true
 jarvus:
   deployments:
+    # applications
+    - name: fetcher
+      namespace: fetcher
+      driver: kustomize
+      path: kubernetes/overlays/fetcher-prod
+
+    # base services
     - name: cert-manager
       namespace: cert-manager
       driver: helm
