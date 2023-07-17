@@ -270,6 +270,7 @@ class SeptaArrivals(FeedContents):
         for key, directions in v.items():
             for direction_dict in directions:
                 assert len(direction_dict) == 1
+        return v
 
     @property
     def records(self) -> Iterable[Dict]:
