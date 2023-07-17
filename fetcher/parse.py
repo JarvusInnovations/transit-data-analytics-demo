@@ -181,13 +181,13 @@ def main(
     else:
         with open("./feeds.yaml") as f:
             configs = parse_obj_as(List[FeedConfig], yaml.safe_load(f))
-        feed_types = set(config.feed_type for config in configs)
+        feed_types_set = set(config.feed_type for config in configs)
         if exclude:
-            feed_types = feed_types - set(exclude)
-        feed_types = list(feed_types)
+            feed_types_set = feed_types_set - set(exclude)
+        feed_types = list(feed_types_set)
 
-    for feed_type in feed_types:
-        prefix = f"{feed_type.value}/dt={SERIALIZERS[pendulum.Date](pendulum.instance(dt).date())}/"
+    for ft in feed_types:
+        prefix = f"{ft.value}/dt={SERIALIZERS[pendulum.Date](pendulum.instance(dt).date())}/"
         typer.secho(f"Listing items in {bucket}/{prefix}...", fg=typer.colors.MAGENTA)
         blobs: List[storage.Blob] = list(client.list_blobs(bucket.removeprefix("gs://"), prefix=prefix))
 
@@ -204,7 +204,7 @@ def main(
 
         typer.secho(f"Found {len(blobs)=} grouped into {len(aggs)=}.", fg=typer.colors.MAGENTA)
 
-        pbar = tqdm(total=len(aggs), leave=False, desc=feed_type)
+        pbar = tqdm(total=len(aggs), leave=False, desc=ft)
         with ProcessPoolExecutor(max_workers=workers) as pool:
             futures = {
                 pool.submit(
