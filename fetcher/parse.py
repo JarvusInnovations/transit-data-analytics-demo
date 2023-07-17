@@ -1,14 +1,17 @@
 """
 Parses fetched data and groups hourly to reduce the number of files for external tables.
 """
+import csv
 import datetime
 import gzip
+import io
 import json
 import traceback
+import zipfile
 from collections import defaultdict, namedtuple
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from io import BytesIO
-from typing import Optional, List, Annotated
+from typing import Optional, List, Annotated, DefaultDict, Iterable, Tuple, Union, Dict
 
 import humanize
 import pendulum
@@ -29,7 +32,8 @@ from fetcher.common import (
     FeedConfig,
     FEED_TYPES,
     GtfsRealtime,
-    FeedContents,
+    GtfsScheduleFileType,
+    ListOfDicts,
 )
 
 HourKey = namedtuple("HourKey", ["hour", "base64url"])
@@ -42,56 +46,36 @@ def hour_key(blob: storage.Blob) -> HourKey:
     return HourKey(hour, base64url)
 
 
-def handle_hour(
-    key: HourKey,
-    blobs: List[storage.Blob],
-    pbar: Optional[tqdm] = None,
-    timeout: int = 60,
-) -> int:
-    if pbar:
-        pbar.write(f"Handling {len(blobs)=} for {key}")
-    client = storage.Client()
-    first_file = None
-    records: List[FetchedRecord] = []
-
-    # we could do this streaming, but data should be small enough
-    for blob in blobs:
-        bio = BytesIO()
-        client.download_blob_to_file(blob, file_obj=bio)
-        bio.seek(0)
-        file = RawFetchedFile(**json.load(bio))
-
-        if not first_file:
-            first_file = file
-
-        pydantic_type = FEED_TYPES[file.config.feed_type]
-        parsed_response: FeedContents
-        try:
-            if pydantic_type == GtfsRealtime:
-                feed = gtfs_realtime_pb2.FeedMessage()
-                feed.ParseFromString(file.contents)
-                parsed_response = GtfsRealtime(**MessageToDict(feed))
-            else:
-                parsed_response = parse_obj_as(pydantic_type, json.loads(file.contents))
-        except ValidationError:
-            msg = f"Validation error occurred on gs://{blob.bucket.name}/{blob.name}"
-            if pbar:
-                pbar.write(msg)
-            else:
-                typer.secho(msg, fg=typer.colors.RED)
-            raise
-        if parsed_response.records:
-            records.extend([FetchedRecord(file=file, record=record) for record in parsed_response.records])
+def file_to_records(file: RawFetchedFile) -> Iterable[Tuple[Union[FeedType, GtfsScheduleFileType], Iterable[Dict]]]:
+    pydantic_type = FEED_TYPES[file.config.feed_type]
+    try:
+        if file.config.feed_type == FeedType.gtfs_schedule:
+            with zipfile.ZipFile(BytesIO(file.contents)) as zipf:
+                for zipf_file in zipf.namelist():
+                    # https://stackoverflow.com/a/60918920
+                    with io.TextIOWrapper(zipf.open(zipf_file), encoding="utf-8") as f:
+                        reader = csv.DictReader(f)
+                        # TODO: this will throw an error if attempting to parse a file we don't enumerate
+                        #  we probably want to just throw a warning/generate an outcome rather than stop
+                        #  further processing
+                        # looking up the enum by value not name
+                        yield GtfsScheduleFileType(zipf_file), parse_obj_as(ListOfDicts, list(reader)).records
+        elif pydantic_type == GtfsRealtime:
+            feed = gtfs_realtime_pb2.FeedMessage()
+            feed.ParseFromString(file.contents)
+            yield file.config.feed_type, GtfsRealtime(**MessageToDict(feed)).records
         else:
-            msg = f"WARNING: no records found for {blob.path}"
-            if pbar:
-                pbar.write(msg)
-            else:
-                typer.secho(msg, fg=typer.colors.YELLOW)
+            yield file.config.feed_type, parse_obj_as(pydantic_type, json.loads(file.contents)).records
+    except ValidationError:
+        typer.secho(f"Validation error occurred on {file.bucket}/{file.gcs_key}", fg=typer.colors.RED)
+        raise
 
-    agg = HourAgg(first_file=first_file)
+
+def save_hour_agg(
+    agg: HourAgg, records: List[FetchedRecord], pbar=None, client: Optional[storage.Client] = None, timeout: int = 60
+) -> int:
     # TODO: add asserts to check all same hour/url/etc.
-
+    client = client or storage.Client()
     contents = gzip.compress(
         "\n".join([record.json(exclude={"file": {"contents"}}) for record in records]).encode("utf-8")
     )
@@ -114,12 +98,58 @@ def handle_hour(
         else:
             typer.secho(msg)
     else:
-        msg = f"WARNING: no records found for {key}"
+        msg = f"WARNING: no records found for aggregation {agg}"
         if pbar:
             pbar.write(msg)
         else:
             typer.secho(msg, fg=typer.colors.YELLOW)
     return len(contents)
+
+
+def handle_hour(
+    key: HourKey,
+    blobs: List[storage.Blob],
+    pbar: Optional[tqdm] = None,
+    timeout: int = 60,
+) -> int:
+    def write(*args, fg=None, **kwargs):
+        if pbar:
+            pbar.write(*args, **kwargs)
+        else:
+            typer.secho(*args, **kwargs, fg=fg)
+
+    write(f"Handling {len(blobs)=} for {key}")
+    client = storage.Client()
+    aggs: DefaultDict[Union[FeedType, GtfsScheduleFileType], List[FetchedRecord]] = defaultdict(list)
+
+    # we could do this streaming, but data should be small enough
+    for blob in blobs:
+        bio = BytesIO()
+        client.download_blob_to_file(blob, file_obj=bio)
+        bio.seek(0)
+        file = RawFetchedFile(**json.load(bio))
+
+        for feed_type, parsed_records in file_to_records(file):
+            if parsed_records:
+                aggs[feed_type].extend(
+                    [
+                        FetchedRecord(file=file, line_number=idx, record=record)
+                        for idx, record in enumerate(parsed_records)
+                    ]
+                )
+            else:
+                write(f"WARNING: no records found for {feed_type} {blob.self_link}", fg=typer.colors.YELLOW)
+
+    written = 0
+    for feed_type, records in aggs.items():
+        written += save_hour_agg(
+            agg=HourAgg(
+                table=feed_type,
+                **key._asdict(),
+            ),
+            records=records,
+        )
+    return written
 
 
 def main(
@@ -128,7 +158,7 @@ def main(
         typer.Argument(
             formats=["%Y-%m-%d"],
         ),
-    ] = datetime.date.today(),
+    ] = datetime.date.today(),  # type: ignore[assignment]
     table: Annotated[Optional[List[FeedType]], typer.Option()] = None,
     exclude: Annotated[Optional[List[FeedType]], typer.Option()] = None,
     bucket: str = RawFetchedFile.bucket,
@@ -139,7 +169,7 @@ def main(
     """
     Parse a collect on of raw data files and save in hourly-partitioned JSONL files named by base64-encoded URL.
 
-    E.g. gs://test-jarvus-transit-data-demo-parsed/gtfs_vehicle_positions/dt=2023-07-07/hour=2023-07-07T01:00:00+00:00/aHR0cHM6Ly90cnVldGltZS5wb3J0YXV0aG9yaXR5Lm9yZy9ndGZzcnQtdHJhaW4vdmVoaWNsZXM=.jsonl
+    E.g. gs://test-jarvus-transit-data-demo-parsed/gtfs_rt__vehicle_positions/dt=2023-07-07/hour=2023-07-07T01:00:00+00:00/aHR0cHM6Ly90cnVldGltZS5wb3J0YXV0aG9yaXR5Lm9yZy9ndGZzcnQtdHJhaW4vdmVoaWNsZXM=.jsonl
     """
     if table and exclude:
         raise ValueError("cannot specify both table and exclude")
@@ -151,7 +181,10 @@ def main(
     else:
         with open("./feeds.yaml") as f:
             configs = parse_obj_as(List[FeedConfig], yaml.safe_load(f))
-        tables = list(set(config.feed_type for config in configs) - set(exclude))
+        feed_types = set(config.feed_type for config in configs)
+        if exclude:
+            feed_types = feed_types - set(exclude)
+        tables = list(feed_types)
 
     for tbl in tables:
         prefix = f"{tbl.value}/dt={SERIALIZERS[pendulum.Date](pendulum.instance(dt).date())}/"

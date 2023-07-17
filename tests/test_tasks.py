@@ -25,7 +25,7 @@ def test_fetched_raw_file_serializes():
         ts=pendulum.now(),
         config=FeedConfig(
             name="whatever",
-            feed_type=FeedType.gtfs_vehicle_positions,
+            feed_type=FeedType.gtfs_rt__vehicle_positions,
             url="https://whatever.com",
         ),
         response_code=200,

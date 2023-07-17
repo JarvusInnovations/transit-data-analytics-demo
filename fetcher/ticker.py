@@ -57,9 +57,9 @@ def main(dry: bool = False):
         seconds=0,
         dry=dry,
         feed_types=[
-            FeedType.gtfs_vehicle_positions,
-            FeedType.gtfs_trip_updates,
-            FeedType.gtfs_service_alerts,
+            FeedType.gtfs_rt__vehicle_positions,
+            FeedType.gtfs_rt__trip_updates,
+            FeedType.gtfs_rt__service_alerts,
             FeedType.septa__arrivals,
             FeedType.septa__train_view,
             FeedType.septa__transit_view_all,

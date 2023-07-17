@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "transit-data-analytics-demo"
-version = "23.7.7"
+version = "2023.7.14"
 description = ""
 authors = ["Andrew Vaccaro <atvaccaro@gmail.com>"]
 readme = "README.md"
@@ -23,6 +23,7 @@ humanize = "^4.7.0"
 python-dotenv = "^1.0.0"
 gtfs-realtime-bindings = "^1.0.0"
 tqdm = "^4.65.0"
+python-slugify = "^8.0.1"
 
 
 [tool.poetry.group.dev.dependencies]

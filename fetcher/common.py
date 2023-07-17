@@ -7,11 +7,17 @@ from typing import Dict, Optional, List, ClassVar, Any, Type, Iterable, Callable
 
 import pendulum
 import requests
-from pydantic import BaseModel, HttpUrl, validator, root_validator, Extra
+import typer.colors
+import yaml
+from google.cloud import storage  # type: ignore
+from pydantic import BaseModel, HttpUrl, validator, root_validator, Extra, parse_obj_as
+from pydantic.dataclasses import dataclass
+from slugify import slugify
 
 from fetcher.metrics import (
     COMMON_LABELNAMES,
 )
+
 
 RAW_BUCKET = os.environ["RAW_BUCKET"]
 PARSED_BUCKET = os.environ["PARSED_BUCKET"]
@@ -26,9 +32,9 @@ SERIALIZERS: Dict[Type, Callable] = {
 class FeedType(StrEnum):
     # gtfs/other standards
     gtfs_schedule = "gtfs_schedule"
-    gtfs_vehicle_positions = "gtfs_vehicle_positions"
-    gtfs_trip_updates = "gtfs_trip_updates"
-    gtfs_service_alerts = "gtfs_service_alerts"
+    gtfs_rt__vehicle_positions = "gtfs_rt__vehicle_positions"
+    gtfs_rt__trip_updates = "gtfs_rt__trip_updates"
+    gtfs_rt__service_alerts = "gtfs_rt__service_alerts"
     # agency/vendor-specific
     septa__arrivals = "septa__arrivals"
     septa__train_view = "septa__train_view"
@@ -37,6 +43,32 @@ class FeedType(StrEnum):
     septa__alerts_without_message = "septa__alerts_without_message"
     septa__alerts = "septa__alerts"
     septa__elevator_outages = "septa__elevator_outages"
+
+
+class GtfsScheduleFileType(StrEnum):
+    agency_txt = "agency.txt"
+    stops_txt = "stops.txt"
+    routes_txt = "routes.txt"
+    trips_txt = "trips.txt"
+    stop_times_txt = "stop_times.txt"
+    calendar_txt = "calendar.txt"
+    calendar_dates_txt = "calendar_dates.txt"
+    fare_attributes_txt = "fare_attributes.txt"
+    fare_rules_txt = "fare_rules.txt"
+    fare_media_txt = "fare_media.txt"
+    fare_products_txt = "fare_products.txt"
+    fare_leg_rules_txt = "fare_leg_rules.txt"
+    fare_transfer_rules_txt = "fare_transfer_rules.txt"
+    areas_txt = "areas.txt"
+    stop_areas_txt = "stop_areas.txt"
+    shapes_txt = "shapes.txt"
+    frequencies_txt = "frequencies.txt"
+    transfers_txt = "transfers.txt"
+    pathways_txt = "pathways.txt"
+    levels_txt = "levels.txt"
+    translations_txt = "translations.txt"
+    feed_info_txt = "feed_info.txt"
+    attributions_txt = "attributions.txt"
 
 
 class KeyValues(BaseModel):
@@ -119,11 +151,15 @@ class RawFetchedFile(BaseModel):
         return f"{b64url}.json"
 
     @property
+    def table(self) -> str:
+        return self.config.feed_type.value
+
+    @property
     def gcs_key(self) -> str:
         hive_str = "/".join(
             [f"{key}={SERIALIZERS[type(getattr(self, key))](getattr(self, key))}" for key in self.partitions]
         )
-        return f"{self.config.feed_type.value}/{hive_str}/{self.filename}"
+        return f"{self.table}/{hive_str}/{self.filename}"
 
     @validator("ts")
     def parse_ts(cls, v):
@@ -140,34 +176,44 @@ class RawFetchedFile(BaseModel):
 
 
 # TODO: dedupe this with above, and maybe __root__ should be List[FetchedRecord]?
+# this is a dataclass so we can use it as a dictionary key
+@dataclass(eq=True, frozen=True)
 class HourAgg(BaseModel):
     bucket: ClassVar[str] = PARSED_BUCKET
     partitions: ClassVar[List[str]] = ["dt", "hour"]
-    first_file: RawFetchedFile
+    table: Union[FeedType, GtfsScheduleFileType]
+    base64url: str
+    hour: pendulum.DateTime
+
+    @validator("hour")
+    def convert_hour(cls, v) -> pendulum.DateTime:
+        return pendulum.instance(v)
 
     @property
     def dt(self):
-        return self.first_file.dt
-
-    @property
-    def hour(self):
-        return self.first_file.hour
+        return self.hour.date()
 
     @property
     def filename(self):
-        return f"{self.first_file.base64url}.jsonl.gz"
+        return f"{self.base64url}.jsonl.gz"
 
     @property
     def gcs_key(self) -> str:
         hive_str = "/".join(
             [f"{key}={SERIALIZERS[type(getattr(self, key))](getattr(self, key))}" for key in self.partitions]
         )
-        return f"{self.first_file.config.feed_type.value}/{hive_str}/{self.filename}"
+        hive_table = (
+            f"gtfs_schedule__{slugify(self.table, separator='_')}"
+            if isinstance(self.table, GtfsScheduleFileType)
+            else self.table
+        )
+        return f"{hive_table}/{hive_str}/{self.filename}"
 
 
 class FetchedRecord(BaseModel):
     file: RawFetchedFile
     record: Dict[str, Any]
+    line_number: Optional[int]
 
 
 # https://github.com/pydantic/pydantic/discussions/2410
@@ -183,19 +229,11 @@ class FeedContents(BaseModel, abc.ABC):
         raise NotImplementedError
 
 
-class GtfsSchedule(FeedContents):
-    feed_types: ClassVar[List[FeedType]] = [FeedType.gtfs_schedule]
-
-    @property
-    def records(self) -> Iterable[Dict]:
-        raise NotImplementedError
-
-
 class GtfsRealtime(FeedContents):
     feed_types: ClassVar[List[FeedType]] = [
-        FeedType.gtfs_vehicle_positions,
-        FeedType.gtfs_trip_updates,
-        FeedType.gtfs_service_alerts,
+        FeedType.gtfs_rt__vehicle_positions,
+        FeedType.gtfs_rt__trip_updates,
+        FeedType.gtfs_rt__service_alerts,
     ]
     header: Dict
     entity: List[Dict] = []
@@ -211,6 +249,7 @@ class GtfsRealtime(FeedContents):
 
 class ListOfDicts(FeedContents):
     feed_types: ClassVar[List[FeedType]] = [
+        FeedType.gtfs_schedule,  # requires special handling
         FeedType.septa__train_view,
         FeedType.septa__alerts_without_message,
         FeedType.septa__alerts,
@@ -291,3 +330,24 @@ FEED_TYPES: Dict[FeedType, Type[FeedContents]] = {
 
 missing_feed_types = [feed_type.value for feed_type in FeedType if feed_type not in FEED_TYPES]
 assert not missing_feed_types, f"Missing parse configurations for {missing_feed_types}"
+
+if __name__ == "__main__":
+    with open("./feeds.yaml") as f:
+        configs = parse_obj_as(List[FeedConfig], yaml.safe_load(f))
+    for config in configs:
+        if config.feed_type == FeedType.gtfs_schedule:
+            response = requests.get(config.url)
+            response.raise_for_status()
+            raw = RawFetchedFile(
+                ts=pendulum.now().replace(microsecond=0),
+                config=config,
+                page=[],
+                response_code=response.status_code,
+                response_headers=response.headers,
+                contents=response.content,
+            )
+            client = storage.Client()
+            typer.secho(f"Saving to {raw.bucket}/{raw.gcs_key}", fg=typer.colors.MAGENTA)
+            client.bucket(raw.bucket.removeprefix("gs://")).blob(raw.gcs_key).upload_from_string(
+                raw.json(), client=client
+            )
