@@ -161,9 +161,15 @@ class RawFetchedFile(BaseModel):
         )
         return f"{self.table}/{hive_str}/{self.filename}"
 
+    @property
+    # should we be wrapping or constructing a storage.Blob?!
+    def uri(self) -> str:
+        return f"{self.bucket}/{self.gcs_key}"
+
     @validator("ts")
     def parse_ts(cls, v):
-        return pendulum.instance(v, tz="UTC") if isinstance(v, datetime.datetime) else v
+        assert isinstance(v, datetime.datetime)
+        return pendulum.instance(v).in_tz("UTC")
 
     @validator("contents", pre=True)
     def base64_contents(cls, v):
@@ -269,7 +275,7 @@ class SeptaArrivals(FeedContents):
     def direction_has_one_entry(cls, v):
         for key, directions in v.items():
             for direction_dict in directions:
-                assert len(direction_dict) == 1
+                assert len(direction_dict) <= 1
         return v
 
     @property

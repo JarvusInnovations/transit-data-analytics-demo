@@ -37,6 +37,7 @@ from fetcher.common import (
 )
 
 HourKey = namedtuple("HourKey", ["hour", "base64url"])
+app = typer.Typer()
 
 
 def hour_key(blob: storage.Blob) -> HourKey:
@@ -106,6 +107,14 @@ def save_hour_agg(
     return len(contents)
 
 
+# mostly exists so we can call directly to debug
+def parse_blob(blob: storage.Blob, client: storage.Client) -> RawFetchedFile:
+    bio = BytesIO()
+    client.download_blob_to_file(blob, file_obj=bio)
+    bio.seek(0)
+    return RawFetchedFile(**json.load(bio))
+
+
 def handle_hour(
     key: HourKey,
     blobs: List[storage.Blob],
@@ -124,11 +133,7 @@ def handle_hour(
 
     # we could do this streaming, but data should be small enough
     for blob in blobs:
-        bio = BytesIO()
-        client.download_blob_to_file(blob, file_obj=bio)
-        bio.seek(0)
-        file = RawFetchedFile(**json.load(bio))
-
+        file = parse_blob(blob=blob, client=client)
         for feed_type, parsed_records in file_to_records(file):
             if parsed_records:
                 aggs[feed_type].extend(
@@ -152,7 +157,15 @@ def handle_hour(
     return written
 
 
-def main(
+@app.command()
+def file(uri: str):
+    client = storage.Client()
+    file = parse_blob(blob=storage.Blob.from_string(uri, client=client), client=client)
+    typer.secho(f"Found {sum(len(list(records)) for _, records in file_to_records(file))} records in {file.gcs_key}")
+
+
+@app.command()
+def day(
     dt: Annotated[
         datetime.datetime,
         typer.Argument(
@@ -227,4 +240,4 @@ def main(
 
 
 if __name__ == "__main__":
-    typer.run(main)
+    app()
