@@ -11,6 +11,7 @@ import zipfile
 from collections import defaultdict, namedtuple
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from io import BytesIO
+from pprint import pformat
 from typing import Optional, List, Annotated, DefaultDict, Iterable, Tuple, Union, Dict
 
 import humanize
@@ -19,6 +20,7 @@ import typer
 import yaml
 from google.cloud import storage  # type: ignore
 from google.protobuf.json_format import MessageToDict
+from google.protobuf.message import DecodeError
 from google.transit import gtfs_realtime_pb2  # type: ignore
 from pydantic import parse_obj_as, ValidationError
 from tqdm import tqdm
@@ -67,8 +69,8 @@ def file_to_records(file: RawFetchedFile) -> Iterable[Tuple[Union[FeedType, Gtfs
             yield file.config.feed_type, GtfsRealtime(**MessageToDict(feed)).records
         else:
             yield file.config.feed_type, parse_obj_as(pydantic_type, json.loads(file.contents)).records
-    except ValidationError:
-        typer.secho(f"Validation error occurred on {file.bucket}/{file.gcs_key}", fg=typer.colors.RED)
+    except (ValidationError, DecodeError) as e:
+        typer.secho(f"{type(e)} occurred on {file.bucket}/{file.gcs_key}", fg=typer.colors.RED)
         raise
 
 
@@ -199,6 +201,7 @@ def day(
             feed_types_set = feed_types_set - set(exclude)
         feed_types = list(feed_types_set)
 
+    errors = []
     for ft in feed_types:
         prefix = f"{ft.value}/dt={SERIALIZERS[pendulum.Date](pendulum.instance(dt).date())}/"
         typer.secho(f"Listing items in {bucket}/{prefix}...", fg=typer.colors.MAGENTA)
@@ -234,9 +237,12 @@ def day(
                 try:
                     pbar.update(1)
                     future.result()
-                except Exception:
+                except Exception as e:
                     typer.secho(f"Exception returned for {key}: {traceback.format_exc()}", fg=typer.colors.RED)
-                    raise
+                    errors.append(e)
+
+    if errors:
+        raise RuntimeError(pformat(errors))
 
 
 if __name__ == "__main__":
