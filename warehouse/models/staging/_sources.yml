@@ -27,6 +27,8 @@ sources:
             data_type: JSON
           - name: record
             data_type: JSON
+          - name: line_number
+            data_type: INTEGER
 
       - name: gtfs_schedule__calendar_dates
         description: "External table of GTFS schedule calendar_dates.txt data; data is stored in GCS as gzipped JSON files"
