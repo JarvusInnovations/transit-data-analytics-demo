@@ -7,16 +7,16 @@ sources:
     loader: gcloud storage
 
     tables:
-      - name: gtfs_vehicle_positions
-        description: "External table of GTFS RT vehicle positions data; data is stored in GCS as gzipped JSON files"
+
+      # GTFS SCHEDULE
+
+      - name: gtfs_schedule__agency
+        description: "External table of GTFS schedule agency.txt data; data is stored in GCS as gzipped JSON files"
         external:
-          location: "gs://{{ var('external_data_bucket') }}/gtfs_rt__vehicle_positions/*"
+          location: "gs://{{ var('external_data_bucket') }}/gtfs_schedule__agency_txt/*"
           options:
             format: NEWLINE_DELIMITED_JSON
-            hive_partition_uri_prefix: "gs://{{ var('external_data_bucket') }}/gtfs_rt__vehicle_positions/"
-            # TODO: BigQuery doesn't recognize this option when creating external table via SQL
-            # we need to figure something out (and apply to all realtime/large data)
-            # require_partition_filter: true
+            hive_partition_uri_prefix: "gs://{{ var('external_data_bucket') }}/gtfs_schedule__agency_txt/"
           partitions: &partitions
             - name: dt
               data_type: date
@@ -28,7 +28,132 @@ sources:
           - name: record
             data_type: JSON
 
-      - name: gtfs_trip_updates
+      - name: gtfs_schedule__calendar_dates
+        description: "External table of GTFS schedule calendar_dates.txt data; data is stored in GCS as gzipped JSON files"
+        external:
+          location: "gs://{{ var('external_data_bucket') }}/gtfs_schedule__calendar_dates_txt/*"
+          options:
+            format: NEWLINE_DELIMITED_JSON
+            hive_partition_uri_prefix: "gs://{{ var('external_data_bucket') }}/gtfs_schedule__calendar_dates_txt/"
+          partitions: *partitions
+        columns: *columns
+
+      - name: gtfs_schedule__calendar
+        description: "External table of GTFS schedule calendar.txt data; data is stored in GCS as gzipped JSON files"
+        external:
+          location: "gs://{{ var('external_data_bucket') }}/gtfs_schedule__calendar_txt/*"
+          options:
+            format: NEWLINE_DELIMITED_JSON
+            hive_partition_uri_prefix: "gs://{{ var('external_data_bucket') }}/gtfs_schedule__calendar_txt/"
+          partitions: *partitions
+        columns: *columns
+
+      - name: gtfs_schedule__fare_attributes
+        description: "External table of GTFS schedule fare_attributes.txt data; data is stored in GCS as gzipped JSON files"
+        external:
+          location: "gs://{{ var('external_data_bucket') }}/gtfs_schedule__fare_attributes_txt/*"
+          options:
+            format: NEWLINE_DELIMITED_JSON
+            hive_partition_uri_prefix: "gs://{{ var('external_data_bucket') }}/gtfs_schedule__fare_attributes_txt/"
+          partitions: *partitions
+        columns: *columns
+
+      - name: gtfs_schedule__fare_rules
+        description: "External table of GTFS schedule fare_rules.txt data; data is stored in GCS as gzipped JSON files"
+        external:
+          location: "gs://{{ var('external_data_bucket') }}/gtfs_schedule__fare_rules_txt/*"
+          options:
+            format: NEWLINE_DELIMITED_JSON
+            hive_partition_uri_prefix: "gs://{{ var('external_data_bucket') }}/gtfs_schedule__fare_rules_txt/"
+          partitions: *partitions
+        columns: *columns
+
+      - name: gtfs_schedule__feed_info
+        description: "External table of GTFS schedule feed_info.txt data; data is stored in GCS as gzipped JSON files"
+        external:
+          location: "gs://{{ var('external_data_bucket') }}/gtfs_schedule__feed_info_txt/*"
+          options:
+            format: NEWLINE_DELIMITED_JSON
+            hive_partition_uri_prefix: "gs://{{ var('external_data_bucket') }}/gtfs_schedule__feed_info_txt/"
+          partitions: *partitions
+        columns: *columns
+
+      - name: gtfs_schedule__routes
+        description: "External table of GTFS schedule routes.txt data; data is stored in GCS as gzipped JSON files"
+        external:
+          location: "gs://{{ var('external_data_bucket') }}/gtfs_schedule__routes_txt/*"
+          options:
+            format: NEWLINE_DELIMITED_JSON
+            hive_partition_uri_prefix: "gs://{{ var('external_data_bucket') }}/gtfs_schedule__routes_txt/"
+          partitions: *partitions
+        columns: *columns
+
+      - name: gtfs_schedule__shapes
+        description: "External table of GTFS schedule shapes.txt data; data is stored in GCS as gzipped JSON files"
+        external:
+          location: "gs://{{ var('external_data_bucket') }}/gtfs_schedule__shapes_txt/*"
+          options:
+            format: NEWLINE_DELIMITED_JSON
+            hive_partition_uri_prefix: "gs://{{ var('external_data_bucket') }}/gtfs_schedule__shapes_txt/"
+          partitions: *partitions
+        columns: *columns
+
+      - name: gtfs_schedule__stop_times
+        description: "External table of GTFS schedule stop_times.txt data; data is stored in GCS as gzipped JSON files"
+        external:
+          location: "gs://{{ var('external_data_bucket') }}/gtfs_schedule__stop_times_txt/*"
+          options:
+            format: NEWLINE_DELIMITED_JSON
+            hive_partition_uri_prefix: "gs://{{ var('external_data_bucket') }}/gtfs_schedule__stop_times_txt/"
+          partitions: *partitions
+        columns: *columns
+
+      - name: gtfs_schedule__stops
+        description: "External table of GTFS schedule stops.txt data; data is stored in GCS as gzipped JSON files"
+        external:
+          location: "gs://{{ var('external_data_bucket') }}/gtfs_schedule__stops_txt/*"
+          options:
+            format: NEWLINE_DELIMITED_JSON
+            hive_partition_uri_prefix: "gs://{{ var('external_data_bucket') }}/gtfs_schedule__stops_txt/"
+          partitions: *partitions
+        columns: *columns
+
+      - name: gtfs_schedule__transfers
+        description: "External table of GTFS schedule transfers.txt data; data is stored in GCS as gzipped JSON files"
+        external:
+          location: "gs://{{ var('external_data_bucket') }}/gtfs_schedule__transfers_txt/*"
+          options:
+            format: NEWLINE_DELIMITED_JSON
+            hive_partition_uri_prefix: "gs://{{ var('external_data_bucket') }}/gtfs_schedule__transfers_txt/"
+          partitions: *partitions
+        columns: *columns
+
+      - name: gtfs_schedule__trips
+        description: "External table of GTFS schedule trips.txt data; data is stored in GCS as gzipped JSON files"
+        external:
+          location: "gs://{{ var('external_data_bucket') }}/gtfs_schedule__trips_txt/*"
+          options:
+            format: NEWLINE_DELIMITED_JSON
+            hive_partition_uri_prefix: "gs://{{ var('external_data_bucket') }}/gtfs_schedule__trips_txt/"
+          partitions: *partitions
+        columns: *columns
+
+      # GTFS RT
+
+      - name: gtfs_rt__vehicle_positions
+        description: "External table of GTFS RT vehicle positions data; data is stored in GCS as gzipped JSON files"
+        external:
+          location: "gs://{{ var('external_data_bucket') }}/gtfs_rt__vehicle_positions/*"
+          options:
+            format: NEWLINE_DELIMITED_JSON
+            hive_partition_uri_prefix: "gs://{{ var('external_data_bucket') }}/gtfs_rt__vehicle_positions/"
+            # TODO: BigQuery doesn't recognize this option when creating external table via SQL
+            # we need to figure something out (and apply to all realtime/large data)
+            # require_partition_filter: true
+          partitions: *partitions
+        columns: *columns
+
+      - name: gtfs_rt__trip_updates
         description: "External table of GTFS RT trip updates data; data is stored in GCS as gzipped JSON files"
         external:
           location: "gs://{{ var('external_data_bucket') }}/gtfs_rt__trip_updates/*"
@@ -38,7 +163,7 @@ sources:
           partitions: *partitions
         columns: *columns
 
-      - name: gtfs_service_alerts
+      - name: gtfs_rt__service_alerts
         description: "External table of GTFS RT service alerts data; data is stored in GCS as gzipped JSON files"
         external:
           location: "gs://{{ var('external_data_bucket') }}/gtfs_rt__service_alerts/*"
@@ -47,6 +172,8 @@ sources:
             hive_partition_uri_prefix: "gs://{{ var('external_data_bucket') }}/gtfs_rt__service_alerts/"
           partitions: *partitions
         columns: *columns
+
+      # SEPTA RT
 
       - name: septa__alerts
         description: "External table of SEPTA alerts data from https://www3.septa.org/#/Real%20Time%20Data/MessageAlert; data is stored in GCS as gzipped JSON files"
