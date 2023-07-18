@@ -6,6 +6,7 @@ on:
       - "*"
 
 env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   HAB_LICENSE: accept-no-persist
 
 jobs:
