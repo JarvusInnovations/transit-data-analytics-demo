@@ -11,7 +11,7 @@ jobs:
     steps:
       - uses: JarvusInnovations/hologit@actions/projector/v1
         env:
-          GITHUB_TOKEN: ${{ secrets.BOT_GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.BOT_GITHUB_ACTION }}
           HAB_LICENSE: accept
         with:
           holobranch: release-candidate
