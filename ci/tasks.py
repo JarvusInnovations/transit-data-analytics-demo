@@ -7,6 +7,7 @@ from pydantic import BaseModel, parse_obj_as
 
 
 # TODO: use GitPython to form absolute paths
+# TODO: deploy secrets from Secret Manager
 
 
 class Driver(StrEnum):
@@ -57,9 +58,17 @@ def diff(c, name=None):
             if deployment.driver == Driver.helm:
                 if deployment.dependency:
                     c.run(f"helm dependency build ../{deployment.chart}")
-                c.run(
-                    f"helm diff upgrade {deployment.name} ../{deployment.chart} {deployment.namespace_cli} {deployment.values_cli} --allow-unreleased"
-                )
+                args = [
+                    "helm",
+                    "diff",
+                    "upgrade",
+                    deployment.name,
+                    f"../{deployment.chart}",
+                    deployment.namespace_cli,
+                    deployment.values_cli,
+                    "-allow-unreleased",
+                ]
+                c.run(" ".join(args))
             elif deployment.driver == Driver.kustomize:
                 pass
             else:
@@ -74,10 +83,17 @@ def apply(c, name=None):
             if deployment.driver == Driver.helm:
                 if deployment.dependency:
                     c.run(f"helm dependency build ../{deployment.chart}")
-
-                c.run(
-                    f"helm upgrade --install --create-namespace  {deployment.name} ../{deployment.chart} {deployment.namespace_cli} {deployment.values_cli}"
-                )
+                args = [
+                    "helm",
+                    "upgrade",
+                    "--install",
+                    "--create-namespace",
+                    deployment.name,
+                    f"../{deployment.chart}",
+                    deployment.namespace_cli,
+                    deployment.values_cli,
+                ]
+                c.run(" ".join(args))
             elif deployment.driver == Driver.kustomize:
                 c.run(f"kubectl apply -k ../{deployment.path}")
             else:
