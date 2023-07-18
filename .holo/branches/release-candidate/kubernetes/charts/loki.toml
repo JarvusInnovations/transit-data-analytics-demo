@@ -1,0 +1,4 @@
+[holomapping]
+holosource = "cluster-template=>k8s-blueprint"
+root = "loki"
+files = "**"

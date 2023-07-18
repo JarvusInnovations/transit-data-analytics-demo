@@ -1,0 +1,30 @@
+name: Release deploy
+
+on:
+  push:
+    branches:
+      - "releases/*"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - id: branch-names
+        uses: tj-actions/branch-names@v2.1
+      - uses: actions/setup-python@v4
+        with:
+          python-version: 3.11
+      - uses: abatilo/actions-poetry@v2
+      - name: "run invoke"
+        working-directory: ci
+        env:
+          KUBECONFIG: /tmp/github-action-kubeconfig.yaml
+          KUBECONFIG_BASE64: ${{ secrets.KUBECONFIG_BASE64 }}
+        run: |
+          echo $KUBECONFIG_BASE64 | base64 -d >> $KUBECONFIG
+          wc $KUBECONFIG
+          poetry install
+          poetry run invoke apply -f ${GITHUB_REF#refs/heads/releases/}.yaml
