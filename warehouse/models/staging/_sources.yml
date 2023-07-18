@@ -31,20 +31,20 @@ sources:
       - name: gtfs_trip_updates
         description: "External table of GTFS RT trip updates data; data is stored in GCS as gzipped JSON files"
         external:
-          location: "gs://{{ var('external_data_bucket') }}/gtfs_trip_updates/*"
+          location: "gs://{{ var('external_data_bucket') }}/gtfs_rt__trip_updates/*"
           options:
             format: NEWLINE_DELIMITED_JSON
-            hive_partition_uri_prefix: "gs://{{ var('external_data_bucket') }}/gtfs_trip_updates/"
+            hive_partition_uri_prefix: "gs://{{ var('external_data_bucket') }}/gtfs_rt__trip_updates/"
           partitions: *partitions
         columns: *columns
 
       - name: gtfs_service_alerts
         description: "External table of GTFS RT service alerts data; data is stored in GCS as gzipped JSON files"
         external:
-          location: "gs://{{ var('external_data_bucket') }}/gtfs_service_alerts/*"
+          location: "gs://{{ var('external_data_bucket') }}/gtfs_rt__service_alerts/*"
           options:
             format: NEWLINE_DELIMITED_JSON
-            hive_partition_uri_prefix: "gs://{{ var('external_data_bucket') }}/gtfs_service_alerts/"
+            hive_partition_uri_prefix: "gs://{{ var('external_data_bucket') }}/gtfs_rt__service_alerts/"
           partitions: *partitions
         columns: *columns
 
