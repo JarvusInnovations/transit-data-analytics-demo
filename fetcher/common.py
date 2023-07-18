@@ -161,9 +161,15 @@ class RawFetchedFile(BaseModel):
         )
         return f"{self.table}/{hive_str}/{self.filename}"
 
+    @property
+    # should we be wrapping or constructing a storage.Blob?!
+    def uri(self) -> str:
+        return f"{self.bucket}/{self.gcs_key}"
+
     @validator("ts")
     def parse_ts(cls, v):
-        return pendulum.instance(v, tz="UTC") if isinstance(v, datetime.datetime) else v
+        assert isinstance(v, datetime.datetime)
+        return pendulum.instance(v).in_tz("UTC")
 
     @validator("contents", pre=True)
     def base64_contents(cls, v):
@@ -187,7 +193,8 @@ class HourAgg(BaseModel):
 
     @validator("hour")
     def convert_hour(cls, v) -> pendulum.DateTime:
-        return pendulum.instance(v)
+        assert isinstance(v, datetime.datetime)
+        return pendulum.instance(v).in_tz("UTC")
 
     @property
     def dt(self):
@@ -265,11 +272,17 @@ class SeptaArrivals(FeedContents):
     feed_types: ClassVar[List[FeedType]] = [FeedType.septa__arrivals]
     __root__: Dict[str, List[Dict[str, List[Dict]]]]
 
+    @validator("__root__")
+    def direction_has_one_entry(cls, v):
+        for key, directions in v.items():
+            for direction_dict in directions:
+                assert len(direction_dict) <= 1
+        return v
+
     @property
     def records(self) -> Iterable[Dict]:
         for key, directions in self.__root__.items():
             for direction_dict in directions:
-                assert len(direction_dict) == 1
                 for direction, updates in direction_dict.items():
                     for update in updates:
                         yield dict(

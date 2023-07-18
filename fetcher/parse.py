@@ -11,6 +11,7 @@ import zipfile
 from collections import defaultdict, namedtuple
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from io import BytesIO
+from pprint import pformat
 from typing import Optional, List, Annotated, DefaultDict, Iterable, Tuple, Union, Dict
 
 import humanize
@@ -19,6 +20,7 @@ import typer
 import yaml
 from google.cloud import storage  # type: ignore
 from google.protobuf.json_format import MessageToDict
+from google.protobuf.message import DecodeError
 from google.transit import gtfs_realtime_pb2  # type: ignore
 from pydantic import parse_obj_as, ValidationError
 from tqdm import tqdm
@@ -37,6 +39,7 @@ from fetcher.common import (
 )
 
 HourKey = namedtuple("HourKey", ["hour", "base64url"])
+app = typer.Typer()
 
 
 def hour_key(blob: storage.Blob) -> HourKey:
@@ -66,8 +69,8 @@ def file_to_records(file: RawFetchedFile) -> Iterable[Tuple[Union[FeedType, Gtfs
             yield file.config.feed_type, GtfsRealtime(**MessageToDict(feed)).records
         else:
             yield file.config.feed_type, parse_obj_as(pydantic_type, json.loads(file.contents)).records
-    except ValidationError:
-        typer.secho(f"Validation error occurred on {file.bucket}/{file.gcs_key}", fg=typer.colors.RED)
+    except (ValidationError, DecodeError) as e:
+        typer.secho(f"{type(e)} occurred on {file.bucket}/{file.gcs_key}", fg=typer.colors.RED)
         raise
 
 
@@ -106,6 +109,14 @@ def save_hour_agg(
     return len(contents)
 
 
+# mostly exists so we can call directly to debug
+def parse_blob(blob: storage.Blob, client: storage.Client) -> RawFetchedFile:
+    bio = BytesIO()
+    client.download_blob_to_file(blob, file_obj=bio)
+    bio.seek(0)
+    return RawFetchedFile(**json.load(bio))
+
+
 def handle_hour(
     key: HourKey,
     blobs: List[storage.Blob],
@@ -124,11 +135,7 @@ def handle_hour(
 
     # we could do this streaming, but data should be small enough
     for blob in blobs:
-        bio = BytesIO()
-        client.download_blob_to_file(blob, file_obj=bio)
-        bio.seek(0)
-        file = RawFetchedFile(**json.load(bio))
-
+        file = parse_blob(blob=blob, client=client)
         for feed_type, parsed_records in file_to_records(file):
             if parsed_records:
                 aggs[feed_type].extend(
@@ -152,14 +159,22 @@ def handle_hour(
     return written
 
 
-def main(
+@app.command()
+def file(uri: str):
+    client = storage.Client()
+    file = parse_blob(blob=storage.Blob.from_string(uri, client=client), client=client)
+    typer.secho(f"Found {sum(len(list(records)) for _, records in file_to_records(file))} records in {file.gcs_key}")
+
+
+@app.command()
+def day(
     dt: Annotated[
         datetime.datetime,
         typer.Argument(
             formats=["%Y-%m-%d"],
         ),
     ] = datetime.date.today(),  # type: ignore[assignment]
-    table: Annotated[Optional[List[FeedType]], typer.Option()] = None,
+    feed_type: Annotated[Optional[List[FeedType]], typer.Option()] = None,
     exclude: Annotated[Optional[List[FeedType]], typer.Option()] = None,
     bucket: str = RawFetchedFile.bucket,
     base64url: Optional[str] = None,
@@ -171,23 +186,24 @@ def main(
 
     E.g. gs://test-jarvus-transit-data-demo-parsed/gtfs_rt__vehicle_positions/dt=2023-07-07/hour=2023-07-07T01:00:00+00:00/aHR0cHM6Ly90cnVldGltZS5wb3J0YXV0aG9yaXR5Lm9yZy9ndGZzcnQtdHJhaW4vdmVoaWNsZXM=.jsonl
     """
-    if table and exclude:
+    if feed_type and exclude:
         raise ValueError("cannot specify both table and exclude")
 
     client = storage.Client()
 
-    if table:
-        tables = table
+    if feed_type:
+        feed_types = feed_type
     else:
         with open("./feeds.yaml") as f:
             configs = parse_obj_as(List[FeedConfig], yaml.safe_load(f))
-        feed_types = set(config.feed_type for config in configs)
+        feed_types_set = set(config.feed_type for config in configs)
         if exclude:
-            feed_types = feed_types - set(exclude)
-        tables = list(feed_types)
+            feed_types_set = feed_types_set - set(exclude)
+        feed_types = list(feed_types_set)
 
-    for tbl in tables:
-        prefix = f"{tbl.value}/dt={SERIALIZERS[pendulum.Date](pendulum.instance(dt).date())}/"
+    errors = []
+    for ft in feed_types:
+        prefix = f"{ft.value}/dt={SERIALIZERS[pendulum.Date](pendulum.instance(dt).date())}/"
         typer.secho(f"Listing items in {bucket}/{prefix}...", fg=typer.colors.MAGENTA)
         blobs: List[storage.Blob] = list(client.list_blobs(bucket.removeprefix("gs://"), prefix=prefix))
 
@@ -204,7 +220,7 @@ def main(
 
         typer.secho(f"Found {len(blobs)=} grouped into {len(aggs)=}.", fg=typer.colors.MAGENTA)
 
-        pbar = tqdm(total=len(aggs), leave=False, desc=tbl)
+        pbar = tqdm(total=len(aggs), leave=False, desc=ft)
         with ProcessPoolExecutor(max_workers=workers) as pool:
             futures = {
                 pool.submit(
@@ -221,10 +237,13 @@ def main(
                 try:
                     pbar.update(1)
                     future.result()
-                except Exception:
+                except Exception as e:
                     typer.secho(f"Exception returned for {key}: {traceback.format_exc()}", fg=typer.colors.RED)
-                    raise
+                    errors.append(e)
+
+    if errors:
+        raise RuntimeError(pformat(errors))
 
 
 if __name__ == "__main__":
-    typer.run(main)
+    app()
