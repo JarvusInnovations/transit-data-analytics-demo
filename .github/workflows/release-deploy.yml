@@ -24,6 +24,7 @@ jobs:
           KUBECONFIG: /tmp/github-action-kubeconfig.yaml
           KUBECONFIG_BASE64: ${{ secrets.KUBECONFIG_BASE64 }}
         run: |
-          echo $KUBECONFIG_BASE64 >> $KUBECONFIG
+          echo $KUBECONFIG_BASE64 | base64 -d >> $KUBECONFIG
+          wc $KUBECONFIG
           poetry install
           poetry run invoke apply -f ${GITHUB_REF#refs/heads/releases/}.yaml
