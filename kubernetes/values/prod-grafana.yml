@@ -1,0 +1,13 @@
+# These values as applied last as downstream overrides
+# See https://github.com/grafana/helm-charts/blob/grafana-6.2.1/charts/grafana/values.yaml
+persistence:
+  enabled: true
+
+ingress:
+  enabled: true
+  hosts:
+    - grafana.demo.k8s.jarv.us
+  tls:
+    - secretName: grafana-tls
+      hosts:
+        - grafana.demo.k8s.jarv.us

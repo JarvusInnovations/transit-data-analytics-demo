@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: consumer
+  labels:
+    app: consumer
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: consumer
+  template:
+    metadata:
+      labels:
+        app: consumer
+      annotations:
+        prometheus.io/scrape: 'true'
+        prometheus.io/port: '8000'
+    spec:
+      containers:
+        - name: consumer
+          image: ghcr.io/jarvusinnovations/transit-data-analytics-demo/fetcher:2023.7.14
+          ports:
+            - containerPort: 8000
+          command: [ python, -m, fetcher.consumer ]
+          envFrom:
+            - configMapRef:
+                name: fetcher-config
+          volumeMounts:
+            - name: gcs-secret
+              mountPath: /etc/gcs-secret
+              readOnly: true
+      volumes:
+        - name: gcs-secret
+          secret:
+            secretName: fetcher-secret
