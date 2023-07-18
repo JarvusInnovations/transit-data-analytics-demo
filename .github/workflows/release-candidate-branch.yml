@@ -16,4 +16,4 @@ jobs:
       - uses: JarvusInnovations/hologit@actions/projector/v1
         with:
           holobranch: release-candidate
-          commit-to: "candidates/${{GITHUB_REF#refs/heads/}}"
+          commit-to: "candidates/${{github.ref_name}}"
