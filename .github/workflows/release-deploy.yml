@@ -16,3 +16,8 @@ jobs:
         uses: tj-actions/branch-names@v2.1
       - uses: actions/setup-python@v4
       - uses: abatilo/actions-poetry@v2
+      - name: "run invoke"
+        working-directory: ci
+        run: |
+          poetry install
+          poetry run invoke apply -f ${GITHUB_REF#refs/heads/releases/}.yaml
