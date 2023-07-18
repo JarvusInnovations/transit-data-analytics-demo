@@ -1,0 +1,5 @@
+# These values as applied first as template-provided defaults
+controller:
+  podAnnotations:
+    prometheus.io/port: '10254'
+    prometheus.io/scrape: 'true'
