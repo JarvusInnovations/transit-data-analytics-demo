@@ -3,7 +3,7 @@ name: Build candidate branch
 on:
   push:
     branches:
-      - *
+      - "*"
 
 env:
   HAB_LICENSE: accept-no-persist

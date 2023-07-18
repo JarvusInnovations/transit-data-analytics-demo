@@ -3,7 +3,7 @@ name: Release deploy
 on:
   push:
     branches:
-      - releases/*
+      - "releases/*"
 
 jobs:
   release:
