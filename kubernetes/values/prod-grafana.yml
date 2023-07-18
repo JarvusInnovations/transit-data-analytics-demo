@@ -6,8 +6,8 @@ persistence:
 ingress:
   enabled: true
   hosts:
-    - grafana.demo.k8s.jarv.us
+    - grafana.k8s.tdad.jarv.us
   tls:
     - secretName: grafana-tls
       hosts:
-        - grafana.demo.k8s.jarv.us
+        - grafana.k8s.tdad.jarv.us
