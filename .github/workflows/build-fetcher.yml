@@ -14,7 +14,7 @@ jobs:
       with:
         python-version: 3.11
     - uses: abatilo/actions-poetry@v2
-    - name: run mypy
+    - name: run mypy and pytest
       working-directory: fetcher
       run: |
         poetry export --with=dev --without-hashes --format=requirements.txt > requirements.txt
@@ -25,6 +25,7 @@ jobs:
         RAW_BUCKET: gs://this-does-not-exist-raw
         PARSED_BUCKET: gs://this-does-not-exist-parsed
     - uses: docker/build-push-action@v4
+      working-directory: fetcher
       with:
         push: false
 #        tags: user/app:latest
