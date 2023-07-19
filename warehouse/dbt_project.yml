@@ -35,4 +35,5 @@ vars:
 models:
   transit_data_analytics_demo:
     staging:
+      schema: staging
       +materialized: view
