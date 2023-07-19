@@ -36,6 +36,7 @@ from fetcher.common import (
     GtfsRealtime,
     GtfsScheduleFileType,
     ListOfDicts,
+    ParsedRecordMetadata,
 )
 
 HourKey = namedtuple("HourKey", ["hour", "base64url"])
@@ -71,15 +72,21 @@ def file_to_records(
                         #  we probably want to just throw a warning/generate an outcome rather than stop
                         #  further processing
                         # looking up the enum by value not name
-                        yield GtfsScheduleFileType(zipf_file), parse_obj_as(ListOfDicts, list(reader)).records
+                        yield GtfsScheduleFileType(zipf_file), parse_obj_as(
+                            ListOfDicts, list(reader)
+                        ).records
         elif pydantic_type == GtfsRealtime:
             feed = gtfs_realtime_pb2.FeedMessage()
             feed.ParseFromString(file.contents)
             yield file.config.feed_type, GtfsRealtime(**MessageToDict(feed)).records
         else:
-            yield file.config.feed_type, parse_obj_as(pydantic_type, json.loads(file.contents)).records
+            yield file.config.feed_type, parse_obj_as(
+                pydantic_type, json.loads(file.contents)
+            ).records
     except (ValidationError, DecodeError) as e:
-        typer.secho(f"{type(e)} occurred on {file.bucket}/{file.gcs_key}", fg=typer.colors.RED)
+        typer.secho(
+            f"{type(e)} occurred on {file.bucket}/{file.gcs_key}", fg=typer.colors.RED
+        )
         raise
 
 
@@ -93,7 +100,9 @@ def save_hour_agg(
     # TODO: add asserts to check all same hour/url/etc.
     client = client or storage.Client()
     contents = gzip.compress(
-        "\n".join([record.json(exclude={"file": {"contents"}}) for record in records]).encode("utf-8")
+        "\n".join(
+            [record.json(exclude={"file": {"contents"}}) for record in records]
+        ).encode("utf-8")
     )
     content_size = humanize.naturalsize(len(contents))
     agg_path = f"{agg.bucket}/{agg.gcs_key}"
@@ -144,7 +153,9 @@ def handle_hour(
 
     write(f"Handling {len(blobs)=} for {key}")
     client = storage.Client()
-    aggs: DefaultDict[Union[FeedType, GtfsScheduleFileType], List[ParsedRecord]] = defaultdict(list)
+    aggs: DefaultDict[
+        Union[FeedType, GtfsScheduleFileType], List[ParsedRecord]
+    ] = defaultdict(list)
 
     # we could do this streaming, but data should be small enough
     for blob in blobs:
@@ -153,7 +164,13 @@ def handle_hour(
             if parsed_records:
                 aggs[feed_type].extend(
                     [
-                        ParsedRecord(file=file, line_number=idx, record=record)
+                        ParsedRecord(
+                            file=file,
+                            record=record,
+                            metadata=ParsedRecordMetadata(
+                                line_number=idx,
+                            ),
+                        )
                         for idx, record in enumerate(parsed_records)
                     ]
                 )
@@ -179,7 +196,9 @@ def handle_hour(
 def file(uri: str):
     client = storage.Client()
     file = parse_blob(blob=storage.Blob.from_string(uri, client=client), client=client)
-    typer.secho(f"Found {sum(len(list(records)) for _, records in file_to_records(file))} records in {file.gcs_key}")
+    typer.secho(
+        f"Found {sum(len(list(records)) for _, records in file_to_records(file))} records in {file.gcs_key}"
+    )
 
 
 @app.command()
@@ -219,9 +238,13 @@ def day(
 
     errors = []
     for ft in feed_types:
-        prefix = f"{ft.value}/dt={SERIALIZERS[pendulum.Date](pendulum.instance(dt).date())}/"
+        prefix = (
+            f"{ft.value}/dt={SERIALIZERS[pendulum.Date](pendulum.instance(dt).date())}/"
+        )
         typer.secho(f"Listing items in {bucket}/{prefix}...", fg=typer.colors.MAGENTA)
-        blobs: List[storage.Blob] = list(client.list_blobs(bucket.removeprefix("gs://"), prefix=prefix))
+        blobs: List[storage.Blob] = list(
+            client.list_blobs(bucket.removeprefix("gs://"), prefix=prefix)
+        )
 
         # remove client from blob
         for blob in blobs:
@@ -234,7 +257,9 @@ def day(
             if not base64url or base64url == blob_key.base64url:
                 aggs[blob_key].append(blob)
 
-        typer.secho(f"Found {len(blobs)=} grouped into {len(aggs)=}.", fg=typer.colors.MAGENTA)
+        typer.secho(
+            f"Found {len(blobs)=} grouped into {len(aggs)=}.", fg=typer.colors.MAGENTA
+        )
 
         pbar = tqdm(total=len(aggs), leave=False, desc=ft)
         with ProcessPoolExecutor(max_workers=workers) as pool:
