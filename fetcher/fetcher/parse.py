@@ -28,7 +28,7 @@ from tqdm import tqdm
 from fetcher.common import (
     SERIALIZERS,
     HourAgg,
-    FetchedRecord,
+    ParsedRecord,
     RawFetchedFile,
     FeedType,
     FeedConfig,
@@ -85,7 +85,7 @@ def file_to_records(
 
 def save_hour_agg(
     agg: HourAgg,
-    records: List[FetchedRecord],
+    records: List[ParsedRecord],
     pbar=None,
     client: Optional[storage.Client] = None,
     timeout: int = 60,
@@ -144,7 +144,7 @@ def handle_hour(
 
     write(f"Handling {len(blobs)=} for {key}")
     client = storage.Client()
-    aggs: DefaultDict[Union[FeedType, GtfsScheduleFileType], List[FetchedRecord]] = defaultdict(list)
+    aggs: DefaultDict[Union[FeedType, GtfsScheduleFileType], List[ParsedRecord]] = defaultdict(list)
 
     # we could do this streaming, but data should be small enough
     for blob in blobs:
@@ -153,7 +153,7 @@ def handle_hour(
             if parsed_records:
                 aggs[feed_type].extend(
                     [
-                        FetchedRecord(file=file, line_number=idx, record=record)
+                        ParsedRecord(file=file, line_number=idx, record=record)
                         for idx, record in enumerate(parsed_records)
                     ]
                 )

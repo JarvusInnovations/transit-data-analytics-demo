@@ -217,10 +217,14 @@ class HourAgg(BaseModel):
         return f"{hive_table}/{hive_str}/{self.filename}"
 
 
-class FetchedRecord(BaseModel):
+class ParsedRecordMetadata(BaseModel):
+    line_number: Optional[int]
+
+
+class ParsedRecord(BaseModel):
     file: RawFetchedFile
     record: Dict[str, Any]
-    line_number: Optional[int]
+    metadata: ParsedRecordMetadata
 
 
 # https://github.com/pydantic/pydantic/discussions/2410
