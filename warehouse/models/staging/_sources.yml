@@ -2,7 +2,7 @@ version: 2
 
 sources:
   - name: transit_data
-    schema: "{% if target.schema == 'prod' -%} external_transit_data {%- else -%} {{ target.schema }}_external_transit_data {%- endif %}"
+    schema: "{% if target.name == 'prod' -%} external_transit_data {%- else -%} {{ target.schema }}_external_transit_data {%- endif %}"
     database: transit-data-analytics-demo
     loader: gcloud storage
 

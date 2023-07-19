@@ -1,0 +1,14 @@
+transit_data_analytics_demo:
+  outputs:
+    prod:
+      dataset: staging
+      job_execution_timeout_seconds: 300
+      job_retries: 1
+      location: us-east4
+      method: oauth
+      priority: interactive
+      project: transit-data-analytics-demo
+      threads: 4
+      type: bigquery
+      maximum_bytes_billed: 100000000000
+  target: prod
