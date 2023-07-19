@@ -43,13 +43,22 @@ app = typer.Typer()
 
 
 def hour_key(blob: storage.Blob) -> HourKey:
-    feed_type, dtequals, hourequals, tsequals, base64urlequals, filename = blob.name.split("/")
+    (
+        feed_type,
+        dtequals,
+        hourequals,
+        tsequals,
+        base64urlequals,
+        filename,
+    ) = blob.name.split("/")
     _, hour = hourequals.split("=")
     _, base64url = base64urlequals.split("=", maxsplit=1)
     return HourKey(hour, base64url)
 
 
-def file_to_records(file: RawFetchedFile) -> Iterable[Tuple[Union[FeedType, GtfsScheduleFileType], Iterable[Dict]]]:
+def file_to_records(
+    file: RawFetchedFile,
+) -> Iterable[Tuple[Union[FeedType, GtfsScheduleFileType], Iterable[Dict]]]:
     pydantic_type = FEED_TYPES[file.config.feed_type]
     try:
         if file.config.feed_type == FeedType.gtfs_schedule:
@@ -75,7 +84,11 @@ def file_to_records(file: RawFetchedFile) -> Iterable[Tuple[Union[FeedType, Gtfs
 
 
 def save_hour_agg(
-    agg: HourAgg, records: List[FetchedRecord], pbar=None, client: Optional[storage.Client] = None, timeout: int = 60
+    agg: HourAgg,
+    records: List[FetchedRecord],
+    pbar=None,
+    client: Optional[storage.Client] = None,
+    timeout: int = 60,
 ) -> int:
     # TODO: add asserts to check all same hour/url/etc.
     client = client or storage.Client()
@@ -145,7 +158,10 @@ def handle_hour(
                     ]
                 )
             else:
-                write(f"WARNING: no records found for {feed_type} {blob.self_link}", fg=typer.colors.YELLOW)
+                write(
+                    f"WARNING: no records found for {feed_type} {blob.self_link}",
+                    fg=typer.colors.YELLOW,
+                )
 
     written = 0
     for feed_type, records in aggs.items():
@@ -238,7 +254,10 @@ def day(
                     pbar.update(1)
                     future.result()
                 except Exception as e:
-                    typer.secho(f"Exception returned for {key}: {traceback.format_exc()}", fg=typer.colors.RED)
+                    typer.secho(
+                        f"Exception returned for {key}: {traceback.format_exc()}",
+                        fg=typer.colors.RED,
+                    )
                     errors.append(e)
 
     if errors:

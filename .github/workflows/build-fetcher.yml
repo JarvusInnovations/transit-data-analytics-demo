@@ -1,0 +1,26 @@
+name: build-fetcher
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  pre-commit:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v4
+      with:
+        python-version: 3.11
+    - uses: abatilo/actions-poetry@v2
+    - name: run mypy
+      working-directory: fetcher
+      run: |
+        poetry install
+        poetry run mypy .
+        poetry run pytest
+    - uses: docker/build-push-action@v4
+      with:
+        push: false
+#        tags: user/app:latest

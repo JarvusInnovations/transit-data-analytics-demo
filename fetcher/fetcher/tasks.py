@@ -40,7 +40,12 @@ def all_signal_handler(signal, task, exc=None):
 @huey.task(
     expires=int(os.getenv("HUEY_FETCH_CONFIG_EXPIRES", 5)),
 )
-def fetch_feed(tick: pendulum.DateTime, config: FeedConfig, page: List[KeyValue] = [], dry: bool = False):
+def fetch_feed(
+    tick: pendulum.DateTime,
+    config: FeedConfig,
+    page: List[KeyValue] = [],
+    dry: bool = False,
+):
     FETCH_REQUEST_DELAY_SECONDS.labels(**config.labels).observe((pendulum.now() - tick).total_seconds())
 
     with FETCH_REQUEST_DURATION_SECONDS.labels(**config.labels).time():
