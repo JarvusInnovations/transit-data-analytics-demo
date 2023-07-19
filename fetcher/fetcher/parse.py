@@ -79,9 +79,7 @@ def file_to_records(
                 for zipf_file in zipf.namelist():
                     with zipf.open(zipf_file) as f:
                         contents = f.read()
-                    reader = csv.DictReader(
-                        io.TextIOWrapper(io.BytesIO(contents), encoding="utf-8")
-                    )
+                    reader = csv.DictReader(io.TextIOWrapper(io.BytesIO(contents), encoding="utf-8"))
                     # TODO: this will throw an error if attempting to parse a file we don't enumerate
                     #  we probably want to just throw a warning/generate an outcome rather than stop
                     #  further processing
@@ -106,9 +104,7 @@ def file_to_records(
                 records=parse_obj_as(pydantic_type, json.loads(file.contents)).records,
             )
     except (ValidationError, DecodeError) as e:
-        typer.secho(
-            f"{type(e)} occurred on {file.bucket}/{file.gcs_key}", fg=typer.colors.RED
-        )
+        typer.secho(f"{type(e)} occurred on {file.bucket}/{file.gcs_key}", fg=typer.colors.RED)
         raise
 
 
@@ -122,9 +118,7 @@ def save_hour_agg(
     # TODO: add asserts to check all same hour/url/etc.
     client = client or storage.Client()
     contents = gzip.compress(
-        "\n".join(
-            [record.json(exclude={"file": {"contents"}}) for record in records]
-        ).encode("utf-8")
+        "\n".join([record.json(exclude={"file": {"contents"}}) for record in records]).encode("utf-8")
     )
     content_size = humanize.naturalsize(len(contents))
     agg_path = f"{agg.bucket}/{agg.gcs_key}"
@@ -175,9 +169,7 @@ def handle_hour(
     write(f"Handling {len(blobs)=} for {key}")
     client = storage.Client()
     outcomes = []
-    aggs: DefaultDict[
-        Union[FeedType, GtfsScheduleFileType], List[ParsedRecord]
-    ] = defaultdict(list)
+    aggs: DefaultDict[Union[FeedType, GtfsScheduleFileType], List[ParsedRecord]] = defaultdict(list)
 
     # we could do this streaming, but data should be small enough
     for blob in blobs:
@@ -229,9 +221,7 @@ def handle_hour(
 def file(uri: str):
     client = storage.Client()
     file = parse_blob(blob=storage.Blob.from_string(uri, client=client), client=client)
-    typer.secho(
-        f"Found {sum(len(list(records)) for _, records in file_to_records(file))} records in {file.gcs_key}"
-    )
+    typer.secho(f"Found {sum(len(list(records)) for _, records in file_to_records(file))} records in {file.gcs_key}")
 
 
 @app.command()
@@ -273,9 +263,7 @@ def day(
     for feed_type in feed_types:
         prefix = f"{feed_type.value}/dt={SERIALIZERS[pendulum.Date](pendulum.instance(dt).date())}/"
         typer.secho(f"Listing items in {bucket}/{prefix}...", fg=typer.colors.MAGENTA)
-        blobs: List[storage.Blob] = list(
-            client.list_blobs(bucket.removeprefix("gs://"), prefix=prefix)
-        )
+        blobs: List[storage.Blob] = list(client.list_blobs(bucket.removeprefix("gs://"), prefix=prefix))
 
         # remove client from blob
         for blob in blobs:
@@ -288,9 +276,7 @@ def day(
             if not base64url or base64url == blob_key.base64url:
                 aggs[blob_key].append(blob)
 
-        typer.secho(
-            f"Found {len(blobs)=} grouped into {len(aggs)=}.", fg=typer.colors.MAGENTA
-        )
+        typer.secho(f"Found {len(blobs)=} grouped into {len(aggs)=}.", fg=typer.colors.MAGENTA)
 
         hourly_outcomes = defaultdict(list)
 
@@ -322,12 +308,8 @@ def day(
                 feed_type=feed_type,
                 hour=hour,
             )
-            contents = "\n".join(
-                outcome.json(exclude={"file": {"contents"}}) for outcome in outcomes
-            )
-            blob = client.bucket(outcomes_file.bucket.removeprefix("gs://")).blob(
-                outcomes_file.gcs_key
-            )
+            contents = "\n".join(outcome.json(exclude={"file": {"contents"}}) for outcome in outcomes)
+            blob = client.bucket(outcomes_file.bucket.removeprefix("gs://")).blob(outcomes_file.gcs_key)
             start = pendulum.now()
             blob.upload_from_string(contents, timeout=timeout, client=client)
             typer.secho(
