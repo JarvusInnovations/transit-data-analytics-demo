@@ -17,7 +17,7 @@ jobs:
     - name: run mypy
       working-directory: fetcher
       run: |
-        poetry export --without-hashes --format=requirements.txt > requirements.txt
+        poetry export --with=dev --without-hashes --format=requirements.txt > requirements.txt
         poetry run pip install -r requirements.txt
         poetry run mypy .
         poetry run pytest
