@@ -303,6 +303,8 @@ def day(
                         fg=typer.colors.RED,
                     )
                     errors.append(e)
+
+        # note: we save individual outcomes per hour in case we want to orchestrate an hourly parse job in the future
         for hour, outcomes in hourly_outcomes.items():
             outcomes_file = FeedTypeHourOutcomes(
                 feed_type=feed_type,
