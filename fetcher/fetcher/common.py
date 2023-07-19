@@ -136,16 +136,22 @@ class RawFetchedFile(BaseModel):
     @property
     def base64url(self) -> str:
         # TODO: add non-auth query params
-        url = requests.Request(url=self.config.url, params={kv.key: kv.value for kv in self.config.query}).url
+        url = requests.Request(
+            url=self.config.url, params={kv.key: kv.value for kv in self.config.query}
+        ).url
         return base64.urlsafe_b64encode(url.encode("utf-8")).decode("utf-8")
 
     @property
     def filename(self) -> str:
         params_with_page = {
-            **{kv.key: kv.value for kv in self.config.query if kv.value},  # exclude secrets
+            **{
+                kv.key: kv.value for kv in self.config.query if kv.value
+            },  # exclude secrets
             **{kv.key: kv.value for kv in self.page},
         }
-        url = requests.Request(url=self.config.url, params=params_with_page).prepare().url
+        url = (
+            requests.Request(url=self.config.url, params=params_with_page).prepare().url
+        )
         assert url is not None
         b64url = base64.urlsafe_b64encode(url.encode("utf-8")).decode("utf-8")
         return f"{b64url}.json"
@@ -157,7 +163,10 @@ class RawFetchedFile(BaseModel):
     @property
     def gcs_key(self) -> str:
         hive_str = "/".join(
-            [f"{key}={SERIALIZERS[type(getattr(self, key))](getattr(self, key))}" for key in self.partitions]
+            [
+                f"{key}={SERIALIZERS[type(getattr(self, key))](getattr(self, key))}"
+                for key in self.partitions
+            ]
         )
         return f"{self.table}/{hive_str}/{self.filename}"
 
@@ -181,13 +190,23 @@ class RawFetchedFile(BaseModel):
         return v
 
 
+class ParsedRecordMetadata(BaseModel):
+    line_number: Optional[int]
+
+
+class ParsedRecord(BaseModel):
+    file: RawFetchedFile
+    record: Dict[str, Any]
+    metadata: ParsedRecordMetadata
+
+
 # TODO: dedupe this with above, and maybe __root__ should be List[FetchedRecord]?
 # this is a dataclass so we can use it as a dictionary key
 @dataclass(eq=True, frozen=True)
 class HourAgg(BaseModel):
     bucket: ClassVar[str] = PARSED_BUCKET
-    partitions: ClassVar[List[str]] = ["dt", "hour"]
     table: Union[FeedType, GtfsScheduleFileType]
+    partitions: ClassVar[List[str]] = ["dt", "hour"]
     base64url: str
     hour: pendulum.DateTime
 
@@ -207,7 +226,10 @@ class HourAgg(BaseModel):
     @property
     def gcs_key(self) -> str:
         hive_str = "/".join(
-            [f"{key}={SERIALIZERS[type(getattr(self, key))](getattr(self, key))}" for key in self.partitions]
+            [
+                f"{key}={SERIALIZERS[type(getattr(self, key))](getattr(self, key))}"
+                for key in self.partitions
+            ]
         )
         hive_table = (
             f"gtfs_schedule__{slugify(self.table, separator='_')}"
@@ -217,14 +239,56 @@ class HourAgg(BaseModel):
         return f"{hive_table}/{hive_str}/{self.filename}"
 
 
-class ParsedRecordMetadata(BaseModel):
-    line_number: Optional[int]
+class ParseOutcomeMetadata(BaseModel):
+    hash: str
 
 
-class ParsedRecord(BaseModel):
+class ParseOutcome(BaseModel):
     file: RawFetchedFile
-    record: Dict[str, Any]
-    metadata: ParsedRecordMetadata
+    metadata: ParseOutcomeMetadata
+    success: bool
+    exception: Optional[Exception]
+
+    class Config:
+        arbitrary_types_allowed = True
+        json_encoders = {
+            Exception: str,
+            pendulum.DateTime: lambda ts: ts.to_iso8601_string(),
+        }
+
+
+class FeedTypeHourOutcomes(BaseModel):
+    bucket: ClassVar[str] = PARSED_BUCKET
+    partitions: ClassVar[List[str]] = ["dt"]
+    feed_type: FeedType
+    hour: pendulum.DateTime
+
+    @property
+    def table(self) -> str:
+        return f"{self.feed_type.value}__outcomes"
+
+    @validator("hour")
+    def convert_hour(cls, v) -> pendulum.DateTime:
+        assert isinstance(v, datetime.datetime)
+        return pendulum.instance(v).in_tz("UTC")
+
+    @property
+    def dt(self) -> pendulum.Date:
+        return self.hour.date()
+
+    @property
+    def filename(self):
+        return f"{self.hour.to_iso8601_string()}.jsonl"
+
+    @property
+    def gcs_key(self) -> str:
+        hive_str = "/".join(
+            [
+                f"{key}={SERIALIZERS[type(getattr(self, key))](getattr(self, key))}"
+                for key in self.partitions
+            ]
+        )
+        return f"{self.table}/{hive_str}/{self.filename}"
 
 
 # https://github.com/pydantic/pydantic/discussions/2410
@@ -345,7 +409,9 @@ FEED_TYPES: Dict[FeedType, Type[FeedContents]] = {
     feed_type: kls for kls in FeedContents.__subclasses__() for feed_type in kls.feed_types  # type: ignore
 }
 
-missing_feed_types = [feed_type.value for feed_type in FeedType if feed_type not in FEED_TYPES]
+missing_feed_types = [
+    feed_type.value for feed_type in FeedType if feed_type not in FEED_TYPES
+]
 assert not missing_feed_types, f"Missing parse configurations for {missing_feed_types}"
 
 if __name__ == "__main__":
@@ -364,7 +430,9 @@ if __name__ == "__main__":
                 contents=response.content,
             )
             client = storage.Client()
-            typer.secho(f"Saving to {raw.bucket}/{raw.gcs_key}", fg=typer.colors.MAGENTA)
-            client.bucket(raw.bucket.removeprefix("gs://")).blob(raw.gcs_key).upload_from_string(
-                raw.json(), client=client
+            typer.secho(
+                f"Saving to {raw.bucket}/{raw.gcs_key}", fg=typer.colors.MAGENTA
             )
+            client.bucket(raw.bucket.removeprefix("gs://")).blob(
+                raw.gcs_key
+            ).upload_from_string(raw.json(), client=client)

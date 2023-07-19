@@ -4,6 +4,7 @@ Parses fetched data and groups hourly to reduce the number of files for external
 import csv
 import datetime
 import gzip
+import hashlib
 import io
 import json
 import traceback
@@ -12,7 +13,7 @@ from collections import defaultdict, namedtuple
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from io import BytesIO
 from pprint import pformat
-from typing import Optional, List, Annotated, DefaultDict, Iterable, Tuple, Union, Dict
+from typing import Optional, List, Annotated, DefaultDict, Iterable, Union, Dict
 
 import humanize
 import pendulum
@@ -22,7 +23,7 @@ from google.cloud import storage  # type: ignore
 from google.protobuf.json_format import MessageToDict
 from google.protobuf.message import DecodeError
 from google.transit import gtfs_realtime_pb2  # type: ignore
-from pydantic import parse_obj_as, ValidationError
+from pydantic import parse_obj_as, ValidationError, BaseModel
 from tqdm import tqdm
 
 from fetcher.common import (
@@ -37,9 +38,14 @@ from fetcher.common import (
     GtfsScheduleFileType,
     ListOfDicts,
     ParsedRecordMetadata,
+    ParseOutcome,
+    ParseOutcomeMetadata,
+    FeedTypeHourOutcomes,
 )
 
-HourKey = namedtuple("HourKey", ["hour", "base64url"])
+# base64url technically makes feed_type unnecessary, but we use it for eventual
+HourKey = namedtuple("HourKey", ["feed_type", "hour", "base64url"])
+
 app = typer.Typer()
 
 
@@ -54,35 +60,51 @@ def hour_key(blob: storage.Blob) -> HourKey:
     ) = blob.name.split("/")
     _, hour = hourequals.split("=")
     _, base64url = base64urlequals.split("=", maxsplit=1)
-    return HourKey(hour, base64url)
+    return HourKey(feed_type, hour, base64url)
+
+
+class ParsedFile(BaseModel):
+    feed_type: Union[FeedType, GtfsScheduleFileType]
+    hash: bytes
+    records: Iterable[Dict]
 
 
 def file_to_records(
     file: RawFetchedFile,
-) -> Iterable[Tuple[Union[FeedType, GtfsScheduleFileType], Iterable[Dict]]]:
+) -> Iterable[ParsedFile]:
     pydantic_type = FEED_TYPES[file.config.feed_type]
     try:
         if file.config.feed_type == FeedType.gtfs_schedule:
             with zipfile.ZipFile(BytesIO(file.contents)) as zipf:
                 for zipf_file in zipf.namelist():
-                    # https://stackoverflow.com/a/60918920
-                    with io.TextIOWrapper(zipf.open(zipf_file), encoding="utf-8") as f:
-                        reader = csv.DictReader(f)
-                        # TODO: this will throw an error if attempting to parse a file we don't enumerate
-                        #  we probably want to just throw a warning/generate an outcome rather than stop
-                        #  further processing
-                        # looking up the enum by value not name
-                        yield GtfsScheduleFileType(zipf_file), parse_obj_as(
-                            ListOfDicts, list(reader)
-                        ).records
+                    with zipf.open(zipf_file) as f:
+                        contents = f.read()
+                    reader = csv.DictReader(
+                        io.TextIOWrapper(io.BytesIO(contents), encoding="utf-8")
+                    )
+                    # TODO: this will throw an error if attempting to parse a file we don't enumerate
+                    #  we probably want to just throw a warning/generate an outcome rather than stop
+                    #  further processing
+                    # looking up the enum by value not name
+                    yield ParsedFile(
+                        feed_type=GtfsScheduleFileType(zipf_file),
+                        hash=hashlib.md5(contents).digest(),
+                        records=parse_obj_as(ListOfDicts, list(reader)).records,
+                    )
         elif pydantic_type == GtfsRealtime:
             feed = gtfs_realtime_pb2.FeedMessage()
             feed.ParseFromString(file.contents)
-            yield file.config.feed_type, GtfsRealtime(**MessageToDict(feed)).records
+            yield ParsedFile(
+                feed_type=file.config.feed_type,
+                hash=hashlib.md5(file.contents).digest(),
+                records=GtfsRealtime(**MessageToDict(feed)).records,
+            )
         else:
-            yield file.config.feed_type, parse_obj_as(
-                pydantic_type, json.loads(file.contents)
-            ).records
+            yield ParsedFile(
+                feed_type=file.config.feed_type,
+                hash=hashlib.md5(file.contents).digest(),
+                records=parse_obj_as(pydantic_type, json.loads(file.contents)).records,
+            )
     except (ValidationError, DecodeError) as e:
         typer.secho(
             f"{type(e)} occurred on {file.bucket}/{file.gcs_key}", fg=typer.colors.RED
@@ -116,7 +138,6 @@ def save_hour_agg(
         start = pendulum.now()
         blob = client.bucket(agg.bucket.removeprefix("gs://")).blob(agg.gcs_key)
         blob.upload_from_string(contents, timeout=timeout, client=client)
-        start.diff()
         msg = f"Took {humanize.naturaldelta(start.diff().total_seconds())} to save {content_size} to {agg_path}"
         if pbar:
             pbar.write(msg)
@@ -144,7 +165,7 @@ def handle_hour(
     blobs: List[storage.Blob],
     pbar: Optional[tqdm] = None,
     timeout: int = 60,
-) -> int:
+) -> List[ParseOutcome]:
     def write(*args, fg=None, **kwargs):
         if pbar:
             pbar.write(*args, **kwargs)
@@ -153,16 +174,19 @@ def handle_hour(
 
     write(f"Handling {len(blobs)=} for {key}")
     client = storage.Client()
+    outcomes = []
     aggs: DefaultDict[
         Union[FeedType, GtfsScheduleFileType], List[ParsedRecord]
     ] = defaultdict(list)
 
     # we could do this streaming, but data should be small enough
     for blob in blobs:
+        blob_hash = hashlib.md5()
         file = parse_blob(blob=blob, client=client)
-        for feed_type, parsed_records in file_to_records(file):
-            if parsed_records:
-                aggs[feed_type].extend(
+        for parsed_file in file_to_records(file):
+            if parsed_file.records:
+                blob_hash.update(parsed_file.hash)
+                aggs[parsed_file.feed_type].extend(
                     [
                         ParsedRecord(
                             file=file,
@@ -171,25 +195,34 @@ def handle_hour(
                                 line_number=idx,
                             ),
                         )
-                        for idx, record in enumerate(parsed_records)
+                        for idx, record in enumerate(parsed_file.records)
                     ]
                 )
             else:
                 write(
-                    f"WARNING: no records found for {feed_type} {blob.self_link}",
+                    f"WARNING: no records found for {parsed_file.feed_type} {blob.self_link}",
                     fg=typer.colors.YELLOW,
                 )
+        outcomes.append(
+            ParseOutcome(
+                file=file,
+                metadata=ParseOutcomeMetadata(
+                    hash=blob_hash.hexdigest(),
+                ),
+                success=True,
+            )
+        )
 
-    written = 0
     for feed_type, records in aggs.items():
-        written += save_hour_agg(
+        save_hour_agg(
             agg=HourAgg(
                 table=feed_type,
                 **key._asdict(),
             ),
             records=records,
         )
-    return written
+
+    return outcomes
 
 
 @app.command()
@@ -209,7 +242,7 @@ def day(
             formats=["%Y-%m-%d"],
         ),
     ] = datetime.date.today(),  # type: ignore[assignment]
-    feed_type: Annotated[Optional[List[FeedType]], typer.Option()] = None,
+    include: Annotated[Optional[List[FeedType]], typer.Option()] = None,
     exclude: Annotated[Optional[List[FeedType]], typer.Option()] = None,
     bucket: str = RawFetchedFile.bucket,
     base64url: Optional[str] = None,
@@ -221,13 +254,13 @@ def day(
 
     E.g. gs://test-jarvus-transit-data-demo-parsed/gtfs_rt__vehicle_positions/dt=2023-07-07/hour=2023-07-07T01:00:00+00:00/aHR0cHM6Ly90cnVldGltZS5wb3J0YXV0aG9yaXR5Lm9yZy9ndGZzcnQtdHJhaW4vdmVoaWNsZXM=.jsonl
     """
-    if feed_type and exclude:
+    if include and exclude:
         raise ValueError("cannot specify both table and exclude")
 
     client = storage.Client()
 
-    if feed_type:
-        feed_types = feed_type
+    if include:
+        feed_types = include
     else:
         with open("./feeds.yaml") as f:
             configs = parse_obj_as(List[FeedConfig], yaml.safe_load(f))
@@ -237,10 +270,8 @@ def day(
         feed_types = list(feed_types_set)
 
     errors = []
-    for ft in feed_types:
-        prefix = (
-            f"{ft.value}/dt={SERIALIZERS[pendulum.Date](pendulum.instance(dt).date())}/"
-        )
+    for feed_type in feed_types:
+        prefix = f"{feed_type.value}/dt={SERIALIZERS[pendulum.Date](pendulum.instance(dt).date())}/"
         typer.secho(f"Listing items in {bucket}/{prefix}...", fg=typer.colors.MAGENTA)
         blobs: List[storage.Blob] = list(
             client.list_blobs(bucket.removeprefix("gs://"), prefix=prefix)
@@ -261,7 +292,9 @@ def day(
             f"Found {len(blobs)=} grouped into {len(aggs)=}.", fg=typer.colors.MAGENTA
         )
 
-        pbar = tqdm(total=len(aggs), leave=False, desc=ft)
+        hourly_outcomes = defaultdict(list)
+
+        pbar = tqdm(total=len(aggs), leave=False, desc=feed_type)
         with ProcessPoolExecutor(max_workers=workers) as pool:
             futures = {
                 pool.submit(
@@ -277,14 +310,30 @@ def day(
                 key = futures[future]
                 try:
                     pbar.update(1)
-                    future.result()
+                    hourly_outcomes[key.hour].extend(future.result())
                 except Exception as e:
                     typer.secho(
                         f"Exception returned for {key}: {traceback.format_exc()}",
                         fg=typer.colors.RED,
                     )
                     errors.append(e)
-
+        for hour, outcomes in hourly_outcomes.items():
+            outcomes_file = FeedTypeHourOutcomes(
+                feed_type=feed_type,
+                hour=hour,
+            )
+            contents = "\n".join(
+                outcome.json(exclude={"file": {"contents"}}) for outcome in outcomes
+            )
+            blob = client.bucket(outcomes_file.bucket.removeprefix("gs://")).blob(
+                outcomes_file.gcs_key
+            )
+            start = pendulum.now()
+            blob.upload_from_string(contents, timeout=timeout, client=client)
+            typer.secho(
+                f"Took {humanize.naturaldelta(start.diff().total_seconds())} to "
+                f"save {humanize.naturalsize(len(contents))} to {outcomes_file.bucket}/{outcomes_file.gcs_key}"
+            )
     if errors:
         raise RuntimeError(pformat(errors))
 
