@@ -17,7 +17,8 @@ jobs:
     - name: run mypy
       working-directory: fetcher
       run: |
-        poetry install
+        poetry export --without-hashes --format=requirements.txt > requirements.txt
+        poetry run pip install -r requirements.txt
         poetry run mypy .
         poetry run pytest
     - uses: docker/build-push-action@v4

@@ -39,14 +39,8 @@ types-protobuf = "^4.23.0.1"
 types-tqdm = "^4.65.0.1"
 types-python-slugify = "^8.0.0.2"
 
-[tool.black]
-line-length = 120
-
 [tool.mypy]
 plugins = "pydantic.mypy"
-
-[tool.ruff]
-line-length = 120
 
 [build-system]
 requires = ["poetry-core"]
