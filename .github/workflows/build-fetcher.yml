@@ -25,7 +25,7 @@ jobs:
         RAW_BUCKET: gs://this-does-not-exist-raw
         PARSED_BUCKET: gs://this-does-not-exist-parsed
     - uses: docker/build-push-action@v4
-      working-directory: fetcher
       with:
+        context: fetcher
         push: false
 #        tags: user/app:latest
