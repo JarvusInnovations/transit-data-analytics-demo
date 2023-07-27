@@ -1,0 +1,57 @@
+version: 2
+
+models:
+  - name: stg_gtfs_rt__trip_updates
+    description: |
+      Model that pulls trip update message fields out of the raw JSON.
+    columns:
+      - &metadata_dt
+        name: dt
+        description: |
+          Date (UTC) on which this data was scraped.
+          Partition for the underlying hive-partitioned data.
+      - &metadata_hour
+        name: hour
+        description: |
+          Hour (UTC) during which this data was scraped; formatted like `2023-07-18 00:00:00 UTC` (timestamp of the first instant in the hour).
+          Partition for the underlying hive-partitioned data.
+      - &metadata_url
+        name: _url
+        description: |
+          The URL (formatted as a string) from which this data was scraped.
+      - &metadata_extract_ts
+        name: _extract_ts
+        description: |
+          The timestamp (UTC) at which this data was scraped.
+      - &gtfs_rt_trip_id
+        name: trip_id
+        description: See https://gtfs.org/realtime/reference/#message-tripdescriptor.
+      - &gtfs_rt_trip_route_id
+        name: trip_route_id
+        description: See https://gtfs.org/realtime/reference/#message-tripdescriptor.
+      - &gtfs_rt_trip_direction_id
+        name: trip_direction_id
+        description: See https://gtfs.org/realtime/reference/#message-tripdescriptor.
+      - &gtfs_rt_trip_start_date
+        name: trip_start_date
+        description: See https://gtfs.org/realtime/reference/#message-tripdescriptor.
+      - &gtfs_rt_trip_start_time
+        name: trip_start_time
+        description: See https://gtfs.org/realtime/reference/#message-tripdescriptor.
+      - &gtfs_rt_trip_schedule_relationship
+        name: trip_schedule_relationship
+        description: See https://gtfs.org/realtime/reference/#message-tripdescriptor.
+  - name: stg_gtfs_rt__vehicle_positions
+    description: |
+      Model that pulls vehicle positions message fields out of the raw JSON.
+    columns:
+      - *metadata_dt
+      - *metadata_hour
+      - *metadata_url
+      - *metadata_extract_ts
+      - *gtfs_rt_trip_id
+      - *gtfs_rt_trip_route_id
+      - *gtfs_rt_trip_direction_id
+      - *gtfs_rt_trip_start_date
+      - *gtfs_rt_trip_start_time
+      - *gtfs_rt_trip_schedule_relationship
