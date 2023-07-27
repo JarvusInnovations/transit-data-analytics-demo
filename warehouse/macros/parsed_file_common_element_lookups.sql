@@ -20,7 +20,7 @@
 
 -------------- GTFS RT --------------
 
--- given the path to the `trip` element (something like `{{ parent_json_path }}`, does not include initial `$.`)
+-- given the path to the `trip` element (something like `entity.vehicle`, does not include initial `$.`)
 -- parse a trip descriptor from JSONL
 {% macro read_gtfs_rt_trip_descriptor(parent_json_path) %}
 
