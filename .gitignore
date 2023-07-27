@@ -1,3 +1,6 @@
+# Mac nonsense
+.DS_Store
+
 kubernetes/.secrets
 
 # from https://github.com/github/gitignore/blob/main/Python.gitignore
@@ -162,3 +165,7 @@ cython_debug/
 #  and can be added to the global gitignore or merged into this file.  For a more nuclear
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 .idea/
+
+# dbt stuff
+# https://stackoverflow.com/questions/60565688/what-is-the-user-yml-file-what-is-its-purpose
+.user.yml
