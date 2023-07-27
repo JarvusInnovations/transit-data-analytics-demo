@@ -4,9 +4,9 @@
 
         dt,
         hour,
-        {{ get_string_value_at_json_path('file' ,'config.url') }} AS _url,
-        {{ get_string_value_at_json_path('file' , 'config.name') }} AS _name,
-        TIMESTAMP({{ get_string_value_at_json_path('file', 'ts') }}) AS _extract_ts
+        JSON_VALUE(file,'$.config.url') AS _url,
+        JSON_VALUE(file, '$.config.name') AS _name,
+        TIMESTAMP(JSON_VALUE(file, '$.ts')) AS _extract_ts
 
 {% endmacro %}
 
@@ -24,12 +24,12 @@
 -- parse a trip descriptor from JSONL
 {% macro read_gtfs_rt_trip_descriptor(parent_json_path) %}
 
-        {{ get_string_value_at_json_path('record', parent_json_path + '.trip.tripId') }} AS trip_id,
-        {{ get_string_value_at_json_path('record', parent_json_path + '.trip.routeId') }} AS trip_route_id,
-        {{ get_string_value_at_json_path('record', parent_json_path + '.trip.direectionId') }} AS trip_direction_id,
-        {{ get_string_value_at_json_path('record', parent_json_path + '.trip.startTime') }} AS trip_start_time,
-        {{ get_string_value_at_json_path('record', parent_json_path + '.trip.startDate') }} AS trip_start_date,
-        {{ get_string_value_at_json_path('record', parent_json_path + '.trip.scheduleRelationship') }} AS trip_schedule_relationship
+        JSON_VALUE(record, '$.{{ parent_json_path }}.trip.tripId') AS trip_id,
+        JSON_VALUE(record, '$.{{ parent_json_path }}.trip.routeId') AS trip_route_id,
+        JSON_VALUE(record, '$.{{ parent_json_path }}.trip.directionId') AS trip_direction_id,
+        JSON_VALUE(record, '$.{{ parent_json_path }}.trip.startTime') AS trip_start_time,
+        JSON_VALUE(record, '$.{{ parent_json_path }}.trip.startDate') AS trip_start_date,
+        JSON_VALUE(record, '$.{{ parent_json_path }}.trip.scheduleRelationship') AS trip_schedule_relationship
 
 {% endmacro %}
 
