@@ -43,7 +43,8 @@ from fetcher.common import (
     FeedTypeHourParseOutcomes,
 )
 
-# base64url technically makes feed_type unnecessary, but we use it for eventual
+# base64url technically makes feed_type unnecessary, but it makes it easier to determine
+# how to parse the data once grouped
 HourKey = namedtuple("HourKey", ["feed_type", "hour", "base64url"])
 
 app = typer.Typer()
