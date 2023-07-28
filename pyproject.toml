@@ -1,0 +1,6 @@
+# This exists for configuration of project-wide linters etc.
+[tool.black]
+line-length = 120
+
+[tool.ruff]
+line-length = 120

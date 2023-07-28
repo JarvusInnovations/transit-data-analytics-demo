@@ -181,13 +181,23 @@ class RawFetchedFile(BaseModel):
         return v
 
 
+class ParsedRecordMetadata(BaseModel):
+    line_number: Optional[int]
+
+
+class ParsedRecord(BaseModel):
+    file: RawFetchedFile
+    record: Dict[str, Any]
+    metadata: ParsedRecordMetadata
+
+
 # TODO: dedupe this with above, and maybe __root__ should be List[FetchedRecord]?
 # this is a dataclass so we can use it as a dictionary key
 @dataclass(eq=True, frozen=True)
 class HourAgg(BaseModel):
     bucket: ClassVar[str] = PARSED_BUCKET
-    partitions: ClassVar[List[str]] = ["dt", "hour"]
     table: Union[FeedType, GtfsScheduleFileType]
+    partitions: ClassVar[List[str]] = ["dt", "hour"]
     base64url: str
     hour: pendulum.DateTime
 
@@ -217,10 +227,53 @@ class HourAgg(BaseModel):
         return f"{hive_table}/{hive_str}/{self.filename}"
 
 
-class FetchedRecord(BaseModel):
+class ParseOutcomeMetadata(BaseModel):
+    hash: str
+
+
+class ParseOutcome(BaseModel):
     file: RawFetchedFile
-    record: Dict[str, Any]
-    line_number: Optional[int]
+    metadata: ParseOutcomeMetadata
+    success: bool
+    exception: Optional[Exception]
+
+    class Config:
+        arbitrary_types_allowed = True
+        json_encoders = {
+            Exception: str,
+            pendulum.DateTime: lambda ts: ts.to_iso8601_string(),
+        }
+
+
+class FeedTypeHourParseOutcomes(BaseModel):
+    bucket: ClassVar[str] = PARSED_BUCKET
+    partitions: ClassVar[List[str]] = ["dt"]
+    feed_type: FeedType
+    hour: pendulum.DateTime
+
+    @property
+    def table(self) -> str:
+        return f"{self.feed_type.value}__parse_outcomes"
+
+    @validator("hour")
+    def convert_hour(cls, v) -> pendulum.DateTime:
+        assert isinstance(v, datetime.datetime)
+        return pendulum.instance(v).in_tz("UTC")
+
+    @property
+    def dt(self) -> pendulum.Date:
+        return self.hour.date()
+
+    @property
+    def filename(self):
+        return f"{self.hour.to_iso8601_string()}.jsonl"
+
+    @property
+    def gcs_key(self) -> str:
+        hive_str = "/".join(
+            [f"{key}={SERIALIZERS[type(getattr(self, key))](getattr(self, key))}" for key in self.partitions]
+        )
+        return f"{self.table}/{hive_str}/{self.filename}"
 
 
 # https://github.com/pydantic/pydantic/discussions/2410

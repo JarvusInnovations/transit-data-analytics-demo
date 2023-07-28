@@ -14,7 +14,9 @@ from fetcher.common import KeyValue, FeedConfig, FeedType
 from fetcher.tasks import fetch_feed
 
 
-def configs_to_urls(configs: List[FeedConfig]) -> List[Tuple[FeedConfig, List[KeyValue]]]:
+def configs_to_urls(
+    configs: List[FeedConfig],
+) -> List[Tuple[FeedConfig, List[KeyValue]]]:
     fetches = []
     for config in configs:
         if config.pages:

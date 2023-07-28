@@ -3,7 +3,7 @@ from typing import Dict, Type, Any
 import pendulum
 from polyfactory.factories.pydantic_factory import ModelFactory
 
-from fetcher.tasks import RawFetchedFile, FeedConfig, FeedType
+from fetcher.common import RawFetchedFile, FeedConfig, FeedType
 
 
 # TODO: get this working
