@@ -1,0 +1,4 @@
+[holomapping]
+holosource = "pmint93-helm-charts"
+root = "charts/metabase"
+files = "**"
