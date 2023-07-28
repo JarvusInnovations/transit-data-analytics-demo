@@ -40,7 +40,7 @@ from fetcher.common import (
     ParsedRecordMetadata,
     ParseOutcome,
     ParseOutcomeMetadata,
-    FeedTypeHourOutcomes,
+    FeedTypeHourParseOutcomes,
 )
 
 # base64url technically makes feed_type unnecessary, but we use it for eventual
@@ -306,7 +306,7 @@ def day(
 
         # note: we save individual outcomes per hour in case we want to orchestrate an hourly parse job in the future
         for hour, outcomes in hourly_outcomes.items():
-            outcomes_file = FeedTypeHourOutcomes(
+            outcomes_file = FeedTypeHourParseOutcomes(
                 feed_type=feed_type,
                 hour=hour,
             )

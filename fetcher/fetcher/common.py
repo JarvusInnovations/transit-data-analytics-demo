@@ -245,7 +245,7 @@ class ParseOutcome(BaseModel):
         }
 
 
-class FeedTypeHourOutcomes(BaseModel):
+class FeedTypeHourParseOutcomes(BaseModel):
     bucket: ClassVar[str] = PARSED_BUCKET
     partitions: ClassVar[List[str]] = ["dt"]
     feed_type: FeedType
@@ -253,7 +253,7 @@ class FeedTypeHourOutcomes(BaseModel):
 
     @property
     def table(self) -> str:
-        return f"{self.feed_type.value}__outcomes"
+        return f"{self.feed_type.value}__parse_outcomes"
 
     @validator("hour")
     def convert_hour(cls, v) -> pendulum.DateTime:
