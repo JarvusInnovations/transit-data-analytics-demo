@@ -1,0 +1,8 @@
+ingress:
+  enabled: true
+  hosts:
+    - metabase.k8s.tdad.jarv.us
+  tls:
+    - secretName: metabase-tls
+      hosts:
+        - metabase.k8s.tdad.jarv.us
