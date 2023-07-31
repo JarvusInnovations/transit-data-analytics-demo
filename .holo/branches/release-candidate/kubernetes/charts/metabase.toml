@@ -1,4 +1,4 @@
 [holomapping]
-holosource = "pmint93-helm-charts"
+holosource = "infra-components"
 root = "charts/metabase"
 files = "**"
