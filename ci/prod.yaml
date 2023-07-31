@@ -12,6 +12,8 @@ jarvus:
       namespace: metabase
       driver: helm
       path: kubernetes/charts/metabase
+      values:
+        - kubernetes/values/prod-metabase.yml
 
     # base services
     - name: cert-manager
