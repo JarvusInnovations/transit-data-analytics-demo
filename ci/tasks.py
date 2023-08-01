@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import List, Optional
 
 from invoke import task, Context
-from pydantic import BaseModel, parse_obj_as
+from pydantic import BaseModel, model_validator
 
 
 # TODO: use GitPython to form absolute paths
@@ -26,7 +26,7 @@ class Deployment(BaseModel):
     values: List[Path] = []
 
     # kustomize specific
-    path: Optional[Path] = None
+    directory: Optional[Path] = None
 
     @property
     def namespace_cli(self) -> str:
@@ -35,6 +35,16 @@ class Deployment(BaseModel):
     @property
     def values_cli(self) -> str:
         return " ".join(f"-f ../{values}" for values in self.values)
+
+    @model_validator(mode="after")
+    def check_fields_for_driver(self):
+        if self.driver == Driver.helm:
+            assert self.chart is not None
+        elif self.driver == Driver.kustomize:
+            assert self.directory is not None
+        else:
+            raise RuntimeError("should not get here")
+        return self
 
 
 class JarvusConfig(BaseModel):
@@ -48,7 +58,7 @@ def helm_plugins(c):
 
 @task
 def parse_jarvus_config(c: Context):
-    c.update({"jarvus_config": parse_obj_as(JarvusConfig, c.config["jarvus"]._config)})
+    c.update({"jarvus_config": JarvusConfig(**c.config["jarvus"]._config)})
 
 
 @task(helm_plugins, parse_jarvus_config)
@@ -95,6 +105,6 @@ def apply(c, name=None):
                 ]
                 c.run(" ".join(args))
             elif deployment.driver == Driver.kustomize:
-                c.run(f"kubectl apply -k ../{deployment.path}")
+                c.run(f"kubectl apply -k ../{deployment.directory}")
             else:
                 raise RuntimeError
