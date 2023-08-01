@@ -1,0 +1,31 @@
+name: build-warehouse
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  check_and_build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v4
+      with:
+        python-version: 3.11
+    - uses: abatilo/actions-poetry@v2
+    - name: run mypy and pytest
+      working-directory: warehouse
+      run: |
+        poetry export --with=dev --without-hashes --format=requirements.txt > requirements.txt
+        poetry run pip install -r requirements.txt
+        poetry run mypy .
+        poetry run pytest
+      env:
+        RAW_BUCKET: gs://this-does-not-exist-raw
+        PARSED_BUCKET: gs://this-does-not-exist-parsed
+    - uses: docker/build-push-action@v4
+      with:
+        context: warehouse
+        push: false
+#        tags: user/app:latest
