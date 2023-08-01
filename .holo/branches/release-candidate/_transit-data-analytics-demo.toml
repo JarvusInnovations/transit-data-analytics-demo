@@ -1,6 +1,6 @@
 [holomapping]
 files = [
-    ".github/**",
+    ".github/release-*",
     "ci/**",
     "kubernetes/**",
 ]
