@@ -1,4 +1,4 @@
-name: Release deploy
+name: release-deploy
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
       - "releases/*"
 
 jobs:
-  release:
+  release_deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2

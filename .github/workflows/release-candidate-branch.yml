@@ -1,4 +1,4 @@
-name: Build candidate branch
+name: release-candidate-branch
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
       - "*"
 
 jobs:
-  release:
+  release_candidate:
     runs-on: ubuntu-latest
     steps:
       - uses: JarvusInnovations/hologit@actions/projector/v1
