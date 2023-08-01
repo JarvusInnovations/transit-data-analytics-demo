@@ -1,4 +1,4 @@
-name: Build candidate branch
+name: release-candidate-branch
 
 on:
   push:
