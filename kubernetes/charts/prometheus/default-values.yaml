@@ -1,0 +1,21 @@
+# These values as applied first as template-provided defaults
+
+server:
+  global:
+
+    # for compatibility with Lens: https://github.com/lensapp/lens/blob/master/troubleshooting/custom-prometheus.md#helm-chart
+    scrape_interval: 30s
+
+  strategy:
+    type: Recreate
+
+alertmanager:
+  strategy:
+    type: Recreate
+
+# nodeExporter:
+
+#   # allow exporter to run on all tainted nodes by default
+#   tolerations:
+#   - operator: Exists
+#     effect: NoSchedule

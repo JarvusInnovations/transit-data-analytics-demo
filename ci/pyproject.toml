@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "ci"
+version = "0.1.0"
+description = ""
+authors = ["Andrew Vaccaro <andrew.v@jarv.us>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+pydantic = "^2.0.2"
+invoke = "^2.2.0"
+gitpython = "^3.1.32"
+
+
+[tool.poetry.group.dev.dependencies]
+mypy = "^1.4.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

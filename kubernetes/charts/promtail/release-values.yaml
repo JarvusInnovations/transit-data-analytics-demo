@@ -1,0 +1,2 @@
+# These values as applied last as downstream overrides
+# See https://github.com/grafana/helm-charts/blob/main/charts/promtail/values.yaml
