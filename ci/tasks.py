@@ -1,6 +1,6 @@
 from enum import StrEnum
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, NoReturn
 
 from invoke import task, Context
 from pydantic import BaseModel, model_validator
@@ -8,6 +8,10 @@ from pydantic import BaseModel, model_validator
 
 # TODO: use GitPython to form absolute paths
 # TODO: deploy secrets from Secret Manager
+
+
+def _assert_never(x: NoReturn) -> NoReturn:
+    assert False, "Unhandled type: {}".format(type(x).__name__)
 
 
 class Driver(StrEnum):
@@ -43,7 +47,7 @@ class Deployment(BaseModel):
         elif self.driver == Driver.kustomize:
             assert self.directory is not None
         else:
-            raise RuntimeError("should not get here")
+            raise _assert_never(self.driver)
         return self
 
 
@@ -82,7 +86,7 @@ def diff(c, name=None):
             elif deployment.driver == Driver.kustomize:
                 pass
             else:
-                raise RuntimeError
+                raise _assert_never(deployment.driver)
 
 
 @task(helm_plugins, parse_jarvus_config)
@@ -107,4 +111,4 @@ def apply(c, name=None):
             elif deployment.driver == Driver.kustomize:
                 c.run(f"kubectl apply -k ../{deployment.directory}")
             else:
-                raise RuntimeError
+                raise _assert_never(deployment.driver)
