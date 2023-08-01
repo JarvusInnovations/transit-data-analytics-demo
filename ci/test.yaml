@@ -7,4 +7,4 @@ jarvus:
     - name: fetcher
       namespace: fetcher-test
       driver: kustomize
-      path: kubernetes/overlays/fetcher-test
+      directory: kubernetes/overlays/fetcher-test
