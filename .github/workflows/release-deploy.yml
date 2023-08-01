@@ -1,4 +1,4 @@
-name: Release deploy
+name: release-deploy
 
 on:
   push:
