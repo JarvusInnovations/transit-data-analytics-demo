@@ -10,3 +10,13 @@ dagster-user-deployments:
         - "--python-file"
         - "/example_project/example_repo/repo.py"
       port: 3030
+
+dagsterDaemon:
+  image:
+    # override to use hologit
+    tag: 1.4.3
+
+dagsterWebserver:
+  image:
+    # override to use hologit
+    tag: 1.4.3
