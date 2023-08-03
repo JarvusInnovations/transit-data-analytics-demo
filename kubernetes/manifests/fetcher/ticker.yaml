@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ticker
+  labels:
+    app: ticker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ticker
+  template:
+    metadata:
+      labels:
+        app: ticker
+      annotations:
+        prometheus.io/scrape: 'true'
+        prometheus.io/port: '8000'
+    spec:
+      containers:
+        - name: ticker
+          image: ghcr.io/jarvusinnovations/transit-data-analytics-demo/fetcher:2023.7.14
+          ports:
+            - containerPort: 8000
+          command: [ python, -m, fetcher.ticker ]
+          envFrom:
+            - configMapRef:
+                name: fetcher-config
+          # TODO: doing this since we instantiate a storage client when importing tasks.py
+          volumeMounts:
+            - name: gcs-secret
+              mountPath: /etc/gcs-secret
+              readOnly: true
+      volumes:
+        - name: gcs-secret
+          secret:
+            secretName: fetcher-secret
