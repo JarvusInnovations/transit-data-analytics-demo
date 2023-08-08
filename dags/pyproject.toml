@@ -19,6 +19,7 @@ dagster-gcp = "^0.20.4"
 humanize = "^4.7.0"
 gtfs-realtime-bindings = "^1.0.0"
 python-slugify = "^8.0.1"
+dagster-postgres = "^0.20.4"
 
 
 [tool.poetry.group.dev.dependencies]
