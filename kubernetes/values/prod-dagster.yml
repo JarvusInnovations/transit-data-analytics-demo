@@ -7,9 +7,16 @@ dagster-user-deployments:
         tag: latest
         pullPolicy: Always
       dagsterApiGrpcArgs:
-        - "--python-file"
-        - "/app/dags/__init__.py"
+        - "--working-directory"
+        - "/app"
+        - "--module-name"
+        - "dags"
       port: 3030
+      env:
+        - name: RAW_BUCKET
+          value: 'gs://jarvus-transit-data-demo-raw'
+        - name: PARSED_BUCKET
+          value: 'gs://jarvus-transit-data-demo-parsed'
 
 dagsterDaemon:
   image:
