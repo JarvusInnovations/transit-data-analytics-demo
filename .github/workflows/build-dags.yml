@@ -1,4 +1,4 @@
-name: build-fetcher-image
+name: build-dags
 
 on:
   pull_request:
@@ -15,7 +15,7 @@ jobs:
         python-version: 3.11
     - uses: abatilo/actions-poetry@v2
     - name: run mypy and pytest
-      working-directory: fetcher
+      working-directory: dags
       run: |
         poetry export --with=dev --without-hashes --format=requirements.txt > requirements.txt
         poetry run pip install -r requirements.txt
@@ -24,13 +24,8 @@ jobs:
       env:
         RAW_BUCKET: gs://this-does-not-exist-raw
         PARSED_BUCKET: gs://this-does-not-exist-parsed
-    - uses: docker/login-action@v2
-      with:
-        registry: ghcr.io
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
     - uses: docker/build-push-action@v4
       with:
-        context: fetcher
+        context: dags
         push: false
-        tags: 'ghcr.io/jarvusinnovations/transit-data-analytics-demo/fetcher:test'
+        tags: 'ghcr.io/jarvusinnovations/transit-data-analytics-demo/dags:test'
