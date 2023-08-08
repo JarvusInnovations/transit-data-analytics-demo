@@ -271,7 +271,8 @@ def raw_files_list(
     )
 )
 def parsed_and_grouped_files(
-    context: AssetExecutionContext, raw_files_list: Dict[str, List[storage.Blob]]
+    context: AssetExecutionContext,
+    raw_files_list: Dict[str, List[storage.Blob]],
 ) -> Dict[str, List[ParseOutcome]]:
     logger = get_dagster_logger()
     keys = context.partition_key.keys_by_dimension

@@ -1,14 +1,14 @@
 dagster-user-deployments:
   enabled: true
   deployments:
-    - name: "k8s-example-user-code-1"
+    - name: "tdad-dags"
       image:
-        repository: "docker.io/dagster/user-code-example"
+        repository: "ghcr.io/jarvusinnovations/transit-data-analytics-demo/dags:latest"
         tag: latest
         pullPolicy: Always
       dagsterApiGrpcArgs:
         - "--python-file"
-        - "/example_project/example_repo/repo.py"
+        - "/app/dags/__init__.py"
       port: 3030
 
 dagsterDaemon:
