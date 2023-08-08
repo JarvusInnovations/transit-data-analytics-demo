@@ -219,7 +219,8 @@ def handle_hour(
             "feed_type": StaticPartitionsDefinition(list(FeedType.__members__.keys())),
             "hour": HourlyPartitionsDefinition(start_date="2023-07-05-00:00"),
         }
-    )
+    ),
+    io_manager_key="gcs_io_manager",
 )
 def raw_files_list(
     context: AssetExecutionContext,
@@ -268,7 +269,8 @@ def raw_files_list(
             "feed_type": StaticPartitionsDefinition(list(FeedType.__members__.keys())),
             "hour": HourlyPartitionsDefinition(start_date="2023-07-05-00:00"),
         }
-    )
+    ),
+    io_manager_key="gcs_io_manager",
 )
 def parsed_and_grouped_files(
     context: AssetExecutionContext,
