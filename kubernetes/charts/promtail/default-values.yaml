@@ -1,0 +1,11 @@
+# These values as applied first as template-provided defaults
+
+config:
+  clients:
+    - url: http://loki:3100/loki/api/v1/push
+
+tolerations:
+
+ # run on all nodes by default
+ - operator: Exists
+   effect: NoSchedule

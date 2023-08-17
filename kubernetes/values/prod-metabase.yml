@@ -1,0 +1,13 @@
+ingress:
+  enabled: true
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+  hosts:
+    - host: metabase.k8s.tdad.jarv.us
+      paths:
+        - /
+  tls:
+    - secretName: metabase-tls
+      hosts:
+        - metabase.k8s.tdad.jarv.us

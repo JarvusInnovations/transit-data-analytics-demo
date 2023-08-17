@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fetcher-config
+data:
+  GOOGLE_APPLICATION_CREDENTIALS: /etc/gcs-secret/google_application_credentials.json
+  HUEY_REDIS_HOST: redis
+  HUEY_WORKERS: "8"
+  PARSED_BUCKET: gs://jarvus-transit-data-demo-parsed
+  RAW_BUCKET: gs://jarvus-transit-data-demo-raw
