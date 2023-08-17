@@ -55,3 +55,21 @@ models:
       - *gtfs_rt_trip_start_date
       - *gtfs_rt_trip_start_time
       - *gtfs_rt_trip_schedule_relationship
+  - name: stg_gtfs_schedule__calendar
+    description: |
+      Model that pulls GTFS calendar file fields out of the raw JSON and casts to appropriate types.
+    columns:
+      - *metadata_dt
+      - *metadata_hour
+      - *metadata_url
+      - *metadata_extract_ts
+      - name: service_id
+      - name: monday
+      - name: tuesday
+      - name: wednesday
+      - name: thursday
+      - name: friday
+      - name: saturday
+      - name: sunday
+      - name: start_date
+      - name: end_date

@@ -1,0 +1,36 @@
+version: 2
+
+models:
+  - name: stg_gtfs_schedule__calendar
+    description: |
+      Model that pulls GTFS schedule calendar file fields out of the raw JSON and casts to appropriate types.
+      See https://gtfs.org/schedule/reference/#calendartxt for field documentation.
+    columns:
+      - &metadata_dt
+        name: dt
+        description: |
+          Date (UTC) on which this data was scraped.
+          Partition for the underlying hive-partitioned data.
+      - &metadata_hour
+        name: hour
+        description: |
+          Hour (UTC) during which this data was scraped; formatted like `2023-07-18 00:00:00 UTC` (timestamp of the first instant in the hour).
+          Partition for the underlying hive-partitioned data.
+      - &metadata_url
+        name: _url
+        description: |
+          The URL (formatted as a string) from which this data was scraped.
+      - &metadata_extract_ts
+        name: _extract_ts
+        description: |
+          The timestamp (UTC) at which this data was scraped.
+      - name: service_id
+      - name: monday
+      - name: tuesday
+      - name: wednesday
+      - name: thursday
+      - name: friday
+      - name: saturday
+      - name: sunday
+      - name: start_date
+      - name: end_date
