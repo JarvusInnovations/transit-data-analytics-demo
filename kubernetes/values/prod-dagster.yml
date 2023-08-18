@@ -35,6 +35,7 @@ dagsterWebserver:
 runLauncher:
   config:
     k8sRunLauncher:
+      jobNamespace: dagster-runs
       resources:
         limits:
           cpu: 1
