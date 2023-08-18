@@ -226,7 +226,7 @@ def raw_files_list(
     context: AssetExecutionContext,
 ) -> Dict[str, List[storage.Blob]]:
     logger = get_dagster_logger()
-    keys = context.partition_key.keys_by_dimension
+    keys: Dict = context.partition_key.keys_by_dimension  # type: ignore[attr-defined]
     logger.info(f"handling {keys}")
     feed_type: str = keys["feed_type"]
     hour = pendulum.from_format(keys["hour"], "YYYY-MM-DD-HH:mm")
@@ -239,7 +239,7 @@ def raw_files_list(
         ]
     )
 
-    bucket = os.getenv("RAW_BUCKET")
+    bucket = os.environ["RAW_BUCKET"]
     client = storage.Client()
     logger.info(f"Listing items in {bucket}/{prefix}...")
     blobs: List[storage.Blob] = list(client.list_blobs(bucket.removeprefix("gs://"), prefix=prefix))
@@ -277,7 +277,7 @@ def parsed_and_grouped_files(
     raw_files_list: Dict[str, List[storage.Blob]],
 ) -> Dict[str, List[ParseOutcome]]:
     logger = get_dagster_logger()
-    keys = context.partition_key.keys_by_dimension
+    keys: Dict = context.partition_key.keys_by_dimension  # type: ignore[attr-defined]
     logger.info(f"handling {keys}")
     feed_type: str = keys["feed_type"]
     hour = pendulum.from_format(keys["hour"], "YYYY-MM-DD-HH:mm")

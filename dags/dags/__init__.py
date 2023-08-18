@@ -13,8 +13,8 @@ from dagster import (
 )
 from dagster._utils import PICKLE_PROTOCOL
 from dagster._utils.backoff import backoff
-from dagster_gcp import GCSResource
-from dagster_gcp.gcs import PickledObjectGCSIOManager
+from dagster_gcp import GCSResource  # type: ignore[import]
+from dagster_gcp.gcs import PickledObjectGCSIOManager  # type: ignore[import]
 from google.api_core.exceptions import Forbidden, ServiceUnavailable, TooManyRequests
 from upath import UPath
 
@@ -82,7 +82,7 @@ defs = Definitions(
     resources={
         "gcs_io_manager": HivePartitionedGCSIOManager(
             client=GCSResource(project="transit-data-analytics-demo").get_client(),
-            bucket=os.getenv("PARSED_BUCKET").removeprefix("gs://"),
+            bucket=os.environ["PARSED_BUCKET"].removeprefix("gs://"),
             prefix="",  # no prefix; tables are the first partition right now
         ),
     },

@@ -4,7 +4,7 @@ import base64
 import datetime
 import os
 from enum import StrEnum
-from typing import Dict, Optional, List, ClassVar, Any, Type, Iterable, Callable, Union
+from typing import Dict, Optional, List, ClassVar, Any, Type, Iterable, Callable, Union, Mapping
 
 import pendulum
 import requests
@@ -100,9 +100,7 @@ class FeedConfig(BaseModel):
 
     @property
     def labels(self) -> Dict[str, Any]:
-        from fetcher.metrics import (
-            COMMON_LABELNAMES,
-        )
+        from fetcher.metrics import COMMON_LABELNAMES  # type: ignore[import]
 
         return {k: v for k, v in self.dict().items() if k in COMMON_LABELNAMES}
 
@@ -114,9 +112,9 @@ class RawFetchedFile(BaseModel):
     config: FeedConfig
     page: List[KeyValue] = []
     response_code: int
-    response_headers: Dict
+    response_headers: Mapping
     contents: bytes
-    exception: Optional[Exception]
+    exception: Optional[Exception] = None
 
     class Config:
         arbitrary_types_allowed = True
@@ -236,7 +234,7 @@ class ParseOutcome(BaseModel):
     file: RawFetchedFile
     metadata: ParseOutcomeMetadata
     success: bool
-    exception: Optional[Exception]
+    exception: Optional[Exception] = None
 
     class Config:
         arbitrary_types_allowed = True
