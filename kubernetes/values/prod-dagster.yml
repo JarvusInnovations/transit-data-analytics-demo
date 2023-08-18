@@ -39,9 +39,17 @@ runLauncher:
         limits:
           cpu: 1
         requests:
-          cpu: 500m
+          cpu: 100m
           memory: 1Gi
+      envVars:
+        - "GOOGLE_APPLICATION_CREDENTIALS=/etc/gcs-secret/google_application_credentials.json"
+        - "RAW_BUCKET=gs://jarvus-transit-data-demo-raw"
+        - "PARSED_BUCKET=gs://jarvus-transit-data-demo-parsed"
       volumes:
         - name: gcs-secret
           secret:
             secretName: dagster-secret
+      volumeMounts:
+        - name: gcs-secret
+          mountPath: /etc/gcs-secret
+          readOnly: true
