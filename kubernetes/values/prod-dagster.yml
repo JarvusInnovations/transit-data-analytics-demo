@@ -31,3 +31,17 @@ dagsterWebserver:
   image:
     # override to use hologit
     tag: 1.4.3
+
+runLauncher:
+  config:
+    k8sRunLauncher:
+      resources:
+        limits:
+          cpu: 1
+        requests:
+          cpu: 500m
+          memory: 1Gi
+      volumes:
+        - name: gcs-secret
+          secret:
+            secretName: dagster-secret
