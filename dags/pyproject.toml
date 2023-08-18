@@ -30,6 +30,8 @@ pandas-stubs = "^2.0.2.230605"
 types-requests = "^2.31.0.2"
 types-python-slugify = "^8.0.0.3"
 types-pyyaml = "^6.0.12.11"
+types-protobuf = "^4.24.0.1"
+types-tqdm = "^4.66.0.1"
 
 [build-system]
 requires = ["poetry-core"]
