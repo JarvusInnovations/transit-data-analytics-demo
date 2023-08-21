@@ -19,8 +19,8 @@ dagster-user-deployments:
           value: 'gs://jarvus-transit-data-demo-parsed'
       resources:
         requests:
-          cpu: 500m
-          memory: 512Mi
+          cpu: 300m
+          memory: 256Mi
 
 dagsterDaemon:
   image:
@@ -32,8 +32,8 @@ dagsterDaemon:
         maxConcurrentRuns: 4
   resources:
     requests:
-      cpu: 500m
-      memory: 512Mi
+      cpu: 300m
+      memory: 256Mi
 
 dagsterWebserver:
   image:
@@ -41,8 +41,8 @@ dagsterWebserver:
     tag: 1.4.3
   resources:
     requests:
-      cpu: 500m
-      memory: 512Mi
+      cpu: 300m
+      memory: 256Mi
 
 runLauncher:
   config:
@@ -51,9 +51,10 @@ runLauncher:
       resources:
         limits:
           cpu: 1
+          memory: 1Gi
         requests:
           cpu: 100m
-          memory: 1Gi
+          memory: 256Gi
       envVars:
         - "GOOGLE_APPLICATION_CREDENTIALS=/etc/gcs-secret/google_application_credentials.json"
         - "RAW_BUCKET=gs://jarvus-transit-data-demo-raw"
