@@ -17,9 +17,10 @@ dagster-user-deployments:
           value: 'gs://jarvus-transit-data-demo-raw'
         - name: PARSED_BUCKET
           value: 'gs://jarvus-transit-data-demo-parsed'
-      requests:
-        cpu: 500m
-        memory: 512Mi
+      resources:
+        requests:
+          cpu: 500m
+          memory: 512Mi
 
 dagsterDaemon:
   image:
@@ -29,17 +30,19 @@ dagsterDaemon:
     config:
       queuedRunCoordinator:
         maxConcurrentRuns: 4
-  requests:
-    cpu: 500m
-    memory: 512Mi
+  resources:
+    requests:
+      cpu: 500m
+      memory: 512Mi
 
 dagsterWebserver:
   image:
     # override to use hologit
     tag: 1.4.3
-  requests:
-    cpu: 500m
-    memory: 512Mi
+  resources:
+    requests:
+      cpu: 500m
+      memory: 512Mi
 
 runLauncher:
   config:
