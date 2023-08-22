@@ -58,18 +58,22 @@ class HivePartitionedPydanticGCSIOManager(PickledObjectGCSIOManager):
         raise NotImplementedError("HivePartitionedGCSIOManager cannot be used to load data")
 
     def dump_to_path(self, context: OutputContext, obj: Any, path: UPath) -> None:
-        assert obj and isinstance(obj, list) and isinstance(obj[0], BaseModel)
+        assert isinstance(obj, list)
+
         if self.path_exists(path):
             context.log.warning(f"Removing existing GCS key: {path}")
             self.unlink(path)
 
-        jsonl_str = "\n".join(item.json() for item in obj)
+        if obj:
+            assert isinstance(obj[0], BaseModel)
 
-        backoff(
-            self.bucket_obj.blob(str(path)).upload_from_string,
-            args=[jsonl_str],
-            retry_on=(TooManyRequests, Forbidden, ServiceUnavailable),
-        )
+            jsonl_str = "\n".join(item.json() for item in obj)
+
+            backoff(
+                self.bucket_obj.blob(str(path)).upload_from_string,
+                args=[jsonl_str],
+                retry_on=(TooManyRequests, Forbidden, ServiceUnavailable),
+            )
 
 
 defs = Definitions(
