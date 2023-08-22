@@ -110,7 +110,7 @@ def save_hour_agg(
     records: List[ParsedRecord],
     pbar=None,
     client: Optional[storage.Client] = None,
-    timeout: int = 60,
+    timeout: int = 300,
 ) -> int:
     logger = get_dagster_logger()
     # TODO: add asserts to check all same hour/url/etc.
