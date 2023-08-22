@@ -1,5 +1,4 @@
 import os
-import pickle
 from typing import Union, Any
 
 import pendulum
@@ -11,11 +10,11 @@ from dagster import (
     OutputContext,
     InputContext,
 )
-from dagster._utils import PICKLE_PROTOCOL
 from dagster._utils.backoff import backoff
-from dagster_gcp import GCSResource  # type: ignore[import]
+from dagster_gcp import GCSResource, ConfigurablePickledObjectGCSIOManager  # type: ignore[import]
 from dagster_gcp.gcs import PickledObjectGCSIOManager  # type: ignore[import]
 from google.api_core.exceptions import Forbidden, ServiceUnavailable, TooManyRequests
+from pydantic import BaseModel
 from upath import UPath
 
 from . import assets
@@ -29,7 +28,7 @@ from .common import SERIALIZERS
 # )
 
 
-class HivePartitionedGCSIOManager(PickledObjectGCSIOManager):
+class HivePartitionedPydanticGCSIOManager(PickledObjectGCSIOManager):
     def get_path_for_partition(
         self, context: Union[InputContext, OutputContext], path: UPath, partition: str
     ) -> "UPath":
@@ -51,24 +50,24 @@ class HivePartitionedGCSIOManager(PickledObjectGCSIOManager):
             [
                 f"feed_type={feed_type}",
                 f"dt={SERIALIZERS[pendulum.Date](parsed_hour.date())}",
-                f"{SERIALIZERS[pendulum.DateTime](parsed_hour)}",
+                f"{SERIALIZERS[pendulum.DateTime](parsed_hour)}.jsonl",
             ]
         )
 
     def load_from_path(self, context: InputContext, path: UPath) -> Any:
-        bytes_obj = self.bucket_obj.blob(str(path)).download_as_bytes()
-        return pickle.loads(bytes_obj)
+        raise NotImplementedError("HivePartitionedGCSIOManager cannot be used to load data")
 
     def dump_to_path(self, context: OutputContext, obj: Any, path: UPath) -> None:
+        assert obj and isinstance(obj, list) and isinstance(obj[0], BaseModel)
         if self.path_exists(path):
             context.log.warning(f"Removing existing GCS key: {path}")
             self.unlink(path)
 
-        pickled_obj = pickle.dumps(obj, PICKLE_PROTOCOL)
+        jsonl_str = "\n".join(item.json() for item in obj)
 
         backoff(
             self.bucket_obj.blob(str(path)).upload_from_string,
-            args=[pickled_obj],
+            args=[jsonl_str],
             retry_on=(TooManyRequests, Forbidden, ServiceUnavailable),
         )
 
@@ -80,7 +79,12 @@ defs = Definitions(
         define_asset_job("parse_job", selection=AssetSelection.all()),
     ],
     resources={
-        "gcs_io_manager": HivePartitionedGCSIOManager(
+        "gcs_io_manager": ConfigurablePickledObjectGCSIOManager(
+            gcs=GCSResource(project="transit-data-analytics-demo"),
+            gcs_bucket=os.environ["PARSED_BUCKET"].removeprefix("gs://"),
+            gcs_prefix="",
+        ),
+        "pydantic_gcs_io_manager": HivePartitionedPydanticGCSIOManager(
             client=GCSResource(project="transit-data-analytics-demo").get_client(),
             bucket=os.environ["PARSED_BUCKET"].removeprefix("gs://"),
             prefix="",  # no prefix; tables are the first partition right now

@@ -11,7 +11,6 @@ from typing import Optional, List, DefaultDict, Iterable, Union, Dict
 
 import humanize
 import pendulum
-import typer
 from dagster import (
     asset,
     get_dagster_logger,
@@ -19,6 +18,7 @@ from dagster import (
     HourlyPartitionsDefinition,
     MultiPartitionsDefinition,
     StaticPartitionsDefinition,
+    AssetIn,
 )
 from google.cloud import storage  # type: ignore
 from google.protobuf.json_format import MessageToDict
@@ -68,6 +68,7 @@ class ParsedFile(BaseModel):
 def file_to_records(
     file: RawFetchedFile,
 ) -> Iterable[ParsedFile]:
+    logger = get_dagster_logger()
     pydantic_type = FEED_TYPES[file.config.feed_type]
     try:
         if file.config.feed_type == FeedType.gtfs_schedule:
@@ -100,7 +101,7 @@ def file_to_records(
                 records=parse_obj_as(pydantic_type, json.loads(file.contents)).records,
             )
     except (ValidationError, DecodeError) as e:
-        typer.secho(f"{type(e)} occurred on {file.bucket}/{file.gcs_key}", fg=typer.colors.RED)
+        logger.error(f"{type(e)} occurred on {file.bucket}/{file.gcs_key}")
         raise
 
 
@@ -111,6 +112,7 @@ def save_hour_agg(
     client: Optional[storage.Client] = None,
     timeout: int = 60,
 ) -> int:
+    logger = get_dagster_logger()
     # TODO: add asserts to check all same hour/url/etc.
     client = client or storage.Client()
     contents = gzip.compress(
@@ -120,25 +122,13 @@ def save_hour_agg(
     agg_path = f"{agg.bucket}/{agg.gcs_key}"
 
     if contents:
-        msg = f"Saving {len(records)} records ({content_size}) to {agg_path}"
-        if pbar:
-            pbar.write(msg)
-        else:
-            typer.secho(msg)
+        logger.info(f"Saving {len(records)} records ({content_size}) to {agg_path}")
         start = pendulum.now()
         blob = client.bucket(agg.bucket.removeprefix("gs://")).blob(agg.gcs_key)
         blob.upload_from_string(contents, timeout=timeout, client=client)
-        msg = f"Took {humanize.naturaldelta(start.diff().total_seconds())} to save {content_size} to {agg_path}"
-        if pbar:
-            pbar.write(msg)
-        else:
-            typer.secho(msg)
+        logger.info(f"Took {humanize.naturaldelta(start.diff().total_seconds())} to save {content_size} to {agg_path}")
     else:
-        msg = f"WARNING: no records found for aggregation {agg}"
-        if pbar:
-            pbar.write(msg)
-        else:
-            typer.secho(msg, fg=typer.colors.YELLOW)
+        logger.warning(f"WARNING: no records found for aggregation {agg}")
     return len(contents)
 
 
@@ -156,13 +146,8 @@ def handle_hour(
     pbar: Optional[tqdm] = None,
     timeout: int = 60,
 ) -> List[ParseOutcome]:
-    def write(*args, fg=None, **kwargs):
-        if pbar:
-            pbar.write(*args, **kwargs)
-        else:
-            typer.secho(*args, **kwargs, fg=fg)
-
-    write(f"Handling {len(blobs)=} for {key}")
+    logger = get_dagster_logger()
+    logger.info(f"Handling {len(blobs)=} for {key}")
     client = storage.Client()
     outcomes = []
     aggs: DefaultDict[Union[FeedType, GtfsScheduleFileType], List[ParsedRecord]] = defaultdict(list)
@@ -187,10 +172,7 @@ def handle_hour(
                     ]
                 )
             else:
-                write(
-                    f"WARNING: no records found for {parsed_file.feed_type} {blob.self_link}",
-                    fg=typer.colors.YELLOW,
-                )
+                logger.warning(f"WARNING: no records found for {parsed_file.feed_type} {blob.self_link}")
         outcomes.append(
             ParseOutcome(
                 file=file,
@@ -270,12 +252,15 @@ def raw_files_list(
             "hour": HourlyPartitionsDefinition(start_date="2023-07-05-00:00"),
         }
     ),
-    io_manager_key="gcs_io_manager",
+    ins={
+        "raw_files_list": AssetIn(input_manager_key="gcs_io_manager"),
+    },
+    io_manager_key="pydantic_gcs_io_manager",
 )
 def parsed_and_grouped_files(
     context: AssetExecutionContext,
     raw_files_list: Dict[str, List[storage.Blob]],
-) -> Dict[str, List[ParseOutcome]]:
+) -> List[ParseOutcome]:
     logger = get_dagster_logger()
     keys: Dict = context.partition_key.keys_by_dimension  # type: ignore[attr-defined]
     logger.info(f"handling {keys}")
@@ -294,4 +279,4 @@ def parsed_and_grouped_files(
         )
         url_to_outcomes[base64url].extend(outcomes)
 
-    return url_to_outcomes
+    return [outcome for outcomes in url_to_outcomes.values() for outcome in outcomes]
