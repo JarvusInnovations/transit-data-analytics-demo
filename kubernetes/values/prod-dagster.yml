@@ -29,7 +29,7 @@ dagster-user-deployments:
                 labelSelector:
                   matchExpressions:
                     - key: app
-                      operator: Equals
+                      operator: In
                       values:
                         - postgresql
                 topologyKey: topology.kubernetes.io/zone
@@ -54,7 +54,7 @@ dagsterDaemon:
             labelSelector:
               matchExpressions:
                 - key: app
-                  operator: Equals
+                  operator: In
                   values:
                     - postgresql
             topologyKey: topology.kubernetes.io/zone
@@ -75,7 +75,7 @@ dagsterWebserver:
             labelSelector:
               matchExpressions:
                 - key: app
-                  operator: Equals
+                  operator: In
                   values:
                     - postgresql
             topologyKey: topology.kubernetes.io/zone
@@ -113,7 +113,7 @@ runLauncher:
                     labelSelector:
                       matchExpressions:
                         - key: app
-                          operator: Equals
+                          operator: In
                           values:
                             - postgresql
                     topologyKey: topology.kubernetes.io/zone
