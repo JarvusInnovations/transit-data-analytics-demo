@@ -11,7 +11,7 @@ import requests
 import typer.colors
 import yaml
 from google.cloud import storage  # type: ignore
-from pydantic import BaseModel, HttpUrl, validator, root_validator, Extra, parse_obj_as
+from pydantic import BaseModel, HttpUrl, validator, root_validator, Extra, parse_obj_as, Field
 from pydantic.dataclasses import dataclass
 from slugify import slugify
 
@@ -185,7 +185,7 @@ class ParsedRecordMetadata(BaseModel):
 
 
 class ParsedRecord(BaseModel):
-    file: RawFetchedFile
+    file: RawFetchedFile = Field(exclude={"contents"})
     record: Dict[str, Any]
     metadata: ParsedRecordMetadata
 
@@ -231,7 +231,7 @@ class ParseOutcomeMetadata(BaseModel):
 
 
 class ParseOutcome(BaseModel):
-    file: RawFetchedFile
+    file: RawFetchedFile = Field(exclude={"contents"})
     metadata: ParseOutcomeMetadata
     success: bool
     exception: Optional[Exception] = None
