@@ -24,13 +24,14 @@ dagster-user-deployments:
       affinity:
         podAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
-          - labelSelector:
-              matchExpressions:
-              - key: app
-                operator: Equals
-                values:
-                - postgresql
-            topologyKey: topology.kubernetes.io/zone
+            - weight: 100
+              labelSelector:
+                matchExpressions:
+                  - key: app
+                    operator: Equals
+                    values:
+                      - postgresql
+              topologyKey: topology.kubernetes.io/zone
 
 dagsterDaemon:
   image:
@@ -47,12 +48,13 @@ dagsterDaemon:
   affinity:
     podAffinity:
       preferredDuringSchedulingIgnoredDuringExecution:
-      - labelSelector:
+        - weight: 100
+          labelSelector:
           matchExpressions:
-          - key: app
-            operator: Equals
-            values:
-            - postgresql
+            - key: app
+              operator: Equals
+              values:
+                - postgresql
         topologyKey: topology.kubernetes.io/zone
 
 dagsterWebserver:
@@ -66,12 +68,13 @@ dagsterWebserver:
   affinity:
     podAffinity:
       preferredDuringSchedulingIgnoredDuringExecution:
-      - labelSelector:
+        - weight: 100
+          labelSelector:
           matchExpressions:
-          - key: app
-            operator: Equals
-            values:
-            - postgresql
+            - key: app
+              operator: Equals
+              values:
+                - postgresql
         topologyKey: topology.kubernetes.io/zone
 
 runLauncher:
@@ -97,15 +100,17 @@ runLauncher:
         - name: gcs-secret
           mountPath: /etc/gcs-secret
           readOnly: true
-  affinity:
-    podAntiAffinity:
-      preferredDuringSchedulingIgnoredDuringExecution:
-      - weight: 100
-        podAffinityTerm:
-          labelSelector:
-            matchExpressions:
-            - key: app
-              operator: Equals
-              values:
-              - postgresql
-          topologyKey: topology.kubernetes.io/zone
+      runK8sConfig:
+        podSpecConfig:
+          affinity:
+            podAntiAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+                - weight: 100
+                  podAffinityTerm:
+                    labelSelector:
+                      matchExpressions:
+                        - key: app
+                          operator: Equals
+                          values:
+                            - postgresql
+                    topologyKey: topology.kubernetes.io/zone
