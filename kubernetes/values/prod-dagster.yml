@@ -21,6 +21,16 @@ dagster-user-deployments:
         requests:
           cpu: 300m
           memory: 256Mi
+      affinity:
+        podAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: Equals
+                values:
+                - postgresql
+            topologyKey: topology.kubernetes.io/zone
 
 dagsterDaemon:
   image:
@@ -34,6 +44,16 @@ dagsterDaemon:
     requests:
       cpu: 300m
       memory: 256Mi
+  affinity:
+    podAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - labelSelector:
+          matchExpressions:
+          - key: app
+            operator: Equals
+            values:
+            - postgresql
+        topologyKey: topology.kubernetes.io/zone
 
 dagsterWebserver:
   image:
@@ -43,6 +63,16 @@ dagsterWebserver:
     requests:
       cpu: 300m
       memory: 256Mi
+  affinity:
+    podAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - labelSelector:
+          matchExpressions:
+          - key: app
+            operator: Equals
+            values:
+            - postgresql
+        topologyKey: topology.kubernetes.io/zone
 
 runLauncher:
   config:
@@ -67,3 +97,15 @@ runLauncher:
         - name: gcs-secret
           mountPath: /etc/gcs-secret
           readOnly: true
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+            - key: app
+              operator: Equals
+              values:
+              - postgresql
+          topologyKey: topology.kubernetes.io/zone
