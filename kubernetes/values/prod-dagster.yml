@@ -55,7 +55,7 @@ dagsterDaemon:
               operator: Equals
               values:
                 - postgresql
-        topologyKey: topology.kubernetes.io/zone
+          topologyKey: topology.kubernetes.io/zone
 
 dagsterWebserver:
   image:
@@ -75,7 +75,7 @@ dagsterWebserver:
               operator: Equals
               values:
                 - postgresql
-        topologyKey: topology.kubernetes.io/zone
+          topologyKey: topology.kubernetes.io/zone
 
 runLauncher:
   config:
