@@ -25,13 +25,14 @@ dagster-user-deployments:
         podAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
             - weight: 100
-              labelSelector:
-                matchExpressions:
-                  - key: app
-                    operator: Equals
-                    values:
-                      - postgresql
-              topologyKey: topology.kubernetes.io/zone
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app
+                      operator: Equals
+                      values:
+                        - postgresql
+                topologyKey: topology.kubernetes.io/zone
 
 dagsterDaemon:
   image:
@@ -49,13 +50,14 @@ dagsterDaemon:
     podAffinity:
       preferredDuringSchedulingIgnoredDuringExecution:
         - weight: 100
-          labelSelector:
-          matchExpressions:
-            - key: app
-              operator: Equals
-              values:
-                - postgresql
-          topologyKey: topology.kubernetes.io/zone
+          podAffinityTerm:
+            labelSelector:
+              matchExpressions:
+                - key: app
+                  operator: Equals
+                  values:
+                    - postgresql
+            topologyKey: topology.kubernetes.io/zone
 
 dagsterWebserver:
   image:
@@ -69,13 +71,14 @@ dagsterWebserver:
     podAffinity:
       preferredDuringSchedulingIgnoredDuringExecution:
         - weight: 100
-          labelSelector:
-          matchExpressions:
-            - key: app
-              operator: Equals
-              values:
-                - postgresql
-          topologyKey: topology.kubernetes.io/zone
+          podAffinityTerm:
+            labelSelector:
+              matchExpressions:
+                - key: app
+                  operator: Equals
+                  values:
+                    - postgresql
+            topologyKey: topology.kubernetes.io/zone
 
 runLauncher:
   config:
