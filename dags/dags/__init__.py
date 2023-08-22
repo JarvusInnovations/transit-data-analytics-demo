@@ -9,6 +9,7 @@ from dagster import (
     load_assets_from_modules,
     OutputContext,
     InputContext,
+    ScheduleDefinition,
 )
 from dagster._utils.backoff import backoff
 from dagster_gcp import GCSResource, ConfigurablePickledObjectGCSIOManager  # type: ignore[import]
@@ -20,12 +21,12 @@ from upath import UPath
 from . import assets
 from .common import SERIALIZERS
 
+parse_job = define_asset_job("parse_job", selection=AssetSelection.all())
 
-# Addition: a ScheduleDefinition the job it should run and a cron schedule of how frequently to run it
-# hackernews_schedule = ScheduleDefinition(
-#     job=parse_job,
-#     cron_schedule="0 * * * *",
-# )
+parse_schedule = ScheduleDefinition(
+    job=parse_job,
+    cron_schedule="0 * * * *",
+)
 
 
 class HivePartitionedPydanticGCSIOManager(PickledObjectGCSIOManager):
@@ -78,9 +79,11 @@ class HivePartitionedPydanticGCSIOManager(PickledObjectGCSIOManager):
 
 defs = Definitions(
     assets=load_assets_from_modules([assets]),
-    # schedules=[hackernews_schedule],
+    schedules=[
+        parse_schedule,
+    ],
     jobs=[
-        define_asset_job("parse_job", selection=AssetSelection.all()),
+        parse_job,
     ],
     resources={
         "gcs_io_manager": ConfigurablePickledObjectGCSIOManager(
