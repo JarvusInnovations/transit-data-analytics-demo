@@ -1,5 +1,5 @@
 transit_data_analytics_demo:
-  target: prod
+  target: "{{ env_var('DBT_TARGET', 'prod') }}"
   outputs:
     prod: &prod
       dataset: staging
