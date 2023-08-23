@@ -1,7 +1,6 @@
 name: build-warehouse-image
 
 on:
-  pull_request:
   push:
     branches: [main]
 
@@ -16,5 +15,5 @@ jobs:
     - uses: docker/build-push-action@v4
       with:
         context: warehouse
-        push: false
-#        tags: user/app:latest
+        push: true
+        tags: ghcr.io/jarvusinnovations/transit-data-analytics-demo/warehouse:latest

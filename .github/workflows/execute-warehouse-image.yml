@@ -1,0 +1,20 @@
+name: execute-warehouse-image
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 12 * * *'
+
+jobs:
+  dbt-run:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/jarvusinnovations/transit-data-analytics-demo/warehouse:latest
+    steps:
+      - run: |
+          echo "$BOT_GCP_SERVICE_ACCOUNT" >> /tmp/keyfile
+          dbt run --profiles-dir . --target
+        working-directory: /app
+        env:
+          BOT_GCP_SERVICE_ACCOUNT: ${{ secrets.BOT_GCP_SERVICE_ACCOUNT }}
+#  dbt-test:

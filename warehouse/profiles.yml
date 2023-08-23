@@ -1,6 +1,7 @@
 transit_data_analytics_demo:
+  target: prod
   outputs:
-    prod:
+    prod: &prod
       dataset: staging
       job_execution_timeout_seconds: 300
       job_retries: 1
@@ -11,4 +12,7 @@ transit_data_analytics_demo:
       threads: 4
       type: bigquery
       maximum_bytes_billed: 100000000000
-  target: prod
+    prod_service_account:
+      <<: *prod
+      method: service-account
+      keyfile: {{ env_var('BIGQUERY_SERVICE_ACCOUNT') }}
