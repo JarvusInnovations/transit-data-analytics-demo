@@ -1,4 +1,4 @@
-name: build-fetcher
+name: build-fetcher-image
 
 on:
   pull_request:
