@@ -29,3 +29,5 @@ jobs:
     - uses: pre-commit/action@v3.0.0
       env:
         BIGQUERY_SERVICE_ACCOUNT: /tmp/keyfile
+        DBT_PROFILES_DIR: warehouse
+        DBT_TARGET: prod_service_account
