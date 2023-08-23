@@ -3060,6 +3060,17 @@ files = [
 types-urllib3 = "*"
 
 [[package]]
+name = "types-tabulate"
+version = "0.9.0.3"
+description = "Typing stubs for tabulate"
+optional = false
+python-versions = "*"
+files = [
+    {file = "types-tabulate-0.9.0.3.tar.gz", hash = "sha256:197651f9d6467193cd166d8500116a6d3a26f2a4eb2db093bc9535ee1c0be55e"},
+    {file = "types_tabulate-0.9.0.3-py3-none-any.whl", hash = "sha256:462d1b62e01728416e8277614d6a3eb172d53a8efaf04a04a973ff2dd45238f6"},
+]
+
+[[package]]
 name = "types-tqdm"
 version = "4.66.0.1"
 description = "Typing stubs for tqdm"
@@ -3470,4 +3481,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "4a7fd0864dcb378394b7753f3a4f689c05c8a55dd053a2510e1952c6a5b01fda"
+content-hash = "7c8e2cd41bcd7656557c4717a32b97d374f49912bc8c2437cc9e93bb1955f295"

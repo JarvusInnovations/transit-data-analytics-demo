@@ -19,12 +19,14 @@ from dagster import (
     MultiPartitionsDefinition,
     StaticPartitionsDefinition,
     AssetIn,
+    MetadataValue,
 )
 from google.cloud import storage  # type: ignore
 from google.protobuf.json_format import MessageToDict
 from google.protobuf.message import DecodeError
 from google.transit import gtfs_realtime_pb2  # type: ignore
 from pydantic import parse_obj_as, ValidationError, BaseModel
+from tabulate import tabulate
 from tqdm import tqdm
 
 from .common import (
@@ -279,4 +281,21 @@ def parsed_and_grouped_files(
         )
         url_to_outcomes[base64url].extend(outcomes)
 
-    return [outcome for outcomes in url_to_outcomes.values() for outcome in outcomes]
+    blobs_table = []
+    all_outcomes = []
+    for url, outcomes in url_to_outcomes.items():
+        blobs_table.append(
+            {
+                "url": url,
+                "successes": len([outcome for outcome in outcomes if outcome.success]),
+                "failures": len([outcome for outcome in outcomes if not outcome.success]),
+            }
+        )
+        all_outcomes.extend(outcomes)
+    context.add_output_metadata(
+        metadata={
+            "blobs": MetadataValue.md(tabulate(blobs_table, tablefmt="simple")),
+        }
+    )
+
+    return all_outcomes
