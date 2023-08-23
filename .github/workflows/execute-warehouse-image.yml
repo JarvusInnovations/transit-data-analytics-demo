@@ -14,8 +14,8 @@ jobs:
     steps:
       - run: |
           echo "$BOT_GCP_SERVICE_ACCOUNT" >> /tmp/keyfile
-          dbt run-operation stage_external_sources --profiles-dir . --target prod_service_account
-          dbt run --profiles-dir . --target prod_service_account
+          BIGQUERY_SERVICE_ACCOUNT=/tmp/keyfile dbt run-operation stage_external_sources --profiles-dir . --target prod_service_account
+          BIGQUERY_SERVICE_ACCOUNT=/tmp/keyfile dbt run --profiles-dir . --target prod_service_account
         working-directory: /app
         env:
           BOT_GCP_SERVICE_ACCOUNT: ${{ secrets.BOT_GCP_SERVICE_ACCOUNT }}
