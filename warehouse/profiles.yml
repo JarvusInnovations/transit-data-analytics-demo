@@ -15,4 +15,4 @@ transit_data_analytics_demo:
     prod_service_account:
       <<: *prod
       method: service-account
-      keyfile: {{ env_var('BIGQUERY_SERVICE_ACCOUNT') }}
+      keyfile: "{{ env_var('BIGQUERY_SERVICE_ACCOUNT') }}"
