@@ -11,10 +11,16 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - uses: actions/setup-python@v3
-    - uses: pre-commit/action@v3.0.0
     - uses: snok/install-poetry@v1
     - name: Lint ci
       working-directory: ci
       run: |
         poetry install
         poetry run mypy tasks.py --check-untyped-defs
+    - name: Install dbt deps
+      working-directory: warehouse
+      run: |
+        poetry install
+        poetry run dbt deps
+    # run this last so dbt deps are installed
+    - uses: pre-commit/action@v3.0.0
