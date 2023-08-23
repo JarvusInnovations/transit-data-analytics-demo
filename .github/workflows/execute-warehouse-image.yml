@@ -1,0 +1,26 @@
+name: execute-warehouse-image
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 12 * * *'
+
+jobs:
+  dbt-run:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/jarvusinnovations/transit-data-analytics-demo/warehouse:latest
+    steps:
+      - run: |
+          echo "$BOT_GCP_SERVICE_ACCOUNT" > /tmp/keyfile
+          BIGQUERY_SERVICE_ACCOUNT=/tmp/keyfile dbt run-operation stage_external_sources --profiles-dir . --target prod_service_account
+          BIGQUERY_SERVICE_ACCOUNT=/tmp/keyfile dbt run --profiles-dir . --target prod_service_account --vars "ext_full_refresh: true"
+        working-directory: /app
+        env:
+          BOT_GCP_SERVICE_ACCOUNT: ${{ secrets.BOT_GCP_SERVICE_ACCOUNT }}
+      - uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: dbt.log
+          path: /app/logs/dbt.log
+#  dbt-test:

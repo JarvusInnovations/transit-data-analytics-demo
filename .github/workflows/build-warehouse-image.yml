@@ -1,0 +1,19 @@
+name: build-warehouse-image
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  check_and_build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v4
+      with:
+        python-version: 3.11
+    - uses: docker/build-push-action@v4
+      with:
+        context: warehouse
+        push: true
+        tags: ghcr.io/jarvusinnovations/transit-data-analytics-demo/warehouse:latest

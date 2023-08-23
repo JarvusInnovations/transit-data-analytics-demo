@@ -11,10 +11,23 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - uses: actions/setup-python@v3
-    - uses: pre-commit/action@v3.0.0
     - uses: snok/install-poetry@v1
     - name: Lint ci
       working-directory: ci
       run: |
         poetry install
         poetry run mypy tasks.py --check-untyped-defs
+    - name: Set up dbt
+      working-directory: warehouse
+      run: |
+        echo "$BOT_GCP_SERVICE_ACCOUNT" > /tmp/keyfile
+        poetry install
+        poetry run dbt deps
+      env:
+        BOT_GCP_SERVICE_ACCOUNT: ${{ secrets.BOT_GCP_SERVICE_ACCOUNT }}
+    # sqlfluff needs dbt to be set up and authenticated
+    - uses: pre-commit/action@v3.0.0
+      env:
+        BIGQUERY_SERVICE_ACCOUNT: /tmp/keyfile
+        DBT_PROFILES_DIR: warehouse
+        DBT_TARGET: prod_service_account

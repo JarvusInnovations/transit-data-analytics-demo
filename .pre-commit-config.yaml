@@ -15,3 +15,8 @@ repos:
     rev: v0.0.275
     hooks:
       - id: ruff
+  - repo: https://github.com/sqlfluff/sqlfluff
+    rev: 2.1.4
+    hooks:
+      - id: sqlfluff-lint
+        additional_dependencies: ['dbt-bigquery', 'sqlfluff-templater-dbt']
