@@ -19,4 +19,8 @@ jobs:
         working-directory: /app
         env:
           BOT_GCP_SERVICE_ACCOUNT: ${{ secrets.BOT_GCP_SERVICE_ACCOUNT }}
+      - uses: actions/upload-artifact@v3
+        with:
+          name: dbt.log
+          path: /app/logs/dbt.log
 #  dbt-test:
