@@ -17,10 +17,15 @@ jobs:
       run: |
         poetry install
         poetry run mypy tasks.py --check-untyped-defs
-    - name: Install dbt deps
+    - name: Set up dbt
       working-directory: warehouse
       run: |
+        echo "$BOT_GCP_SERVICE_ACCOUNT" > /tmp/keyfile
         poetry install
         poetry run dbt deps
-    # run this last so dbt deps are installed
+      env:
+        BOT_GCP_SERVICE_ACCOUNT: ${{ secrets.BOT_GCP_SERVICE_ACCOUNT }}
+    # sqlfluff needs dbt to be set up and authenticated
     - uses: pre-commit/action@v3.0.0
+      env:
+        BIGQUERY_SERVICE_ACCOUNT: /tmp/keyfile
