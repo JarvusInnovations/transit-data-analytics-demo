@@ -4,3 +4,11 @@ line-length = 120
 
 [tool.ruff]
 line-length = 120
+
+[tool.sqlfluff.core]
+templater = "dbt"
+dialect = "bigquery"
+max_line_length = -1
+
+[tool.sqlfluff.templater.dbt]
+project_dir = "./warehouse/"
