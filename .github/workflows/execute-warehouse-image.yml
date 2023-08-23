@@ -13,7 +13,7 @@ jobs:
       image: ghcr.io/jarvusinnovations/transit-data-analytics-demo/warehouse:latest
     steps:
       - run: |
-          echo "$BOT_GCP_SERVICE_ACCOUNT" >> /tmp/keyfile
+          echo "$BOT_GCP_SERVICE_ACCOUNT" > /tmp/keyfile
           BIGQUERY_SERVICE_ACCOUNT=/tmp/keyfile dbt run-operation stage_external_sources --profiles-dir . --target prod_service_account
           BIGQUERY_SERVICE_ACCOUNT=/tmp/keyfile dbt run --profiles-dir . --target prod_service_account
         working-directory: /app
