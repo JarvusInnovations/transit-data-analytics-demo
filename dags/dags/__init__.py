@@ -21,13 +21,6 @@ from upath import UPath
 from . import assets
 from .common import SERIALIZERS
 
-parse_job = define_asset_job("parse_job", selection=AssetSelection.all())
-
-parse_schedule = ScheduleDefinition(
-    job=parse_job,
-    cron_schedule="0 * * * *",
-)
-
 
 class HivePartitionedPydanticGCSIOManager(PickledObjectGCSIOManager):
     def get_path_for_partition(
@@ -80,10 +73,10 @@ class HivePartitionedPydanticGCSIOManager(PickledObjectGCSIOManager):
 defs = Definitions(
     assets=load_assets_from_modules([assets]),
     schedules=[
-        parse_schedule,
-    ],
-    jobs=[
-        parse_job,
+        ScheduleDefinition(
+            job=define_asset_job("parse_job", selection=AssetSelection.all()),
+            cron_schedule="0 * * * *",
+        ),
     ],
     resources={
         "gcs_io_manager": ConfigurablePickledObjectGCSIOManager(
