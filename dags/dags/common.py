@@ -11,7 +11,7 @@ import requests
 import typer.colors
 import yaml
 from google.cloud import storage  # type: ignore
-from pydantic import BaseModel, HttpUrl, validator, root_validator, Extra, parse_obj_as, Field
+from pydantic import BaseModel, HttpUrl, validator, root_validator, Extra, parse_obj_as
 from pydantic.dataclasses import dataclass
 from slugify import slugify
 
@@ -177,11 +177,6 @@ class RawFetchedFileWithContents(RawFetchedFile):
     def base64_contents(cls, v):
         return base64.b64decode(v) if isinstance(v, str) else v
 
-    @validator("exception")
-    def exception_must_exist_if_no_contents(cls, v, values):
-        assert v or values["contents"]
-        return v
-
 
 class ParsedRecordMetadata(BaseModel):
     line_number: Optional[int]
@@ -234,7 +229,7 @@ class ParseOutcomeMetadata(BaseModel):
 
 
 class ParseOutcome(BaseModel):
-    file: RawFetchedFile = Field(exclude={"contents"})
+    file: RawFetchedFile
     metadata: ParseOutcomeMetadata
     success: bool
     exception: Optional[Exception] = None
