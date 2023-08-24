@@ -32,7 +32,6 @@ from tqdm import tqdm
 from .common import (
     SERIALIZERS,
     HourAgg,
-    ParsedRecord,
     RawFetchedFile,
     FeedType,
     FEED_TYPES,
@@ -42,6 +41,8 @@ from .common import (
     ParsedRecordMetadata,
     ParseOutcome,
     ParseOutcomeMetadata,
+    RawFetchedFileWithContents,
+    ParsedRecord,
 )
 
 HourKey = namedtuple("HourKey", ["feed_type", "hour", "base64url"])
@@ -68,7 +69,7 @@ class ParsedFile(BaseModel):
 
 
 def file_to_records(
-    file: RawFetchedFile,
+    file: RawFetchedFileWithContents,
 ) -> Iterable[ParsedFile]:
     logger = get_dagster_logger()
     pydantic_type = FEED_TYPES[file.config.feed_type]
@@ -135,11 +136,11 @@ def save_hour_agg(
 
 
 # mostly exists so we can call directly to debug
-def parse_blob(blob: storage.Blob, client: storage.Client) -> RawFetchedFile:
+def parse_blob(blob: storage.Blob, client: storage.Client) -> RawFetchedFileWithContents:
     bio = BytesIO()
     client.download_blob_to_file(blob, file_obj=bio)
     bio.seek(0)
-    return RawFetchedFile(**json.load(bio))
+    return RawFetchedFileWithContents(**json.load(bio))
 
 
 def handle_hour(
@@ -164,7 +165,8 @@ def handle_hour(
                 aggs[parsed_file.feed_type].extend(
                     [
                         ParsedRecord(
-                            file=file,
+                            # this is weird but I realized contents was getting copied everywhere...
+                            file=RawFetchedFile(**{k: v for k, v in file.dict(exclude={"contents"}).items()}),
                             record=record,
                             metadata=ParsedRecordMetadata(
                                 line_number=idx,
@@ -177,7 +179,8 @@ def handle_hour(
                 logger.warning(f"WARNING: no records found for {parsed_file.feed_type} {blob.self_link}")
         outcomes.append(
             ParseOutcome(
-                file=file,
+                # this is weird but I realized contents was getting copied everywhere...
+                file=RawFetchedFile(**{k: v for k, v in file.dict(exclude={"contents"}).items()}),
                 metadata=ParseOutcomeMetadata(
                     hash=blob_hash.hexdigest(),
                 ),

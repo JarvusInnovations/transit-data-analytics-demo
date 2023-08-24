@@ -113,7 +113,6 @@ class RawFetchedFile(BaseModel):
     page: List[KeyValue] = []
     response_code: int
     response_headers: Mapping
-    contents: bytes
     exception: Optional[Exception] = None
 
     class Config:
@@ -170,6 +169,10 @@ class RawFetchedFile(BaseModel):
         assert isinstance(v, datetime.datetime)
         return pendulum.instance(v).in_tz("UTC")
 
+
+class RawFetchedFileWithContents(RawFetchedFile):
+    contents: bytes
+
     @validator("contents", pre=True)
     def base64_contents(cls, v):
         return base64.b64decode(v) if isinstance(v, str) else v
@@ -185,7 +188,7 @@ class ParsedRecordMetadata(BaseModel):
 
 
 class ParsedRecord(BaseModel):
-    file: RawFetchedFile = Field(exclude={"contents"})
+    file: RawFetchedFile
     record: Dict[str, Any]
     metadata: ParsedRecordMetadata
 
@@ -403,7 +406,7 @@ if __name__ == "__main__":
         if config.feed_type == FeedType.gtfs_schedule:
             response = requests.get(config.url)
             response.raise_for_status()
-            raw = RawFetchedFile(
+            raw = RawFetchedFileWithContents(
                 ts=pendulum.now().replace(microsecond=0),
                 config=config,
                 page=[],
