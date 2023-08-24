@@ -38,10 +38,7 @@ from .common import (
     GtfsRealtime,
     GtfsScheduleFileType,
     ListOfDicts,
-    ParsedRecordMetadata,
     ParseOutcome,
-    ParseOutcomeMetadata,
-    RawFetchedFileWithContents,
     ParsedRecord,
 )
 
@@ -69,7 +66,7 @@ class ParsedFile(BaseModel):
 
 
 def file_to_records(
-    file: RawFetchedFileWithContents,
+    file: RawFetchedFile,
 ) -> Iterable[ParsedFile]:
     logger = get_dagster_logger()
     pydantic_type = FEED_TYPES[file.config.feed_type]
@@ -116,31 +113,36 @@ def save_hour_agg(
     timeout: int = 300,
 ) -> int:
     logger = get_dagster_logger()
-    # TODO: add asserts to check all same hour/url/etc.
-    client = client or storage.Client()
-    contents = gzip.compress(
-        "\n".join([record.json(exclude={"file": {"contents"}}) for record in records]).encode("utf-8")
-    )
-    content_size = humanize.naturalsize(len(contents))
-    agg_path = f"{agg.bucket}/{agg.gcs_key}"
+    if records:
+        client = client or storage.Client()
+        # TODO: add asserts to check all same hour/url/etc.
+        contents = gzip.compress("\n".join([record.json() for record in records]).encode("utf-8"))
+        content_size = humanize.naturalsize(len(contents))
+        agg_path = f"{agg.bucket}/{agg.gcs_key}"
 
-    if contents:
         logger.info(f"Saving {len(records)} records ({content_size}) to {agg_path}")
         start = pendulum.now()
         blob = client.bucket(agg.bucket.removeprefix("gs://")).blob(agg.gcs_key)
         blob.upload_from_string(contents, timeout=timeout, client=client)
         logger.info(f"Took {humanize.naturaldelta(start.diff().total_seconds())} to save {content_size} to {agg_path}")
-    else:
-        logger.warning(f"WARNING: no records found for aggregation {agg}")
-    return len(contents)
+        return len(contents)
+
+    logger.warning(f"WARNING: no records found for aggregation {agg}")
+    return 0
 
 
 # mostly exists so we can call directly to debug
-def parse_blob(blob: storage.Blob, client: storage.Client) -> RawFetchedFileWithContents:
+def download_blob(blob: storage.Blob, client: storage.Client) -> RawFetchedFile:
+    logger = get_dagster_logger()
     bio = BytesIO()
+    start = pendulum.now()
+    logger.info(f"fetching {blob.name}")
     client.download_blob_to_file(blob, file_obj=bio)
     bio.seek(0)
-    return RawFetchedFileWithContents(**json.load(bio))
+    logger.info(
+        f"Took {humanize.naturaldelta(start.diff().total_seconds())} to read {humanize.naturalsize(bio.getbuffer().nbytes)} from {blob.name}"
+    )
+    return RawFetchedFile(**json.load(bio))
 
 
 def handle_hour(
@@ -158,30 +160,27 @@ def handle_hour(
     # we could do this streaming, but data should be small enough
     for blob in blobs:
         blob_hash = hashlib.md5()
-        file = parse_blob(blob=blob, client=client)
+        file = download_blob(blob=blob, client=client)
         for parsed_file in file_to_records(file):
-            if parsed_file.records:
-                blob_hash.update(parsed_file.hash)
-                aggs[parsed_file.feed_type].extend(
-                    [
-                        ParsedRecord(
-                            # this is weird but I realized contents was getting copied everywhere...
-                            file=RawFetchedFile(**{k: v for k, v in file.dict(exclude={"contents"}).items()}),
-                            record=record,
-                            metadata=ParsedRecordMetadata(
-                                line_number=idx,
-                            ),
-                        )
-                        for idx, record in enumerate(parsed_file.records)
-                    ]
+            blob_hash.update(parsed_file.hash)
+            start = pendulum.now()
+            parsed_records = [
+                ParsedRecord(
+                    record=record,
+                    metadata=dict(
+                        line_number=idx,
+                    ),
                 )
-            else:
-                logger.warning(f"WARNING: no records found for {parsed_file.feed_type} {blob.self_link}")
+                for idx, record in enumerate(parsed_file.records)
+            ]
+            logger.info(
+                f"took {humanize.naturaldelta(start.diff().total_seconds())} to get {len(parsed_records)} records for {parsed_file.feed_type}"
+            )
+            aggs[parsed_file.feed_type].extend(parsed_records)
         outcomes.append(
             ParseOutcome(
-                # this is weird but I realized contents was getting copied everywhere...
-                file=RawFetchedFile(**{k: v for k, v in file.dict(exclude={"contents"}).items()}),
-                metadata=ParseOutcomeMetadata(
+                file=file.dict(exclude={"contents"}),
+                metadata=dict(
                     hash=blob_hash.hexdigest(),
                 ),
                 success=True,
