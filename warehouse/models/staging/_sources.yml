@@ -7,6 +7,28 @@ sources:
     loader: gcloud storage
 
     tables:
+      - name: parse_outcomes
+        description: "All parse outcomes, partitioned by feed_type and date"
+        external:
+          location: "gs://{{ var('external_data_bucket') }}/parsed_and_grouped_files/*"
+          options:
+            format: NEWLINE_DELIMITED_JSON
+            hive_partition_uri_prefix: "gs://{{ var('external_data_bucket') }}/parsed_and_grouped_files/"
+          partitions:
+            - name: feed_type
+              data_type: string
+            - name: dt
+              data_type: date
+        columns:
+          - name: file
+            data_type: JSON
+          - name: metadata
+            data_type: JSON
+          - name: success
+            data_type: BOOLEAN
+          - name: exception
+            data_type: STRING
+
 
       # GTFS SCHEDULE
 
