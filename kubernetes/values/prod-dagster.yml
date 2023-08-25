@@ -87,10 +87,10 @@ runLauncher:
       resources:
         limits:
           cpu: 1
-          memory: 1Gi
+          memory: 2Gi
         requests:
-          cpu: 100m
-          memory: 256Gi
+          cpu: 300m
+          memory: 1Gi
       envVars:
         - "GOOGLE_APPLICATION_CREDENTIALS=/etc/gcs-secret/google_application_credentials.json"
         - "RAW_BUCKET=gs://jarvus-transit-data-demo-raw"

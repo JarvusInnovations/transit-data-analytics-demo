@@ -94,6 +94,7 @@ def file_to_records(
                 hash=hashlib.md5(file.contents).digest(),
                 records=GtfsRealtime(**MessageToDict(feed)).records,
             )
+            del feed
         else:
             yield ParsedFile(
                 feed_type=file.config.feed_type,
@@ -139,9 +140,9 @@ def download_blob(blob: storage.Blob, client: storage.Client) -> RawFetchedFile:
     logger.info(f"fetching {blob.name}")
     client.download_blob_to_file(blob, file_obj=bio)
     bio.seek(0)
-    logger.info(
-        f"Took {humanize.naturaldelta(start.diff().total_seconds())} to read {humanize.naturalsize(bio.getbuffer().nbytes)} from {blob.name}"
-    )
+    delta = humanize.naturaldelta(start.diff().total_seconds())
+    size = humanize.naturalsize(bio.getbuffer().nbytes)
+    logger.info(f"Took {delta} to read {size} from {blob.name}")
     return RawFetchedFile(**json.load(bio))
 
 
@@ -173,10 +174,10 @@ def handle_hour(
                 )
                 for idx, record in enumerate(parsed_file.records)
             ]
-            logger.info(
-                f"took {humanize.naturaldelta(start.diff().total_seconds())} to get {len(parsed_records)} records for {parsed_file.feed_type}"
-            )
+            delta = humanize.naturaldelta(start.diff().total_seconds())
+            logger.info(f"took {delta} to get {len(parsed_records)} records for {parsed_file.feed_type}")
             aggs[parsed_file.feed_type].extend(parsed_records)
+            del parsed_file
         outcomes.append(
             ParseOutcome(
                 file=file.dict(exclude={"contents"}),
