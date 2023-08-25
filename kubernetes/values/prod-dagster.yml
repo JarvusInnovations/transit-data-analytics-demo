@@ -19,7 +19,7 @@ dagster-user-deployments:
           value: 'gs://jarvus-transit-data-demo-parsed'
       resources:
         requests:
-          cpu: 300m
+          cpu: 100m
           memory: 256Mi
       affinity:
         podAffinity:
@@ -44,8 +44,8 @@ dagsterDaemon:
         maxConcurrentRuns: 4
   resources:
     requests:
-      cpu: 300m
-      memory: 256Mi
+      cpu: 100m
+      memory: 128Mi
   affinity:
     podAffinity:
       preferredDuringSchedulingIgnoredDuringExecution:
@@ -65,7 +65,7 @@ dagsterWebserver:
     tag: 1.4.3
   resources:
     requests:
-      cpu: 300m
+      cpu: 100m
       memory: 256Mi
   affinity:
     podAffinity:
@@ -87,7 +87,7 @@ runLauncher:
       resources:
         limits:
           cpu: 1
-          memory: 2Gi
+          memory: 4Gi
         requests:
           cpu: 300m
           memory: 1Gi
@@ -105,15 +105,18 @@ runLauncher:
           readOnly: true
       runK8sConfig:
         podSpecConfig:
+          tolerations:
+            - key: dagster-purpose
+              operator: Equals
+              value: runs
+              effect: "NoSchedule"
           affinity:
-            podAntiAffinity:
+            nodeAffinity:
               preferredDuringSchedulingIgnoredDuringExecution:
-                - weight: 100
-                  podAffinityTerm:
-                    labelSelector:
-                      matchExpressions:
-                        - key: app
-                          operator: In
-                          values:
-                            - postgresql
-                    topologyKey: topology.kubernetes.io/zone
+              - weight: 100
+                preference:
+                  matchExpressions:
+                  - key: dagster-purpose
+                    operator: In
+                    values:
+                      - runs
