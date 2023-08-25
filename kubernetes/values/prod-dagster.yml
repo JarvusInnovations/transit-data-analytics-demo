@@ -112,11 +112,10 @@ runLauncher:
               effect: "NoSchedule"
           affinity:
             nodeAffinity:
-              preferredDuringSchedulingIgnoredDuringExecution:
-              - weight: 100
-                preference:
-                  matchExpressions:
-                  - key: dagster-purpose
-                    operator: In
-                    values:
-                      - runs
+              requiredDuringSchedulingIgnoredDuringExecution:
+                nodeSelectorTerms:
+                  - matchExpressions:
+                      - key: dagster-purpose
+                        operator: In
+                        values:
+                          - runs
