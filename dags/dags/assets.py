@@ -86,6 +86,7 @@ def file_to_records(
                         hash=hashlib.md5(contents).digest(),
                         records=parse_obj_as(ListOfDicts, list(reader)).records,
                     )
+                    del contents, reader
         elif pydantic_type == GtfsRealtime:
             feed = gtfs_realtime_pb2.FeedMessage()
             feed.ParseFromString(file.contents)
@@ -187,6 +188,7 @@ def handle_hour(
                 success=True,
             )
         )
+        del file
 
     for feed_type, records in aggs.items():
         save_hour_agg(
