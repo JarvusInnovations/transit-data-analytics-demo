@@ -107,7 +107,7 @@ runLauncher:
         podSpecConfig:
           tolerations:
             - key: dagster-purpose
-              operator: Equals
+              operator: Equal
               value: runs
               effect: "NoSchedule"
           affinity:
