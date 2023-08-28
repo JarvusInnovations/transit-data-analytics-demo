@@ -9,7 +9,7 @@ from dagster import (
     load_assets_from_modules,
     OutputContext,
     InputContext,
-    ScheduleDefinition,
+    build_schedule_from_partitioned_job,
 )
 from dagster._utils.backoff import backoff
 from dagster_gcp import GCSResource, ConfigurablePickledObjectGCSIOManager  # type: ignore[import]
@@ -73,9 +73,8 @@ class HivePartitionedPydanticGCSIOManager(PickledObjectGCSIOManager):
 defs = Definitions(
     assets=load_assets_from_modules([assets]),
     schedules=[
-        ScheduleDefinition(
-            job=define_asset_job("parse_job", selection=AssetSelection.all()),
-            cron_schedule="0 * * * *",
+        build_schedule_from_partitioned_job(
+            define_asset_job("parse_job", selection=AssetSelection.all()),
         ),
     ],
     resources={
