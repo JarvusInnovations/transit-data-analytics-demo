@@ -141,7 +141,7 @@ class RawFetchedFile(BaseModel):
     @property
     def filename(self) -> str:
         params_with_page = {
-            **{kv.key: kv.value for kv in self.config.query if kv.value},  # exclude secrets
+            **{kv.key: kv.value for kv in self.config.query if kv.value},  # excludes secrets
             **{kv.key: kv.value for kv in self.page},
         }
         url = requests.Request(url=self.config.url, params=params_with_page).prepare().url

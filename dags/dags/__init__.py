@@ -26,7 +26,10 @@ class HivePartitionedPydanticGCSIOManager(PickledObjectGCSIOManager):
     def get_path_for_partition(
         self, context: Union[InputContext, OutputContext], path: UPath, partition: str
     ) -> "UPath":
-        """Override this method if you want to use a different partitioning scheme
+        """
+        (Docs taken from parent class)
+
+        Override this method if you want to use a different partitioning scheme
         (for example, if the saving function handles partitioning instead).
         The extension will be added later.
 
