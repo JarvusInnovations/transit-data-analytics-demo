@@ -41,7 +41,7 @@ dagsterDaemon:
   runCoordinator:
     config:
       queuedRunCoordinator:
-        maxConcurrentRuns: 4
+        maxConcurrentRuns: 16
   resources:
     requests:
       cpu: 100m
