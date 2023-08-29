@@ -2,3 +2,9 @@ server:
   global:
     # we want to scrape pretty often to see if we can get a decent fetches per minute
     scrape_interval: 15s
+  resources:
+    limits:
+      memory: 2Gi
+    requests:
+      cpu: 100m
+      memory: 1Gi
