@@ -1,0 +1,121 @@
+dagster-user-deployments:
+  enabled: true
+  deployments:
+    - name: "tdad-dags"
+      image:
+        repository: "ghcr.io/jarvusinnovations/transit-data-analytics-demo/dags"
+        tag: latest
+        pullPolicy: Always
+      dagsterApiGrpcArgs:
+        - "--working-directory"
+        - "/app"
+        - "--module-name"
+        - "dags"
+      port: 3030
+      env:
+        - name: RAW_BUCKET
+          value: 'gs://jarvus-transit-data-demo-raw'
+        - name: PARSED_BUCKET
+          value: 'gs://jarvus-transit-data-demo-parsed'
+      resources:
+        requests:
+          cpu: 100m
+          memory: 256Mi
+      affinity:
+        podAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                        - postgresql
+                topologyKey: topology.kubernetes.io/zone
+
+dagsterDaemon:
+  image:
+    # override to use hologit
+    tag: 1.4.3
+  runCoordinator:
+    config:
+      queuedRunCoordinator:
+        maxConcurrentRuns: 16
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+  affinity:
+    podAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          podAffinityTerm:
+            labelSelector:
+              matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                    - postgresql
+            topologyKey: topology.kubernetes.io/zone
+
+dagsterWebserver:
+  image:
+    # override to use hologit
+    tag: 1.4.3
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+  affinity:
+    podAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          podAffinityTerm:
+            labelSelector:
+              matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                    - postgresql
+            topologyKey: topology.kubernetes.io/zone
+
+runLauncher:
+  config:
+    k8sRunLauncher:
+      jobNamespace: dagster-runs
+      resources:
+        limits:
+          cpu: 1
+          memory: 4Gi
+        requests:
+          cpu: 300m
+          memory: 1Gi
+      envVars:
+        - "GOOGLE_APPLICATION_CREDENTIALS=/etc/gcs-secret/google_application_credentials.json"
+        - "RAW_BUCKET=gs://jarvus-transit-data-demo-raw"
+        - "PARSED_BUCKET=gs://jarvus-transit-data-demo-parsed"
+      volumes:
+        - name: gcs-secret
+          secret:
+            secretName: dagster-secret
+      volumeMounts:
+        - name: gcs-secret
+          mountPath: /etc/gcs-secret
+          readOnly: true
+      runK8sConfig:
+        podSpecConfig:
+          tolerations:
+            - key: dagster-purpose
+              operator: Equal
+              value: runs
+              effect: "NoSchedule"
+          affinity:
+            nodeAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                nodeSelectorTerms:
+                  - matchExpressions:
+                      - key: dagster-purpose
+                        operator: In
+                        values:
+                          - runs
