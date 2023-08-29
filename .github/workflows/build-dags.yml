@@ -15,13 +15,11 @@ jobs:
         python-version: 3.11
     - uses: abatilo/actions-poetry@v2
     - name: run mypy and pytest
-      id: test
       working-directory: dags
       run: |
         poetry export --with=dev --without-hashes --format=requirements.txt > requirements.txt
         poetry run pip install -r requirements.txt
         poetry run mypy .
-        echo "VERSION=$(poetry version)" >> "$GITHUB_OUTPUT"
 # un-comment and move up once we have tests; pytest exits with an exit code if no tests are found
 #        poetry run pytest
       env:
@@ -36,4 +34,4 @@ jobs:
       with:
         context: dags
         push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
-        tags: 'ghcr.io/jarvusinnovations/transit-data-analytics-demo/dags:${{ steps.test.outputs.VERSION }}'
+        tags: 'ghcr.io/jarvusinnovations/transit-data-analytics-demo/dags:latest'

@@ -15,12 +15,14 @@ jobs:
         python-version: 3.11
     - uses: abatilo/actions-poetry@v2
     - name: run mypy and pytest
+      id: test
       working-directory: fetcher
       run: |
         poetry export --with=dev --without-hashes --format=requirements.txt > requirements.txt
         poetry run pip install -r requirements.txt
         poetry run mypy .
         poetry run pytest
+        echo "VERSION=$(poetry version --short)" >> "$GITHUB_OUTPUT"
       env:
         RAW_BUCKET: gs://this-does-not-exist-raw
         PARSED_BUCKET: gs://this-does-not-exist-parsed
@@ -33,4 +35,4 @@ jobs:
       with:
         context: fetcher
         push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
-        tags: 'ghcr.io/jarvusinnovations/transit-data-analytics-demo/fetcher:latest'
+        tags: 'ghcr.io/jarvusinnovations/transit-data-analytics-demo/fetcher:${{ steps.test.outputs.VERSION }}'
