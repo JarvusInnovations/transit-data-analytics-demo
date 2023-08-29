@@ -64,6 +64,7 @@ def helm_reqs(c):
     c.run(
         "helm repo add bitnami-pre-2022 https://raw.githubusercontent.com/bitnami/charts/eb5f9a9513d987b519f0ecd732e7031241c50328/bitnami"
     )
+    c.run("helm repo add prometheus-community https://prometheus-community.github.io/helm-charts")
 
 
 @task
