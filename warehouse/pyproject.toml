@@ -9,6 +9,9 @@ readme = "README.md"
 python = "^3.11"
 dbt-bigquery = "^1.5.3"
 
+[tool.poetry.group.dev.dependencies]
+sqlfluff = "^2.3.0"
+sqlfluff-templater-dbt = "^2.3.0"
 
 [build-system]
 requires = ["poetry-core"]

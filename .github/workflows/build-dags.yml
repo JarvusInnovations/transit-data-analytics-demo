@@ -1,4 +1,4 @@
-name: build-fetcher-image
+name: build-dags
 
 on:
   pull_request:
@@ -15,14 +15,13 @@ jobs:
         python-version: 3.11
     - uses: abatilo/actions-poetry@v2
     - name: run mypy and pytest
-      id: test
-      working-directory: fetcher
+      working-directory: dags
       run: |
         poetry export --with=dev --without-hashes --format=requirements.txt > requirements.txt
         poetry run pip install -r requirements.txt
         poetry run mypy .
-        poetry run pytest
-        echo "VERSION=$(poetry version --short)" >> "$GITHUB_OUTPUT"
+# un-comment and move up once we have tests; pytest exits with an exit code if no tests are found
+#        poetry run pytest
       env:
         RAW_BUCKET: gs://this-does-not-exist-raw
         PARSED_BUCKET: gs://this-does-not-exist-parsed
@@ -33,6 +32,6 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
     - uses: docker/build-push-action@v4
       with:
-        context: fetcher
+        context: dags
         push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
-        tags: 'ghcr.io/jarvusinnovations/transit-data-analytics-demo/fetcher:${{ steps.test.outputs.VERSION }}'
+        tags: 'ghcr.io/jarvusinnovations/transit-data-analytics-demo/dags:latest'

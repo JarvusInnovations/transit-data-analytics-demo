@@ -1,0 +1,44 @@
+[tool.poetry]
+name = "dags"
+version = "0.1.0"
+description = ""
+authors = ["Andrew Vaccaro <andrew.v@jarv.us>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+dagster = "^1.4.3"
+dagster-cloud = "^1.4.3"
+requests = "^2.31.0"
+pandas = "^2.0.3"
+matplotlib = "^3.7.2"
+dagster-duckdb = "^0.20.3"
+dagster-duckdb-pandas = "^0.20.3"
+faker = "^19.2.0"
+dagster-gcp = "^0.20.4"
+humanize = "^4.7.0"
+gtfs-realtime-bindings = "^1.0.0"
+python-slugify = "^8.0.1"
+dagster-postgres = "^0.20.4"
+tabulate = "^0.9.0"
+
+
+[tool.poetry.group.dev.dependencies]
+dagster-webserver = "^1.4.3"
+pytest = "^7.4.0"
+mypy = "^1.4.1"
+pandas-stubs = "^2.0.2.230605"
+types-requests = "^2.31.0.2"
+types-python-slugify = "^8.0.0.3"
+types-pyyaml = "^6.0.12.11"
+types-protobuf = "^4.24.0.1"
+types-tqdm = "^4.66.0.1"
+types-tabulate = "^0.9.0.3"
+memray = "^1.9.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.dagster]
+module_name = "dags"

@@ -28,6 +28,8 @@ jobs:
     # sqlfluff needs dbt to be set up and authenticated
     - uses: pre-commit/action@v3.0.0
       env:
+        # skip sqlfluff for now; it's not authenticating to bigquery properly
+        SKIP: sqlfluff-lint
         BIGQUERY_SERVICE_ACCOUNT: /tmp/keyfile
         DBT_PROFILES_DIR: warehouse
         DBT_TARGET: prod_service_account
