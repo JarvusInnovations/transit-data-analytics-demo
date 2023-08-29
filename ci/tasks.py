@@ -56,8 +56,15 @@ class JarvusConfig(BaseModel):
 
 
 @task
-def helm_plugins(c):
+def helm_reqs(c):
     c.run("helm plugin install https://github.com/databus23/helm-diff", warn=True)
+
+    # https://github.com/dagster-io/dagster/blob/master/.buildkite/dagster-buildkite/dagster_buildkite/steps/helm.py#L75-L80
+    # https://github.com/dagster-io/dagster/issues/8167
+    c.run(
+        "helm repo add bitnami-pre-2022 https://raw.githubusercontent.com/bitnami/charts/eb5f9a9513d987b519f0ecd732e7031241c50328/bitnami"
+    )
+    c.run("helm repo add prometheus-community https://prometheus-community.github.io/helm-charts")
 
 
 @task
@@ -65,7 +72,7 @@ def parse_jarvus_config(c: Context):
     c.update({"jarvus_config": JarvusConfig(**c.config["jarvus"]._config)})
 
 
-@task(helm_plugins, parse_jarvus_config)
+@task(helm_reqs, parse_jarvus_config)
 def diff(c, name=None):
     for deployment in c.config.jarvus_config.deployments:
         if not name or name == deployment.name:
@@ -80,7 +87,7 @@ def diff(c, name=None):
                     f"../{deployment.chart}",
                     deployment.namespace_cli,
                     deployment.values_cli,
-                    "-allow-unreleased",
+                    "--allow-unreleased",
                 ]
                 c.run(" ".join(args))
             elif deployment.driver == Driver.kustomize:
@@ -89,7 +96,7 @@ def diff(c, name=None):
                 raise _assert_never(deployment.driver)
 
 
-@task(helm_plugins, parse_jarvus_config)
+@task(helm_reqs, parse_jarvus_config)
 def apply(c, name=None):
     deployment: Deployment
     for deployment in c.config.jarvus_config.deployments:

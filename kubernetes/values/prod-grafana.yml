@@ -3,6 +3,11 @@
 persistence:
   enabled: true
 
+admin:
+  existingSecret: grafana-initial-admin
+  userKey: admin-user
+  passwordKey: admin-password
+
 ingress:
   enabled: true
   hosts:

@@ -14,6 +14,12 @@ jarvus:
       chart: kubernetes/charts/metabase
       values:
         - kubernetes/values/prod-metabase.yml
+    - name: dagster
+      namespace: dagster
+      driver: helm
+      chart: kubernetes/charts/dagster
+      values:
+        - kubernetes/values/prod-dagster.yml
 
     # base services
     - name: cert-manager
