@@ -19,6 +19,7 @@ from pydantic import BaseModel
 from upath import UPath
 
 from . import assets
+from .assets import feed_type_hour_partition_def
 from .common import SERIALIZERS
 
 
@@ -76,8 +77,9 @@ class HivePartitionedPydanticGCSIOManager(PickledObjectGCSIOManager):
 defs = Definitions(
     assets=load_assets_from_modules([assets]),
     schedules=[
+        # see https://github.com/dagster-io/dagster/pull/13071
         build_schedule_from_partitioned_job(
-            define_asset_job("parse_job", selection=AssetSelection.all()),
+            define_asset_job("parse_job", selection=AssetSelection.all(), partitions_def=feed_type_hour_partition_def),
         ),
     ],
     resources={
