@@ -37,7 +37,7 @@ dagster-user-deployments:
 dagsterDaemon:
   image:
     # override to use hologit
-    tag: 1.4.11
+    tag: 1.4.10
   runCoordinator:
     config:
       queuedRunCoordinator:
@@ -62,7 +62,7 @@ dagsterDaemon:
 dagsterWebserver:
   image:
     # override to use hologit
-    tag: 1.4.11
+    tag: 1.4.10
   resources:
     requests:
       cpu: 100m
