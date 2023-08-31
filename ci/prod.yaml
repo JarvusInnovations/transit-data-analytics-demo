@@ -1,0 +1,62 @@
+run:
+  echo_format: "{command}"
+  echo: true
+jarvus:
+  deployments:
+    # applications
+    - name: fetcher
+      namespace: fetcher
+      driver: kustomize
+      directory: kubernetes/overlays/fetcher-prod
+    - name: metabase
+      namespace: metabase
+      driver: helm
+      chart: kubernetes/charts/metabase
+      values:
+        - kubernetes/values/prod-metabase.yml
+    - name: dagster
+      namespace: dagster
+      driver: helm
+      chart: kubernetes/charts/dagster
+      values:
+        - kubernetes/values/prod-dagster.yml
+
+    # base services
+    - name: cert-manager
+      namespace: cert-manager
+      driver: helm
+      chart: kubernetes/charts/cert-manager/helm-chart
+      dependency: false
+      values:
+        - kubernetes/charts/cert-manager/default-values.yaml
+    - name: grafana
+      namespace: grafana
+      driver: helm
+      chart: kubernetes/charts/grafana/helm-chart
+      values:
+        - kubernetes/charts/grafana/default-values.yaml
+        - kubernetes/values/prod-grafana.yml
+    - name: ingress-nginx
+      namespace: ingress-nginx
+      driver: helm
+      chart: kubernetes/charts/ingress-nginx/helm-chart
+      values:
+        - kubernetes/charts/ingress-nginx/default-values.yaml
+    - name: loki
+      namespace: loki
+      driver: helm
+      chart: kubernetes/charts/loki/helm-chart
+      values:
+        - kubernetes/charts/loki/default-values.yaml
+    - name: prometheus
+      namespace: prometheus
+      driver: helm
+      chart: kubernetes/charts/prometheus/helm-chart
+      values:
+        - kubernetes/charts/prometheus/default-values.yaml
+    - name: promtail
+      namespace: promtail
+      driver: helm
+      chart: kubernetes/charts/promtail/helm-chart
+      values:
+        - kubernetes/charts/promtail/default-values.yaml

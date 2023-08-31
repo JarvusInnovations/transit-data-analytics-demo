@@ -1,0 +1,18 @@
+# These values as applied last as downstream overrides
+# See https://github.com/grafana/helm-charts/blob/grafana-6.2.1/charts/grafana/values.yaml
+persistence:
+  enabled: true
+
+admin:
+  existingSecret: grafana-initial-admin
+  userKey: admin-user
+  passwordKey: admin-password
+
+ingress:
+  enabled: true
+  hosts:
+    - grafana.k8s.tdad.jarv.us
+  tls:
+    - secretName: grafana-tls
+      hosts:
+        - grafana.k8s.tdad.jarv.us
