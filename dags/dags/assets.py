@@ -202,13 +202,16 @@ def handle_hour(
     return outcomes
 
 
+feed_type_hour_partition_def = MultiPartitionsDefinition(
+    {
+        "feed_type": StaticPartitionsDefinition(list(FeedType.__members__.keys())),
+        "hour": HourlyPartitionsDefinition(start_date="2023-07-05-00:00"),
+    }
+)
+
+
 @asset(
-    partitions_def=MultiPartitionsDefinition(
-        {
-            "feed_type": StaticPartitionsDefinition(list(FeedType.__members__.keys())),
-            "hour": HourlyPartitionsDefinition(start_date="2023-07-05-00:00"),
-        }
-    ),
+    partitions_def=feed_type_hour_partition_def,
     io_manager_key="gcs_io_manager",
 )
 def raw_files_list(
@@ -253,12 +256,7 @@ def raw_files_list(
 
 
 @asset(
-    partitions_def=MultiPartitionsDefinition(
-        {
-            "feed_type": StaticPartitionsDefinition(list(FeedType.__members__.keys())),
-            "hour": HourlyPartitionsDefinition(start_date="2023-07-05-00:00"),
-        }
-    ),
+    partitions_def=feed_type_hour_partition_def,
     ins={
         "raw_files_list": AssetIn(input_manager_key="gcs_io_manager"),
     },
