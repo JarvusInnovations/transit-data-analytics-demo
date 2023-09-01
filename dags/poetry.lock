@@ -418,13 +418,13 @@ files = [
 
 [[package]]
 name = "dagster"
-version = "1.4.10"
+version = "1.4.11"
 description = "Dagster is an orchestration platform for the development, production, and observation of data assets."
 optional = false
 python-versions = "*"
 files = [
-    {file = "dagster-1.4.10-py3-none-any.whl", hash = "sha256:342a0e15fd2b23357957a1cca2f56c66f18f9a2211bd843d8c47ac0415a54a83"},
-    {file = "dagster-1.4.10.tar.gz", hash = "sha256:026705e7d235ca4a8774d3e5f2da09b112bb6827e09a002efd299d9009cc940f"},
+    {file = "dagster-1.4.11-py3-none-any.whl", hash = "sha256:3bbe7eff9b5ff23aa854cd0e5847b6bd5d44220e4938a0c99ed0884ee44e421a"},
+    {file = "dagster-1.4.11.tar.gz", hash = "sha256:dbdfbe263105aa45bb6b2b74226610be138401aa560c0a80ee25ca8b8fb72dad"},
 ]
 
 [package.dependencies]
@@ -467,41 +467,41 @@ test = ["buildkite-test-collector", "docker", "grpcio-tools (>=1.44.0)", "mock (
 
 [[package]]
 name = "dagster-cloud"
-version = "1.4.10"
+version = "1.4.11"
 description = ""
 optional = false
 python-versions = "*"
 files = [
-    {file = "dagster_cloud-1.4.10-py3-none-any.whl", hash = "sha256:8ba81bc61fbad59d9a97cbeabc2e53094c23cb53a05f3cb5b119ea9c7e5c00ac"},
-    {file = "dagster_cloud-1.4.10.tar.gz", hash = "sha256:7bd58dcae923e3dd0bf9ac8a481188f313fb071828d4a47bfbf9893be00d789e"},
+    {file = "dagster_cloud-1.4.11-py3-none-any.whl", hash = "sha256:07e87ae477a2b40462866f4e2efab00ec6dfa59f68f561b7a464e018997b3c4d"},
+    {file = "dagster_cloud-1.4.11.tar.gz", hash = "sha256:c70a658c61bc9440b9e2dd5ea278af89868ed2f2dc6e18c8fd83a125f165dd6f"},
 ]
 
 [package.dependencies]
-dagster = "1.4.10"
-dagster-cloud-cli = "1.4.10"
-pex = "*"
+dagster = "1.4.11"
+dagster-cloud-cli = "1.4.11"
+pex = ">=2.1.132"
 questionary = "*"
 requests = "*"
 typer = {version = "*", extras = ["all"]}
 
 [package.extras]
-docker = ["dagster-docker (==0.20.10)", "docker"]
-ecs = ["boto3", "dagster-aws (==0.20.10)"]
-kubernetes = ["dagster-k8s (==0.20.10)", "kubernetes"]
+docker = ["dagster-docker (==0.20.11)", "docker"]
+ecs = ["boto3", "dagster-aws (==0.20.11)"]
+kubernetes = ["dagster-k8s (==0.20.11)", "kubernetes"]
 pex = ["boto3"]
 sandbox = ["supervisor"]
 serverless = ["boto3"]
-tests = ["black", "dagster-cloud-test-infra", "dagster-k8s (==0.20.10)", "docker", "httpretty", "isort", "kubernetes", "moto[all]", "mypy", "paramiko", "psutil", "pylint", "pytest", "types-PyYAML", "types-requests"]
+tests = ["black", "dagster-cloud-test-infra", "dagster-k8s (==0.20.11)", "docker", "httpretty", "isort", "kubernetes", "moto[all]", "mypy", "paramiko", "psutil", "pylint", "pytest", "types-PyYAML", "types-requests"]
 
 [[package]]
 name = "dagster-cloud-cli"
-version = "1.4.10"
+version = "1.4.11"
 description = ""
 optional = false
 python-versions = "*"
 files = [
-    {file = "dagster_cloud_cli-1.4.10-py3-none-any.whl", hash = "sha256:16f36d1ee38c4c84422d5f84094729e23008dea5aba37e8015bfe27c48e7f76b"},
-    {file = "dagster_cloud_cli-1.4.10.tar.gz", hash = "sha256:405309df0dfaef3f3d810b90e3f308f5e7cfc2fded6260e1dd08f9bb2cd81711"},
+    {file = "dagster_cloud_cli-1.4.11-py3-none-any.whl", hash = "sha256:f953b2355ae49521f6737c4ed7c6a2e2f41164d91a44b5c998d7a35796e4b5ed"},
+    {file = "dagster_cloud_cli-1.4.11.tar.gz", hash = "sha256:4296559a850f440edf8c834dc9be79cd127f5e1bd77dd065286aebc8f00b4946"},
 ]
 
 [package.dependencies]
@@ -517,53 +517,53 @@ tests = ["freezegun"]
 
 [[package]]
 name = "dagster-duckdb"
-version = "0.20.10"
+version = "0.20.11"
 description = "Package for DuckDB-specific Dagster framework op and resource components."
 optional = false
 python-versions = "*"
 files = [
-    {file = "dagster-duckdb-0.20.10.tar.gz", hash = "sha256:3bc8b2a047f50e30c2b1b7cce36b07af08fb26a9b5ce5b9d97a62c4b60924085"},
-    {file = "dagster_duckdb-0.20.10-py3-none-any.whl", hash = "sha256:1b5ad27f65642673680dc3f7bd47296a7ec176d9c31953925ab5fba0732cc3de"},
+    {file = "dagster-duckdb-0.20.11.tar.gz", hash = "sha256:48b42010f6b271b0c9e833ce31ea6ca76c394dc5789f8e3b78a3dd3d28f0f74f"},
+    {file = "dagster_duckdb-0.20.11-py3-none-any.whl", hash = "sha256:b36e709ed34052a7e39c1331ee114e681ad12496048fc6cff5ada1689600d3b5"},
 ]
 
 [package.dependencies]
-dagster = "1.4.10"
+dagster = "1.4.11"
 duckdb = "*"
 
 [package.extras]
-pandas = ["pandas"]
+pandas = ["pandas (<2.1)"]
 pyspark = ["pyspark (>=2.0.2)", "pyspark (>=3.0.0)"]
 
 [[package]]
 name = "dagster-duckdb-pandas"
-version = "0.20.10"
+version = "0.20.11"
 description = "Package for storing Pandas DataFrames in DuckDB."
 optional = false
 python-versions = "*"
 files = [
-    {file = "dagster-duckdb-pandas-0.20.10.tar.gz", hash = "sha256:29cc53de62edb0808185780d8fa8ddb80b1562ed75169eabb414cd353a7c77ec"},
-    {file = "dagster_duckdb_pandas-0.20.10-py3-none-any.whl", hash = "sha256:330ec2e052671c8e9cf4336aad55e3178712511e22cc6522bd9b2687bb1ba767"},
+    {file = "dagster-duckdb-pandas-0.20.11.tar.gz", hash = "sha256:4f4fe37db65a024f29757da87cce33649c74a1fc8140ab8de20158c8675adb2b"},
+    {file = "dagster_duckdb_pandas-0.20.11-py3-none-any.whl", hash = "sha256:60a308bf1659bb760acef75e096bdd105033fffdfcd540912bb511b13267afc1"},
 ]
 
 [package.dependencies]
-dagster = "1.4.10"
-dagster-duckdb = "0.20.10"
-pandas = "*"
+dagster = "1.4.11"
+dagster-duckdb = "0.20.11"
+pandas = "<2.1"
 
 [[package]]
 name = "dagster-gcp"
-version = "0.20.10"
+version = "0.20.11"
 description = "Package for GCP-specific Dagster framework op and resource components."
 optional = false
 python-versions = "*"
 files = [
-    {file = "dagster-gcp-0.20.10.tar.gz", hash = "sha256:f9c6b168fe7bda4b2be7f9b4a36055962594d4577c1a3ae54e637183f61e57c6"},
-    {file = "dagster_gcp-0.20.10-py3-none-any.whl", hash = "sha256:0f34bf755a9878d600b6e61d313da2c47bb80a41923e126bddb27e8cb11ec4cf"},
+    {file = "dagster-gcp-0.20.11.tar.gz", hash = "sha256:85a636e0e13125447ddc98af4f3ba16d07a9b073a5e42d40c9d17cd0410d0c53"},
+    {file = "dagster_gcp-0.20.11-py3-none-any.whl", hash = "sha256:a4bc6626e6e8e55a2d1c17c82b04d9d6fba832e3631c5acdb01ab1a3f7e5d2a6"},
 ]
 
 [package.dependencies]
-dagster = "1.4.10"
-dagster-pandas = "0.20.10"
+dagster = "1.4.11"
+dagster-pandas = "0.20.11"
 db-dtypes = "*"
 google-api-python-client = "*"
 google-cloud-bigquery = "*"
@@ -575,17 +575,17 @@ pyarrow = ["pyarrow"]
 
 [[package]]
 name = "dagster-graphql"
-version = "1.4.10"
+version = "1.4.11"
 description = "The GraphQL frontend to python dagster."
 optional = false
 python-versions = "*"
 files = [
-    {file = "dagster-graphql-1.4.10.tar.gz", hash = "sha256:ea216e2e5bf1d1e5934b3bd5fde4b731dab9963fbd3dc0f89a0063347efa7426"},
-    {file = "dagster_graphql-1.4.10-py3-none-any.whl", hash = "sha256:ed4478d0cf626c52262776b9a6b5f4188d5eba746a2d90caea00f3492ead3781"},
+    {file = "dagster-graphql-1.4.11.tar.gz", hash = "sha256:7dbc0340b765c454e9e61d877aec3bd7f0470ebca3f1f358f7b930977347c0b0"},
+    {file = "dagster_graphql-1.4.11-py3-none-any.whl", hash = "sha256:b96af8389d1c60fc6612f439e4c106c85b80a0d070ce2855d1cf81c2fa3c0e76"},
 ]
 
 [package.dependencies]
-dagster = "1.4.10"
+dagster = "1.4.11"
 gql = {version = ">=3.0.0", extras = ["requests"]}
 graphene = ">=3"
 requests = "*"
@@ -594,49 +594,49 @@ urllib3 = "<2.0.0"
 
 [[package]]
 name = "dagster-pandas"
-version = "0.20.10"
+version = "0.20.11"
 description = "Utilities and examples for working with pandas and dagster, an opinionated framework for expressing data pipelines"
 optional = false
 python-versions = "*"
 files = [
-    {file = "dagster-pandas-0.20.10.tar.gz", hash = "sha256:164262a368a7bc2b3f80a5fac8d0972e9f7909dc805cb57c9e4574f0a9336073"},
-    {file = "dagster_pandas-0.20.10-py3-none-any.whl", hash = "sha256:274da4f73556e31a0bfab783e111c337d4ee4112d2dedd8365523548bc447032"},
+    {file = "dagster-pandas-0.20.11.tar.gz", hash = "sha256:bb2dd8be76eb8720c2572f31d07559750ff2c1d531dfd7787baeef14c96a5f59"},
+    {file = "dagster_pandas-0.20.11-py3-none-any.whl", hash = "sha256:05d0bf8487c2b5ea12e7cc8c849e299d2c10094ca4aa705dafceade45d8f3d6f"},
 ]
 
 [package.dependencies]
-dagster = "1.4.10"
+dagster = "1.4.11"
 pandas = "*"
 
 [[package]]
 name = "dagster-postgres"
-version = "0.20.10"
+version = "0.20.11"
 description = "A Dagster integration for postgres"
 optional = false
 python-versions = "*"
 files = [
-    {file = "dagster-postgres-0.20.10.tar.gz", hash = "sha256:1c53a0e6abdb9694fdc2401acb39ec3435181f4c13efa9010169f094496cd44f"},
-    {file = "dagster_postgres-0.20.10-py3-none-any.whl", hash = "sha256:beba927e36ff7aca9b98468cd97dd415266520a5d4cbc8f6a6c7c27319fc3c85"},
+    {file = "dagster-postgres-0.20.11.tar.gz", hash = "sha256:6cf771384bf13f52d7d8e57d4741a37943772b9239db827ea69cb3a4479d5fd7"},
+    {file = "dagster_postgres-0.20.11-py3-none-any.whl", hash = "sha256:32531f1d8b1e00f9ab86ab2eb462211c669756e8084a5e330ecbb3728d5ae8f4"},
 ]
 
 [package.dependencies]
-dagster = "1.4.10"
+dagster = "1.4.11"
 psycopg2-binary = "*"
 
 [[package]]
 name = "dagster-webserver"
-version = "1.4.10"
+version = "1.4.11"
 description = "Web UI for dagster."
 optional = false
 python-versions = "*"
 files = [
-    {file = "dagster_webserver-1.4.10-py3-none-any.whl", hash = "sha256:be30e464c86bc2dec4e525291c253c917c89b1eba46be54fd988a7b1b0ba2422"},
-    {file = "dagster_webserver-1.4.10.tar.gz", hash = "sha256:0eaf2f954199b1480a92b99f6829f6dd50fc8df8454ca4d881289a430984d994"},
+    {file = "dagster_webserver-1.4.11-py3-none-any.whl", hash = "sha256:7128dfe02122abb7b557ea37a603684cfeee36ca8918bd80603b945c09122652"},
+    {file = "dagster_webserver-1.4.11.tar.gz", hash = "sha256:7c06a6c2978cc5e6e2f4e39c87e95e61378679efe05a3579fb85ca88d2ce7ff4"},
 ]
 
 [package.dependencies]
 click = ">=7.0,<9.0"
-dagster = "1.4.10"
-dagster-graphql = "1.4.10"
+dagster = "1.4.11"
+dagster-graphql = "1.4.11"
 starlette = "*"
 uvicorn = {version = "*", extras = ["standard"]}
 
@@ -2068,61 +2068,69 @@ files = [
 
 [[package]]
 name = "pandas"
-version = "2.1.0"
+version = "2.0.3"
 description = "Powerful data structures for data analysis, time series, and statistics"
 optional = false
-python-versions = ">=3.9"
+python-versions = ">=3.8"
 files = [
-    {file = "pandas-2.1.0-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:40dd20439ff94f1b2ed55b393ecee9cb6f3b08104c2c40b0cb7186a2f0046242"},
-    {file = "pandas-2.1.0-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:d4f38e4fedeba580285eaac7ede4f686c6701a9e618d8a857b138a126d067f2f"},
-    {file = "pandas-2.1.0-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:6e6a0fe052cf27ceb29be9429428b4918f3740e37ff185658f40d8702f0b3e09"},
-    {file = "pandas-2.1.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:9d81e1813191070440d4c7a413cb673052b3b4a984ffd86b8dd468c45742d3cc"},
-    {file = "pandas-2.1.0-cp310-cp310-musllinux_1_1_x86_64.whl", hash = "sha256:eb20252720b1cc1b7d0b2879ffc7e0542dd568f24d7c4b2347cb035206936421"},
-    {file = "pandas-2.1.0-cp310-cp310-win_amd64.whl", hash = "sha256:38f74ef7ebc0ffb43b3d633e23d74882bce7e27bfa09607f3c5d3e03ffd9a4a5"},
-    {file = "pandas-2.1.0-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:cda72cc8c4761c8f1d97b169661f23a86b16fdb240bdc341173aee17e4d6cedd"},
-    {file = "pandas-2.1.0-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:d97daeac0db8c993420b10da4f5f5b39b01fc9ca689a17844e07c0a35ac96b4b"},
-    {file = "pandas-2.1.0-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:d8c58b1113892e0c8078f006a167cc210a92bdae23322bb4614f2f0b7a4b510f"},
-    {file = "pandas-2.1.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:629124923bcf798965b054a540f9ccdfd60f71361255c81fa1ecd94a904b9dd3"},
-    {file = "pandas-2.1.0-cp311-cp311-musllinux_1_1_x86_64.whl", hash = "sha256:70cf866af3ab346a10debba8ea78077cf3a8cd14bd5e4bed3d41555a3280041c"},
-    {file = "pandas-2.1.0-cp311-cp311-win_amd64.whl", hash = "sha256:d53c8c1001f6a192ff1de1efe03b31a423d0eee2e9e855e69d004308e046e694"},
-    {file = "pandas-2.1.0-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:86f100b3876b8c6d1a2c66207288ead435dc71041ee4aea789e55ef0e06408cb"},
-    {file = "pandas-2.1.0-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:28f330845ad21c11db51e02d8d69acc9035edfd1116926ff7245c7215db57957"},
-    {file = "pandas-2.1.0-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:b9a6ccf0963db88f9b12df6720e55f337447aea217f426a22d71f4213a3099a6"},
-    {file = "pandas-2.1.0-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:d99e678180bc59b0c9443314297bddce4ad35727a1a2656dbe585fd78710b3b9"},
-    {file = "pandas-2.1.0-cp39-cp39-musllinux_1_1_x86_64.whl", hash = "sha256:b31da36d376d50a1a492efb18097b9101bdbd8b3fbb3f49006e02d4495d4c644"},
-    {file = "pandas-2.1.0-cp39-cp39-win_amd64.whl", hash = "sha256:0164b85937707ec7f70b34a6c3a578dbf0f50787f910f21ca3b26a7fd3363437"},
-    {file = "pandas-2.1.0.tar.gz", hash = "sha256:62c24c7fc59e42b775ce0679cfa7b14a5f9bfb7643cfbe708c960699e05fb918"},
+    {file = "pandas-2.0.3-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:e4c7c9f27a4185304c7caf96dc7d91bc60bc162221152de697c98eb0b2648dd8"},
+    {file = "pandas-2.0.3-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:f167beed68918d62bffb6ec64f2e1d8a7d297a038f86d4aed056b9493fca407f"},
+    {file = "pandas-2.0.3-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:ce0c6f76a0f1ba361551f3e6dceaff06bde7514a374aa43e33b588ec10420183"},
+    {file = "pandas-2.0.3-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:ba619e410a21d8c387a1ea6e8a0e49bb42216474436245718d7f2e88a2f8d7c0"},
+    {file = "pandas-2.0.3-cp310-cp310-win32.whl", hash = "sha256:3ef285093b4fe5058eefd756100a367f27029913760773c8bf1d2d8bebe5d210"},
+    {file = "pandas-2.0.3-cp310-cp310-win_amd64.whl", hash = "sha256:9ee1a69328d5c36c98d8e74db06f4ad518a1840e8ccb94a4ba86920986bb617e"},
+    {file = "pandas-2.0.3-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:b084b91d8d66ab19f5bb3256cbd5ea661848338301940e17f4492b2ce0801fe8"},
+    {file = "pandas-2.0.3-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:37673e3bdf1551b95bf5d4ce372b37770f9529743d2498032439371fc7b7eb26"},
+    {file = "pandas-2.0.3-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:b9cb1e14fdb546396b7e1b923ffaeeac24e4cedd14266c3497216dd4448e4f2d"},
+    {file = "pandas-2.0.3-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:d9cd88488cceb7635aebb84809d087468eb33551097d600c6dad13602029c2df"},
+    {file = "pandas-2.0.3-cp311-cp311-win32.whl", hash = "sha256:694888a81198786f0e164ee3a581df7d505024fbb1f15202fc7db88a71d84ebd"},
+    {file = "pandas-2.0.3-cp311-cp311-win_amd64.whl", hash = "sha256:6a21ab5c89dcbd57f78d0ae16630b090eec626360085a4148693def5452d8a6b"},
+    {file = "pandas-2.0.3-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:9e4da0d45e7f34c069fe4d522359df7d23badf83abc1d1cef398895822d11061"},
+    {file = "pandas-2.0.3-cp38-cp38-macosx_11_0_arm64.whl", hash = "sha256:32fca2ee1b0d93dd71d979726b12b61faa06aeb93cf77468776287f41ff8fdc5"},
+    {file = "pandas-2.0.3-cp38-cp38-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:258d3624b3ae734490e4d63c430256e716f488c4fcb7c8e9bde2d3aa46c29089"},
+    {file = "pandas-2.0.3-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:9eae3dc34fa1aa7772dd3fc60270d13ced7346fcbcfee017d3132ec625e23bb0"},
+    {file = "pandas-2.0.3-cp38-cp38-win32.whl", hash = "sha256:f3421a7afb1a43f7e38e82e844e2bca9a6d793d66c1a7f9f0ff39a795bbc5e02"},
+    {file = "pandas-2.0.3-cp38-cp38-win_amd64.whl", hash = "sha256:69d7f3884c95da3a31ef82b7618af5710dba95bb885ffab339aad925c3e8ce78"},
+    {file = "pandas-2.0.3-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:5247fb1ba347c1261cbbf0fcfba4a3121fbb4029d95d9ef4dc45406620b25c8b"},
+    {file = "pandas-2.0.3-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:81af086f4543c9d8bb128328b5d32e9986e0c84d3ee673a2ac6fb57fd14f755e"},
+    {file = "pandas-2.0.3-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:1994c789bf12a7c5098277fb43836ce090f1073858c10f9220998ac74f37c69b"},
+    {file = "pandas-2.0.3-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:5ec591c48e29226bcbb316e0c1e9423622bc7a4eaf1ef7c3c9fa1a3981f89641"},
+    {file = "pandas-2.0.3-cp39-cp39-win32.whl", hash = "sha256:04dbdbaf2e4d46ca8da896e1805bc04eb85caa9a82e259e8eed00254d5e0c682"},
+    {file = "pandas-2.0.3-cp39-cp39-win_amd64.whl", hash = "sha256:1168574b036cd8b93abc746171c9b4f1b83467438a5e45909fed645cf8692dbc"},
+    {file = "pandas-2.0.3.tar.gz", hash = "sha256:c02f372a88e0d17f36d3093a644c73cfc1788e876a7c4bcb4020a77512e2043c"},
 ]
 
 [package.dependencies]
-numpy = {version = ">=1.23.2", markers = "python_version >= \"3.11\""}
+numpy = [
+    {version = ">=1.21.0", markers = "python_version >= \"3.10\""},
+    {version = ">=1.23.2", markers = "python_version >= \"3.11\""},
+]
 python-dateutil = ">=2.8.2"
 pytz = ">=2020.1"
 tzdata = ">=2022.1"
 
 [package.extras]
-all = ["PyQt5 (>=5.15.6)", "SQLAlchemy (>=1.4.36)", "beautifulsoup4 (>=4.11.1)", "bottleneck (>=1.3.4)", "dataframe-api-compat (>=0.1.7)", "fastparquet (>=0.8.1)", "fsspec (>=2022.05.0)", "gcsfs (>=2022.05.0)", "html5lib (>=1.1)", "hypothesis (>=6.46.1)", "jinja2 (>=3.1.2)", "lxml (>=4.8.0)", "matplotlib (>=3.6.1)", "numba (>=0.55.2)", "numexpr (>=2.8.0)", "odfpy (>=1.4.1)", "openpyxl (>=3.0.10)", "pandas-gbq (>=0.17.5)", "psycopg2 (>=2.9.3)", "pyarrow (>=7.0.0)", "pymysql (>=1.0.2)", "pyreadstat (>=1.1.5)", "pytest (>=7.3.2)", "pytest-asyncio (>=0.17.0)", "pytest-xdist (>=2.2.0)", "pyxlsb (>=1.0.9)", "qtpy (>=2.2.0)", "s3fs (>=2022.05.0)", "scipy (>=1.8.1)", "tables (>=3.7.0)", "tabulate (>=0.8.10)", "xarray (>=2022.03.0)", "xlrd (>=2.0.1)", "xlsxwriter (>=3.0.3)", "zstandard (>=0.17.0)"]
-aws = ["s3fs (>=2022.05.0)"]
-clipboard = ["PyQt5 (>=5.15.6)", "qtpy (>=2.2.0)"]
-compression = ["zstandard (>=0.17.0)"]
-computation = ["scipy (>=1.8.1)", "xarray (>=2022.03.0)"]
-consortium-standard = ["dataframe-api-compat (>=0.1.7)"]
-excel = ["odfpy (>=1.4.1)", "openpyxl (>=3.0.10)", "pyxlsb (>=1.0.9)", "xlrd (>=2.0.1)", "xlsxwriter (>=3.0.3)"]
+all = ["PyQt5 (>=5.15.1)", "SQLAlchemy (>=1.4.16)", "beautifulsoup4 (>=4.9.3)", "bottleneck (>=1.3.2)", "brotlipy (>=0.7.0)", "fastparquet (>=0.6.3)", "fsspec (>=2021.07.0)", "gcsfs (>=2021.07.0)", "html5lib (>=1.1)", "hypothesis (>=6.34.2)", "jinja2 (>=3.0.0)", "lxml (>=4.6.3)", "matplotlib (>=3.6.1)", "numba (>=0.53.1)", "numexpr (>=2.7.3)", "odfpy (>=1.4.1)", "openpyxl (>=3.0.7)", "pandas-gbq (>=0.15.0)", "psycopg2 (>=2.8.6)", "pyarrow (>=7.0.0)", "pymysql (>=1.0.2)", "pyreadstat (>=1.1.2)", "pytest (>=7.3.2)", "pytest-asyncio (>=0.17.0)", "pytest-xdist (>=2.2.0)", "python-snappy (>=0.6.0)", "pyxlsb (>=1.0.8)", "qtpy (>=2.2.0)", "s3fs (>=2021.08.0)", "scipy (>=1.7.1)", "tables (>=3.6.1)", "tabulate (>=0.8.9)", "xarray (>=0.21.0)", "xlrd (>=2.0.1)", "xlsxwriter (>=1.4.3)", "zstandard (>=0.15.2)"]
+aws = ["s3fs (>=2021.08.0)"]
+clipboard = ["PyQt5 (>=5.15.1)", "qtpy (>=2.2.0)"]
+compression = ["brotlipy (>=0.7.0)", "python-snappy (>=0.6.0)", "zstandard (>=0.15.2)"]
+computation = ["scipy (>=1.7.1)", "xarray (>=0.21.0)"]
+excel = ["odfpy (>=1.4.1)", "openpyxl (>=3.0.7)", "pyxlsb (>=1.0.8)", "xlrd (>=2.0.1)", "xlsxwriter (>=1.4.3)"]
 feather = ["pyarrow (>=7.0.0)"]
-fss = ["fsspec (>=2022.05.0)"]
-gcp = ["gcsfs (>=2022.05.0)", "pandas-gbq (>=0.17.5)"]
-hdf5 = ["tables (>=3.7.0)"]
-html = ["beautifulsoup4 (>=4.11.1)", "html5lib (>=1.1)", "lxml (>=4.8.0)"]
-mysql = ["SQLAlchemy (>=1.4.36)", "pymysql (>=1.0.2)"]
-output-formatting = ["jinja2 (>=3.1.2)", "tabulate (>=0.8.10)"]
+fss = ["fsspec (>=2021.07.0)"]
+gcp = ["gcsfs (>=2021.07.0)", "pandas-gbq (>=0.15.0)"]
+hdf5 = ["tables (>=3.6.1)"]
+html = ["beautifulsoup4 (>=4.9.3)", "html5lib (>=1.1)", "lxml (>=4.6.3)"]
+mysql = ["SQLAlchemy (>=1.4.16)", "pymysql (>=1.0.2)"]
+output-formatting = ["jinja2 (>=3.0.0)", "tabulate (>=0.8.9)"]
 parquet = ["pyarrow (>=7.0.0)"]
-performance = ["bottleneck (>=1.3.4)", "numba (>=0.55.2)", "numexpr (>=2.8.0)"]
+performance = ["bottleneck (>=1.3.2)", "numba (>=0.53.1)", "numexpr (>=2.7.1)"]
 plot = ["matplotlib (>=3.6.1)"]
-postgresql = ["SQLAlchemy (>=1.4.36)", "psycopg2 (>=2.9.3)"]
-spss = ["pyreadstat (>=1.1.5)"]
-sql-other = ["SQLAlchemy (>=1.4.36)"]
-test = ["hypothesis (>=6.46.1)", "pytest (>=7.3.2)", "pytest-asyncio (>=0.17.0)", "pytest-xdist (>=2.2.0)"]
-xml = ["lxml (>=4.8.0)"]
+postgresql = ["SQLAlchemy (>=1.4.16)", "psycopg2 (>=2.8.6)"]
+spss = ["pyreadstat (>=1.1.2)"]
+sql-other = ["SQLAlchemy (>=1.4.16)"]
+test = ["hypothesis (>=6.34.2)", "pytest (>=7.3.2)", "pytest-asyncio (>=0.17.0)", "pytest-xdist (>=2.2.0)"]
+xml = ["lxml (>=4.6.3)"]
 
 [[package]]
 name = "pandas-stubs"
@@ -2175,18 +2183,16 @@ pytzdata = ">=2020.1"
 
 [[package]]
 name = "pex"
-version = "2.0.3"
+version = "2.1.145"
 description = "The PEX packaging toolchain."
 optional = false
-python-versions = "*"
+python-versions = ">=2.7,<3.13,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*"
 files = [
-    {file = "pex-2.0.3-py2.py3-none-any.whl", hash = "sha256:4ca62e27fd30cd1d4acbcdadfc52739c6e73c9292613d98cb35d88065174fa63"},
-    {file = "pex-2.0.3.tar.gz", hash = "sha256:a8a35e7eb212616b2964d70d8a134d41d16649c943ab206b90c749c005e60999"},
+    {file = "pex-2.1.145-py2.py3-none-any.whl", hash = "sha256:7293e4fea898fbc474a2c033ca99acf1ef3d58fc1f18a5090469d389ca194937"},
+    {file = "pex-2.1.145.tar.gz", hash = "sha256:d6bac8c4e8ce746cfe5f16fa42b1fa66d87f785fb368138615fe08f4fd7b9db2"},
 ]
 
 [package.extras]
-cachecontrol = ["CacheControl (>=0.12.3)"]
-requests = ["requests (>=2.8.14)"]
 subprocess = ["subprocess32 (>=3.2.7)"]
 
 [[package]]
@@ -3563,5 +3569,5 @@ multidict = ">=4.0"
 
 [metadata]
 lock-version = "2.0"
-python-versions = "^3.11"
-content-hash = "4b4577e23a6d1751983b1364cc69aa5433bb1c4351c9715086be924427e5e340"
+python-versions = "~3.11"
+content-hash = "7f669806ed9ad7e817797610b5e3903fb97e38adf1fa6234dc0e628b909a3d66"

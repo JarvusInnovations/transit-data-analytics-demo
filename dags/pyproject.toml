@@ -6,21 +6,21 @@ authors = ["Andrew Vaccaro <andrew.v@jarv.us>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.11"
-dagster = "^1.4.3"
-dagster-cloud = "^1.4.3"
+python = "~3.11"
 requests = "^2.31.0"
 pandas = "^2.0.3"
 matplotlib = "^3.7.2"
-dagster-duckdb = "^0.20.3"
-dagster-duckdb-pandas = "^0.20.3"
 faker = "^19.2.0"
-dagster-gcp = "^0.20.4"
 humanize = "^4.7.0"
 gtfs-realtime-bindings = "^1.0.0"
 python-slugify = "^8.0.1"
 dagster-postgres = "^0.20.4"
 tabulate = "^0.9.0"
+dagster = "^1.4.11"
+dagster-cloud = "^1.4.11"
+dagster-duckdb = "^0.20.11"
+dagster-duckdb-pandas = "^0.20.11"
+dagster-gcp = "^0.20.11"
 
 
 [tool.poetry.group.dev.dependencies]
