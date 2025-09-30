@@ -169,3 +169,6 @@ cython_debug/
 # dbt stuff
 # https://stackoverflow.com/questions/60565688/what-is-the-user-yml-file-what-is-its-purpose
 .user.yml
+
+# VSCode
+.vscode/
