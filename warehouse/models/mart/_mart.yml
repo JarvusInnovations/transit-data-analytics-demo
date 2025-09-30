@@ -1,0 +1,12 @@
+version: 2
+
+models:
+  - name: dim_schedule_feeds
+    description: |
+      Feed versions with validity dates.
+    tests:
+      - dbt_utils.mutually_exclusive_ranges:
+          lower_bound_column: _valid_from
+          upper_bound_column: _valid_to
+          gaps: allowed
+          partition_by: feed_url
