@@ -1,7 +1,6 @@
 with cal as (
     select
-        *,
-        _FILE_NAME as _filename, --noqa: CP02
+        {{ parse_schedule_filename('_FILE_NAME') }} as _b64_url, --noqa: CP02
         dt,
         hour as hr,
         JSON_VALUE(record, '$.service_id') as service_id,
@@ -29,7 +28,7 @@ int_long_calendar as (
         day_of_week,
         start_date,
         end_date,
-        _filename,
+        _b64_url,
         dt,
         hr,
         CAST(CAST(service_ind as int) as bool) as service_ind
