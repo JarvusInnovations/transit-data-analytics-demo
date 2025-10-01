@@ -26,11 +26,21 @@ int_long_calendar as (
     select
         service_id,
         day_of_week,
-        start_date,
-        end_date,
         _b64_url,
         dt,
         hr,
+        PARSE_DATE('%Y%m%d', start_date) as start_date,
+        PARSE_DATE('%Y%m%d', end_date) as end_date,
+        -- https://cloud.google.com/bigquery/docs/reference/standard-sql/date_functions#extract
+        case day_of_week
+            when 'monday' then 2
+            when 'tuesday' then 3
+            when 'wednesday' then 4
+            when 'thursday' then 5
+            when 'friday' then 6
+            when 'saturday' then 7
+            when 'sunday' then 1
+        end as day_of_week_int,
         CAST(CAST(service_ind as int) as bool) as service_ind
     from long_cal
 )
