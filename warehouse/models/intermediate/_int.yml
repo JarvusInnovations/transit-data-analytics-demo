@@ -1,11 +1,12 @@
 version: 2
 
 models:
-  - name: dim_schedule_feeds
+  - name: int_service
     description: |
-      Feed versions with validity dates.
+      All service from active feeds.
     tests:
       - dbt_utils.unique_combination_of_columns:
             combination_of_columns:
               - service_id
               - service_date
+              - _b64_url

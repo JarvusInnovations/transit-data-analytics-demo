@@ -32,8 +32,11 @@ feed_dates as (
         dates.*,
         feeds.*
     from dates
-    left join feeds
-        on dates.date_day between feeds._valid_from and feeds._valid_to
+    inner join feeds
+        -- bigquery between is inclusive on both sides so need to manually construct
+        on
+            dates.date_day >= feeds._valid_from
+            and dates.date_day < feeds._valid_to
 ),
 
 int_service as (
@@ -53,12 +56,17 @@ int_service as (
             and EXTRACT(dayofweek from feed_dates.date_day) = cal.day_of_week_int
             and feed_dates._b64_url = cal._b64_url
             and feed_dates._valid_from = cal.dt
+            and feed_dates.date_day >= cal.dt
     left join cal_dates
         on
             DATE(feed_dates.date_day) = cal_dates.service_date
             and (cal_dates.service_id = cal.service_id or cal.service_id is null)
             and feed_dates._b64_url = cal_dates._b64_url
             and feed_dates._valid_from = cal_dates.dt
+            and feed_dates.date_day >= cal_dates.dt
+    -- think SEPTA uploaded a feed with no active service (service started after upload date)
+    -- so that causes rows in feed_dates that don't get any service joined on
+    where COALESCE(cal._b64_url, cal_dates._b64_url) is not null
 )
 
 select * from int_service
