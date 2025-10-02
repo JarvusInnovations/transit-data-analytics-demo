@@ -20,6 +20,7 @@ fct_scheduled_trips as (
         routes.route_short_name,
         routes.route_long_name,
         trips._b64_url,
+        trips.dt,
         srvc.feed_name
     from srvc
     left join trips
