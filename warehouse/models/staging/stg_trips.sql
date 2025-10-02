@@ -12,6 +12,7 @@ stg_trips as (
         hour as hr,
         JSON_VALUE(record, '$.route_id') as route_id,
         JSON_VALUE(record, '$.trip_id') as trip_id,
+        JSON_VALUE(record, '$.service_id') as service_id,
         JSON_VALUE(record, '$.trip_headsign') as trip_headsign,
         JSON_VALUE(record, '$.trip_short_name') as trip_short_name,
         JSON_VALUE(record, '$.direction_id') as direction_id,

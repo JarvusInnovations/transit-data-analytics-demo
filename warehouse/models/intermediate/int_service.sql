@@ -44,6 +44,7 @@ int_service as (
         cal.* except (_b64_url, dt, service_id),
         cal_dates.* except (_b64_url, dt, service_id, service_date),
         feed_dates.date_day as service_date,
+        feed_dates.feed_name,
         COALESCE(cal.service_id, cal_dates.service_id) as service_id,
         COALESCE(cal._b64_url, cal_dates._b64_url) as _b64_url,
         COALESCE(cal.dt, cal_dates.dt) as dt,

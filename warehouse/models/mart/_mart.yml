@@ -5,7 +5,18 @@ models:
     description: |
       Feed versions with validity dates.
     tests:
+      - dbt_utils.mutually_exclusive_ranges:
+          lower_bound_column: _valid_from
+          upper_bound_column: _valid_to
+          gaps: allowed
+          partition_by: _b64_url
+
+  - name: fct_scheduled_trips
+    description: |
+      All scheduled trips.
+    tests:
       - dbt_utils.unique_combination_of_columns:
             combination_of_columns:
-              - service_id
               - service_date
+              - trip_id
+              - _b64_url
