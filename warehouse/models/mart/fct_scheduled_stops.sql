@@ -1,3 +1,5 @@
+{{ config(materialized='table') }}
+
 with stop_times as (
     select
         *,
@@ -12,6 +14,8 @@ stops as (
 
 trips as (
     select * from {{ ref('fct_scheduled_trips') }}
+    -- todo: remove this filter
+    where dt = '2024-02-08'
 ),
 
 fct_scheduled_stops as (
