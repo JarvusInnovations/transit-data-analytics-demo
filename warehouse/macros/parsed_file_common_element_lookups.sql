@@ -65,3 +65,21 @@
     incrementality,
     gtfs_rt_message_timestamp
 {% endmacro %}
+
+-- given the path to the `vehicle` element (something like `entity.vehicle`, does not include initial `$.`)
+-- parse a trip descriptor from JSONL
+{% macro read_gtfs_rt_vehicle_descriptor(parent_json_path) %}
+
+        JSON_VALUE(record, '$.{{ parent_json_path }}.vehicle.id') AS vehicle_id,
+        JSON_VALUE(record, '$.{{ parent_json_path }}.vehicle.label') AS vehicle_label,
+        JSON_VALUE(record, '$.{{ parent_json_path }}.vehicle.licensePlate') AS license_plate,
+        JSON_VALUE(record, '$.{{ parent_json_path }}.vehicle.wheelchairAccessible') AS vehicle_wheelchair_accessible
+
+{% endmacro %}
+
+{% macro vehicle_descriptor_columns() %}
+    vehicle_id,
+    vehicle_label,
+    license_plate,
+    vehicle_wheelchair_accessible
+{% endmacro %}
