@@ -4,7 +4,7 @@ with cal as (
 
 cal_dates as (
     select
-        {{ parse_schedule_filename('_FILE_NAME') }} as _b64_url, --noqa: CP02
+        {{ extract_b64_url_from_filename('_FILE_NAME') }} as _b64_url, --noqa: CP02
         dt,
         JSON_VALUE(record, '$.service_id') as service_id,
         PARSE_DATE('%Y%m%d', JSON_VALUE(record, '$.date')) as service_date,
