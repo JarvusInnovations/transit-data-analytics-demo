@@ -17,7 +17,7 @@ unpack_json AS (
         JSON_VALUE(record, '$.entity.vehicle.position.odometer') AS odometer,
         JSON_VALUE(record, '$.entity.vehicle.position.speed') AS speed,
         JSON_VALUE(record, '$.entity.stopId') AS stop_id,
-        TIMESTAMP_SECONDS(JSON_VALUE(record, '$.entity.vehicle.timestamp')) AS vehicle_timestamp,
+        TIMESTAMP_SECONDS(CAST(JSON_VALUE(record, '$.entity.vehicle.timestamp') AS INT)) AS vehicle_timestamp,
         JSON_VALUE(record, '$.entity.current_stop_sequence') AS current_stop_sequence,
         JSON_VALUE(record, '$.entity.current_status') AS current_status
     FROM src

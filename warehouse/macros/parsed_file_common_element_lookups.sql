@@ -56,7 +56,7 @@
 
         JSON_VALUE(record, '$.{{ parent_json_path }}.gtfsRealtimeVersion') AS gtfs_realtime_version,
         JSON_VALUE(record, '$.{{ parent_json_path }}.incrementality') AS incrementality,
-        TIMESTAMP_SECONDS(JSON_VALUE(record, '$.{{ parent_json_path }}.timestamp')) AS gtfs_rt_message_timestamp
+        TIMESTAMP_SECONDS(CAST(JSON_VALUE(record, '$.{{ parent_json_path }}.timestamp') AS INT)) AS gtfs_rt_message_timestamp
 
 {% endmacro %}
 
