@@ -1,10 +1,14 @@
 WITH src AS (
-    SELECT * FROM {{ source('transit_data', 'gtfs_rt__vehicle_positions') }}
+    SELECT
+        *,
+        _file_name
+    FROM {{ source('transit_data', 'gtfs_rt__vehicle_positions') }}
 ),
 
 unpack_json AS (
     SELECT
-        {{ read_file_config_and_partitions() }},
+        {{ read_gtfs_rt_header() }},
+        {{ impute_parsed_rt_file_info() }},
         {{ read_gtfs_rt_trip_descriptor('entity.vehicle') }},
         JSON_VALUE(record, '$.entity.vehicle.position.latitude') AS latitude,
         JSON_VALUE(record, '$.entity.vehicle.position.longitude') AS longitude,
@@ -21,7 +25,10 @@ unpack_json AS (
 
 stg_gtfs_rt__vehicle_positions AS (
     SELECT
-        {{ metadata_columns() }},
+        dt,
+        hour,
+        _b64_url,
+        {{ gtfs_rt_header_columns() }},
         {{ trip_descriptor_columns() }},
         latitude,
         longitude,

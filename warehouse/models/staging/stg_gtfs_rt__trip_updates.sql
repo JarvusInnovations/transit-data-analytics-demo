@@ -1,10 +1,14 @@
 WITH src AS (
-    SELECT * FROM {{ source('transit_data', 'gtfs_rt__trip_updates') }}
+    SELECT
+        *,
+        _file_name
+    FROM {{ source('transit_data', 'gtfs_rt__trip_updates') }}
 ),
 
 unpack_json AS (
     SELECT
-        {{ read_file_config_and_partitions() }},
+        {{ read_gtfs_rt_header() }},
+        {{ impute_parsed_rt_file_info() }},
         {{ read_gtfs_rt_trip_descriptor('entity.tripUpdate') }}
     FROM src
 ),
@@ -13,9 +17,8 @@ stg_gtfs_rt__trip_updates AS (
     SELECT
         dt,
         hour,
-        _url,
-        _name,
-        _extract_ts,
+        _b64_url,
+        {{ gtfs_rt_header_columns() }},
         {{ trip_descriptor_columns() }}
     FROM unpack_json
 )
