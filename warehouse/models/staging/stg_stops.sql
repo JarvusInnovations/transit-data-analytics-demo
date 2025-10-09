@@ -7,7 +7,7 @@ with src_stops as (
 
 stg_stops as (
     select
-        {{ parse_schedule_filename('_FILE_NAME') }} as _b64_url, --noqa: CP02
+        {{ extract_b64_url_from_filename('_FILE_NAME') }} as _b64_url, --noqa: CP02
         dt,
         hour as hr,
         JSON_VALUE(record, '$.stop_id') as stop_id,
