@@ -16,7 +16,13 @@ with fct_vehicle_positions as (
         vehicle_id,
         trip_schedule_relationship
     from {{ ref('stg_gtfs_rt__vehicle_positions') }}
-    where dt in ('2024-02-08', '2024-02-07', '2024-02-09')
+    -- align with schedule
+    where
+        dt in
+        (
+            '2023-10-09', '2023-10-10', '2023-10-11', '2023-10-12', '2023-10-13', '2023-10-14', '2023-10-15',
+            '2024-10-07', '2024-10-08', '2024-10-09', '2024-10-10', '2024-10-11', '2024-10-12', '2024-10-13'
+        )
 )
 
 select * from fct_vehicle_positions
