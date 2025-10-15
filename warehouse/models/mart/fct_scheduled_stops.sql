@@ -26,7 +26,7 @@ shapes as (
 ),
 
 fct_scheduled_stops as (
-    select
+    select --noqa: ST06
         stop_times._b64_url,
         trips.feed_name,
         stop_times.dt,
@@ -42,7 +42,8 @@ fct_scheduled_stops as (
             when not st_iscollection(shapes.shape_linestring) then st_linelocatepoint(shapes.shape_linestring, st_closestpoint(shapes.shape_linestring, stops.stop_pt))
         end as shape_closest_point_to_stop_as_pct,
         make_interval(second => stop_times.arrival_secs) + trips.service_date as arrival_time,
-        make_interval(second => stop_times.departure_secs) + trips.service_date as departure_time
+        make_interval(second => stop_times.departure_secs) + trips.service_date as departure_time,
+        stop_times.timepoint
     from trips
     left join stop_times
         on
