@@ -119,3 +119,9 @@ runLauncher:
                         operator: In
                         values:
                           - runs
+
+ingress:
+  enabled: true
+  ingressClassName: nginx
+  dagsterWebserver:
+    host: dagster.k8s.tdad.jarv.us
