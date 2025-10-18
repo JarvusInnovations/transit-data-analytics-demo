@@ -1,0 +1,6 @@
+# This file was automatically generated
+name: tdad
+type: bigquery
+options:
+  authenticator: service-account
+  location: us-east4
