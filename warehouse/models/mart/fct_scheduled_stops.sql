@@ -17,13 +17,6 @@ stops as (
 
 trips as (
     select * from {{ ref('fct_scheduled_trips') }}
-    -- todo: remove this filter and deal with performance
-    where
-        dt in
-        (
-            '2023-10-09', '2023-10-10', '2023-10-11', '2023-10-12', '2023-10-13', '2023-10-14', '2023-10-15',
-            '2024-10-07', '2024-10-08', '2024-10-09', '2024-10-10', '2024-10-11', '2024-10-12', '2024-10-13'
-        )
 ),
 
 shapes as (
@@ -33,6 +26,7 @@ shapes as (
 fct_scheduled_stops as (
     select --noqa: ST06
         stop_times._b64_url,
+        stop_times.trip_id,
         trips.feed_name,
         stop_times.dt,
         stop_times.stop_id,
