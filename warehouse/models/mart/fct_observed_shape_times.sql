@@ -5,7 +5,7 @@ with vehicle_positions as (
         *,
         st_geogpoint(longitude, latitude) as location_geog
     from {{ ref('fct_vehicle_positions') }}
-    -- ignore data with no trip, this could be imputed but deferring that
+    -- todo: impute trip id where null or add handling
     where trip_id is not null
 ),
 
