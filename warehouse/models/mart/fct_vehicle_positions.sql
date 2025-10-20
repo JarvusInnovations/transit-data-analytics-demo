@@ -4,7 +4,9 @@ with fct_vehicle_positions as (
     select distinct --noqa: ST06
         _b64_url,
         dt,
-        extract(date from vehicle_timestamp) as service_date,
+        -- todo: fix this based on latest service for a given day per feed?
+        -- currently it's messing up some early morning service
+        date(timestamp_add(vehicle_timestamp, interval -3 hour), 'America/New_York') as service_date,
         vehicle_timestamp,
         latitude,
         longitude,
