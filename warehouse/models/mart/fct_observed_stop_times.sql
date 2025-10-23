@@ -8,7 +8,8 @@ with shape_times as (
 ),
 
 schedule as (
-    select * from {{ ref('fct_scheduled_stops') }}
+    select *
+    from {{ ref('fct_scheduled_stops') }}
 ),
 
 lagged_shape_times as (
@@ -22,10 +23,6 @@ lagged_shape_times as (
             as previous_ping_timestamp
     from shape_times
 ),
-
--- todo:
--- interpolate stop time based on time between observed pings
--- there is probably a better way to do this but this should work for back of envelope
 
 calculated_observed_stop_arrival as (
     select
@@ -75,7 +72,7 @@ calculated_observed_stop_arrival as (
     -- todo: improve matching, but for now just drop where no match
     where lagged_shape_times._b64_url is not null
     -- todo: fix this -- if the vehicle stays in one position for a long time, we need to actually handle it
-    -- need to take the row where the vehicle leaves the position
+    -- need to take the row where the vehicle leaves the position and basically handle dwell
     and lagged_shape_times.shape_closest_point_to_vehicle_position_as_pct != lagged_shape_times.previous_ping_shape_pct
 ),
 

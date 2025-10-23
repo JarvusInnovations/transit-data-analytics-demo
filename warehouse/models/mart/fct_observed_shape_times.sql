@@ -1,5 +1,8 @@
 {{ config(materialized='table') }}
 
+-- map observed positions to schedule shapes
+-- this allows us to compare with scheduled stops by mapping both rt and scheduled stops to common shape reference
+
 with vehicle_positions as (
     select
         *,
