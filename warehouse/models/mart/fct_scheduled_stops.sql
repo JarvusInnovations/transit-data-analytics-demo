@@ -35,6 +35,7 @@ fct_scheduled_stops as (
         trips.service_id,
         trips.route_id,
         trips.route_type,
+        stops.stop_name,
         stops.stop_pt,
         st_closestpoint(shapes.shape_linestring, stops.stop_pt) as shape_closest_point_to_stop,
         case
