@@ -10,6 +10,7 @@ shapes as (
 
 fct_observed_segment_geographies as (
     select --noqa: ST06
+        segments.segment_key,
         segments.feed_key,
         segments.feed_name,
         segments.segment_id,
