@@ -43,6 +43,7 @@ metric_stop_performance_all_shapes as (
         perf.stop_id,
         perf.hour_type,
         stops.stop_pt,
+        stops.stop_name,
         perf.ct_observations,
         perf.pct_early,
         perf.pct_late,
