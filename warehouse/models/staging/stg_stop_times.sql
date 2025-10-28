@@ -14,7 +14,8 @@ stg_stop_times as (
         JSON_VALUE(record, '$.stop_id') as stop_id,
         JSON_VALUE(record, '$.arrival_time') as arrival_time,
         JSON_VALUE(record, '$.departure_time') as departure_time,
-        JSON_VALUE(record, '$.stop_sequence') as stop_sequence
+        JSON_VALUE(record, '$.stop_sequence') as stop_sequence,
+        JSON_VALUE(record, '$.timepoint') as timepoint
         -- todo: add additional fields
     from src_stop_times
 )
