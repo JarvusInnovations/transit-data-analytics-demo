@@ -11,7 +11,7 @@ transit_data_analytics_demo:
       project: transit-data-analytics-demo
       threads: 4
       type: bigquery
-      maximum_bytes_billed: 100000000000
+      maximum_bytes_billed: 500000000000
     prod_service_account:
       <<: *prod
       method: service-account
