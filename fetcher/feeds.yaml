@@ -84,3 +84,20 @@
 - name: Pittsburgh Bus Service Alerts
   url: https://truetime.portauthority.org/gtfsrt-bus/alerts
   feed_type: gtfs_rt__service_alerts
+
+# RTD-Denver
+- name: Denver GTFS Main Schedule
+  url: https://www.rtd-denver.com/files/gtfs/google_transit.zip
+  feed_type: gtfs_schedule
+- name: Denver GTFS Bustang Schedule
+  url: https://www.rtd-denver.com/files/gtfs/bustang-co-us.zip
+  feed_type: gtfs_schedule
+- name: Denver Service Alerts
+  url: https://www.rtd-denver.com/files/gtfs-rt/Alerts.pb
+  feed_type: gtfs_rt__service_alerts
+- name: Denver Vehicle Positions
+  url: https://www.rtd-denver.com/files/gtfs-rt/VehiclePosition.pb
+  feed_type: gtfs_rt__vehicle_positions
+- name: Denver Trip Updates
+  url: https://www.rtd-denver.com/files/gtfs-rt/TripUpdate.pb
+  feed_type: gtfs_rt__trip_updates
