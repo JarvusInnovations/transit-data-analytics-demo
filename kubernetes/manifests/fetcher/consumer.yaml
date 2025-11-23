@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
         - name: consumer
-          image: ghcr.io/jarvusinnovations/transit-data-analytics-demo/fetcher:2023.7.14
+          image: ghcr.io/jarvusinnovations/transit-data-analytics-demo/fetcher:2025.11.21
           ports:
             - containerPort: 8000
           command: [ python, -m, fetcher.consumer ]
