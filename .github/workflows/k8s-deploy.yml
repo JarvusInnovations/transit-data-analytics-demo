@@ -1,0 +1,223 @@
+name: 'K8s: Deploy k8s-manifests'
+
+on:
+  push:
+    branches: [ deploys/k8s-manifests ]
+
+env:
+  BRANCH_RELEASE: releases/k8s-manifests
+  BRANCH_DEPLOY: deploys/k8s-manifests
+
+
+jobs:
+
+  k8s-deploy:
+    runs-on: ubuntu-latest
+    steps:
+
+    - uses: actions/checkout@v2
+      with:
+        ref: ${{ env.BRANCH_DEPLOY }}
+        fetch-depth: 2 # need parent commit to detect deletions
+
+    - name: Configure .kube/config
+      run: |
+        test -e ~/.kube || mkdir ~/.kube
+
+        echo "${{ secrets.KUBECONFIG_BASE64 }}" | base64 -d > ~/.kube/config
+
+        # initialize empty log of kube operations
+        echo -n '' > /tmp/kube.log
+        echo -n '' > /tmp/kube.err
+
+    - name: 'Apply manifests: CRD resources'
+      run: |
+        if [ -d ./_/CustomResourceDefinition ]; then
+          # Capture errors and add context
+          dir_errors=$(kubectl apply -Rf ./_/CustomResourceDefinition 2>&1 1>>/tmp/kube.log || true)
+
+          # Filter and append errors with context if meaningful
+          filtered_errors=$(echo "$dir_errors" | \
+                            grep -v "Warning: Use tokens from the TokenRequest API" | \
+                            grep -v "^Error: exit status [0-9]*$" | \
+                            grep -v "^[[:space:]]*$" || true)
+
+          if [ -n "$filtered_errors" ] && echo "$filtered_errors" | grep -q '[^[:space:]]' 2>/dev/null; then
+              echo "=== CRD Resources ===" >> /tmp/kube.err
+              echo "$filtered_errors" >> /tmp/kube.err
+              echo "" >> /tmp/kube.err
+          fi
+        fi
+
+    - name: 'Apply manifests: non-CRD global resources'
+      run: |
+        if [ -d ./_ ]; then
+          find _ \
+            -maxdepth 1 \
+            -mindepth 1 \
+            -type d \
+            -not -name 'CustomResourceDefinition' \
+            -print0 \
+          | sort -z \
+          | while IFS= read -r -d '' dir; do
+              # Capture errors and add context per directory
+              dir_errors=$(kubectl apply -Rf "$dir" 2>&1 1>>/tmp/kube.log || true)
+
+              # Filter and append errors with context if meaningful
+              filtered_errors=$(echo "$dir_errors" | \
+                                grep -v "Warning: Use tokens from the TokenRequest API" | \
+                                grep -v "^Error: exit status [0-9]*$" | \
+                                grep -v "^[[:space:]]*$" || true)
+
+              if [ -n "$filtered_errors" ] && echo "$filtered_errors" | grep -q '[^[:space:]]' 2>/dev/null; then
+                  echo "=== Directory: $dir ===" >> /tmp/kube.err
+                  echo "$filtered_errors" >> /tmp/kube.err
+                  echo "" >> /tmp/kube.err
+              fi
+            done
+        fi
+
+    - name: 'Apply manifests: generated regcred secrets'
+      run: |
+        # apply a copy of regcred secret for every deployed namespace
+        while IFS= read -r namespace; do
+          namespace="$(basename "${namespace}")"
+
+          # Capture errors for this namespace's regcred
+          secret_errors=$(cat <<EOF | kubectl apply -f - 2>&1 1>>/tmp/kube.log || true
+        apiVersion: v1
+        kind: Secret
+        metadata:
+          name: regcred
+          namespace: ${namespace}
+        type: kubernetes.io/dockerconfigjson
+        data:
+          .dockerconfigjson: ${{ secrets.DOCKER_CONFIG_BASE64 }}
+        EOF
+        )
+
+          # Filter and append errors with context if meaningful
+          filtered_errors=$(echo "$secret_errors" | \
+                            grep -v "Warning: Use tokens from the TokenRequest API" | \
+                            grep -v "^Error: exit status [0-9]*$" | \
+                            grep -v "^[[:space:]]*$" || true)
+
+          if [ -n "$filtered_errors" ] && echo "$filtered_errors" | grep -q '[^[:space:]]' 2>/dev/null; then
+              echo "=== Regcred Secret: $namespace ===" >> /tmp/kube.err
+              echo "$filtered_errors" >> /tmp/kube.err
+              echo "" >> /tmp/kube.err
+          fi
+        done <<< "$(find . -maxdepth 1 -type d -not -name '_' -not -name '.*')"
+
+    - name: 'Apply manifests: namespaced resources'
+      run: |
+        find . \
+          -maxdepth 1 \
+          -type d \
+          -not -name '_' \
+          -not -name '.*' \
+          -print0 \
+        | sort -z \
+        | while IFS= read -r -d '' dir; do
+            # Capture errors and add context per directory
+            dir_errors=$(kubectl apply -Rf "$dir" 2>&1 1>>/tmp/kube.log || true)
+
+            # Filter and append errors with context if meaningful
+            filtered_errors=$(echo "$dir_errors" | \
+                              grep -v "Warning: Use tokens from the TokenRequest API" | \
+                              grep -v "^Error: exit status [0-9]*$" | \
+                              grep -v "^[[:space:]]*$" || true)
+
+            if [ -n "$filtered_errors" ] && echo "$filtered_errors" | grep -q '[^[:space:]]' 2>/dev/null; then
+                echo "=== Directory: $dir ===" >> /tmp/kube.err
+                echo "$filtered_errors" >> /tmp/kube.err
+                echo "" >> /tmp/kube.err
+            fi
+          done
+
+    - name: 'Apply manifests: deleted resources'
+      run: |
+        for manifest_path in $(git diff-tree --name-only --diff-filter=D -r HEAD^ HEAD); do
+          manifest_path="${manifest_path%.yaml}"
+          namespace="${manifest_path%%/*}"
+          kind_name="${manifest_path#*/}"
+          kind="${kind_name%%/*}"
+          name="${kind_name##*/}"
+
+          # Capture errors for this deletion
+          if [ "${namespace}" == "_" ]; then
+            delete_errors=$(kubectl delete $kind $name 2>&1 1>>/tmp/kube.log || true)
+          else
+            delete_errors=$(kubectl -n $namespace delete $kind $name 2>&1 1>>/tmp/kube.log || true)
+          fi
+
+          # Filter and append errors with context if meaningful
+          filtered_errors=$(echo "$delete_errors" | \
+                            grep -v "Warning: Use tokens from the TokenRequest API" | \
+                            grep -v "^Error: exit status [0-9]*$" | \
+                            grep -v "^[[:space:]]*$" || true)
+
+          if [ -n "$filtered_errors" ] && echo "$filtered_errors" | grep -q '[^[:space:]]' 2>/dev/null; then
+              if [ "${namespace}" == "_" ]; then
+                  echo "=== Deleting: $kind/$name ===" >> /tmp/kube.err
+              else
+                  echo "=== Deleting: $namespace/$kind/$name ===" >> /tmp/kube.err
+              fi
+              echo "$filtered_errors" >> /tmp/kube.err
+              echo "" >> /tmp/kube.err
+          fi
+        done
+
+    - name: Add comment to PR
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        ## build comment body
+        echo
+        echo "Builing coment body content..."
+        comment_body="$(cat <<EOF
+        \`kubectl apply\` output (excluding unchanged) for $(git describe --always --tag) was:
+
+        \`\`\`
+        $(cat /tmp/kube.log | grep -v ' unchanged$')
+        \`\`\`
+        EOF
+        )"
+
+        # Conditionally append error output if it has meaningful content
+        if [ -s /tmp/kube.err ]; then
+            comment_body="${comment_body}
+
+        ## Errors/Warnings
+
+        \`\`\`
+        $(cat /tmp/kube.err)
+        \`\`\`"
+        fi
+
+
+        ## get most recent merged PR
+        echo
+        echo "Looking for most recent merged PR for branch ${BRANCH_RELEASE}..."
+        pr_number=$(
+            gh pr list \
+                --head "${BRANCH_RELEASE}" \
+                --base "${BRANCH_DEPLOY}" \
+                --state merged \
+                --limit 1 \
+                --json number \
+                --jq '.[0].number'
+        )
+
+
+        ## post comment
+        if [ -n "${pr_number}" ]; then
+            echo
+            echo "Adding comment to PR #${pr_number}..."
+            gh pr comment "${pr_number}" \
+                --body "${comment_body}"
+        fi
+
+    # - uses: mxschmitt/action-tmate@v3
+    #   env:
+    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
