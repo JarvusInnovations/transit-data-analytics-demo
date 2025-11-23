@@ -1,0 +1,4 @@
+[holomapping]
+holosource = "cluster-template=>github-workflows"
+# workflows triggered by target branch must be included within it
+files = "**"
