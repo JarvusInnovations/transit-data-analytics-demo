@@ -13,7 +13,8 @@ ENV PATH="$PATH:/root/.local/bin"
 
 COPY ./pyproject.toml ./poetry.lock /app/
 ENV POETRY_VIRTUALENVS_CREATE=false
-RUN poetry export --without-hashes --format=requirements.txt | pip install -r /dev/stdin
+RUN poetry self add poetry-plugin-export && \
+    poetry export --without-hashes --format=requirements.txt | pip install -r /dev/stdin
 
 COPY . /app
 RUN dbt deps
