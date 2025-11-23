@@ -1,7 +1,0 @@
-[holomapping]
-files = [
-    ".github/workflows/release-*",
-    "ci/**",
-    "kubernetes/**",
-]
-before = "*"
