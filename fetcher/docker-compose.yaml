@@ -9,7 +9,7 @@ services:
     environment:
       GOOGLE_APPLICATION_CREDENTIALS: /creds/google_application_credentials.json
     volumes:
-      - ~/.jarvus/dev_archiver_key.json:/creds/google_application_credentials.json
+      - ../.scratch/google-services.test-fetcher.json:/creds/google_application_credentials.json
       - shared:/tmp
     command:
       - python
@@ -23,7 +23,7 @@ services:
       HUEY_WORKERS: 8
       GOOGLE_APPLICATION_CREDENTIALS: /creds/google_application_credentials.json
     volumes:
-      - ~/.jarvus/dev_archiver_key.json:/creds/google_application_credentials.json
+      - ../.scratch/google-services.test-fetcher.json:/creds/google_application_credentials.json
       - shared:/tmp
     command:
       - python
