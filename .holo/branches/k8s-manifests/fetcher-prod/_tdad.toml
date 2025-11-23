@@ -1,0 +1,6 @@
+[holomapping]
+root = "kubernetes"
+files = [
+    "manifests/fetcher/**",
+    "overlays/fetcher-prod/**",
+]

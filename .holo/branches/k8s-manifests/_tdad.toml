@@ -1,0 +1,6 @@
+[holomapping]
+files = [
+    ".github/workflows/k8s-*.yml",
+    # ".holo/lenses/**",
+    # "kubernetes/**",
+]

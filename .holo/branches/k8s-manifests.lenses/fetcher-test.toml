@@ -1,0 +1,12 @@
+[hololens]
+container = "ghcr.io/hologit/lenses/kustomize:latest"
+
+[hololens.input]
+root = "fetcher-test"
+files = "**"
+
+[hololens.kustomize]
+directory = "overlays/fetcher-test"
+
+[hololens.output]
+merge = "replace"

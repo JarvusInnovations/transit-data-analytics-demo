@@ -1,0 +1,12 @@
+[hololens]
+container = "ghcr.io/hologit/lenses/k8s-normalize:latest"
+after = "*"
+
+[hololens.input]
+files = [
+  "**/*.{yaml,yml}",
+  "!.github/"
+]
+
+[hololens.output]
+merge = "replace"
