@@ -1,0 +1,143 @@
+#!/bin/bash
+
+# Wrapper script to list files from both GCS buckets
+# Outputs CSVs to .scratch/ directory
+
+set -euo pipefail
+
+# Get the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+LIST_SCRIPT="$SCRIPT_DIR/list-gcs-files"
+OUTPUT_DIR="$REPO_ROOT/.scratch"
+
+# Buckets to process
+BUCKETS=("test-jarvus-transit-data-demo-raw" "jarvus-transit-data-demo-raw")
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Function to print colored output
+print_info() {
+    echo -e "${BLUE}[INFO]${NC} $1"
+}
+
+print_success() {
+    echo -e "${GREEN}[SUCCESS]${NC} $1"
+}
+
+print_warning() {
+    echo -e "${YELLOW}[WARNING]${NC} $1"
+}
+
+print_error() {
+    echo -e "${RED}[ERROR]${NC} $1"
+}
+
+# Function to show usage
+show_usage() {
+    cat << EOF
+Usage: $0 [OPTIONS]
+
+List files from all GCS buckets and save CSVs to .scratch/ directory.
+
+OPTIONS:
+    -l, --limit N       Limit output to first N rows per bucket (for testing)
+    --no-decode         Skip decoding feed URLs (faster)
+    -h, --help          Show this help message
+
+BUCKETS PROCESSED:
+    - test-jarvus-transit-data-demo-raw
+    - jarvus-transit-data-demo-raw
+
+OUTPUT FILES:
+    .scratch/test-jarvus-transit-data-demo-raw-files.csv
+    .scratch/jarvus-transit-data-demo-raw-files.csv
+
+EXAMPLES:
+    $0                  # List all files from both buckets
+    $0 --limit 1000     # List first 1000 files per bucket
+    $0 --no-decode      # Skip URL decoding for faster execution
+
+EOF
+}
+
+# Parse command line arguments
+EXTRA_ARGS=()
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        -h|--help)
+            show_usage
+            exit 0
+            ;;
+        *)
+            # Pass through all other arguments to list-gcs-files
+            EXTRA_ARGS+=("$1")
+            shift
+            ;;
+    esac
+done
+
+# Check if list-gcs-files script exists
+if [ ! -f "$LIST_SCRIPT" ]; then
+    print_error "list-gcs-files script not found at: $LIST_SCRIPT"
+    exit 1
+fi
+
+if [ ! -x "$LIST_SCRIPT" ]; then
+    print_error "list-gcs-files script is not executable: $LIST_SCRIPT"
+    exit 1
+fi
+
+# Create .scratch directory if it doesn't exist
+print_info "Creating output directory: $OUTPUT_DIR"
+mkdir -p "$OUTPUT_DIR"
+
+print_success "Output directory ready: $OUTPUT_DIR"
+echo
+
+# Process each bucket
+SUCCESS_COUNT=0
+FAILED_COUNT=0
+
+for bucket in "${BUCKETS[@]}"; do
+    output_file="$OUTPUT_DIR/${bucket}-files.csv"
+
+    print_info "Processing bucket: $bucket"
+    print_info "Output file: $output_file"
+
+    # Run list-gcs-files with the bucket and output file
+    if [ ${#EXTRA_ARGS[@]} -eq 0 ]; then
+        "$LIST_SCRIPT" --bucket "$bucket" --output "$output_file"
+    else
+        "$LIST_SCRIPT" --bucket "$bucket" --output "$output_file" "${EXTRA_ARGS[@]}"
+    fi
+
+    if [ $? -eq 0 ]; then
+        print_success "Completed: $bucket"
+        SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
+    else
+        print_error "Failed to process bucket: $bucket"
+        FAILED_COUNT=$((FAILED_COUNT + 1))
+    fi
+
+    echo
+done
+
+# Summary
+echo "----------------------------------------"
+print_info "Summary:"
+print_success "Successfully processed: $SUCCESS_COUNT bucket(s)"
+
+if [ "$FAILED_COUNT" -gt 0 ]; then
+    print_error "Failed to process: $FAILED_COUNT bucket(s)"
+    exit 1
+fi
+
+echo
+print_success "All files saved to: $OUTPUT_DIR"
+ls -lh "$OUTPUT_DIR"/*.csv 2>/dev/null || true

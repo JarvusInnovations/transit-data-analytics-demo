@@ -1,0 +1,301 @@
+#!/bin/bash
+
+# Script to list files from a parsed GCS bucket and output to CSV
+# Includes parsed metadata from Hive-partitioned paths and decoded feed URLs
+
+set -euo pipefail
+
+# Ignore SIGPIPE - this happens when we break from the gsutil pipeline early
+trap '' PIPE
+
+# Configuration
+DEFAULT_BUCKET="test-jarvus-transit-data-demo-parsed"
+BUCKET="$DEFAULT_BUCKET"
+OUTPUT_FILE=""
+LIMIT=""
+NO_DECODE=false
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Function to print colored output
+print_info() {
+    echo -e "${BLUE}[INFO]${NC} $1" >&2
+}
+
+print_success() {
+    echo -e "${GREEN}[SUCCESS]${NC} $1" >&2
+}
+
+print_warning() {
+    echo -e "${YELLOW}[WARNING]${NC} $1" >&2
+}
+
+print_error() {
+    echo -e "${RED}[ERROR]${NC} $1" >&2
+}
+
+# Function to show usage
+show_usage() {
+    cat << EOF
+Usage: $0 [OPTIONS]
+
+List all files in a parsed GCS bucket and output metadata to CSV format.
+Parses Hive-partitioned paths and decodes base64url-encoded feed URLs.
+
+Parsed buckets have structure: table/dt=DATE/hour=HOUR/base64url.jsonl.gz
+
+OPTIONS:
+    -b, --bucket NAME   GCS bucket name (default: $DEFAULT_BUCKET)
+    -o, --output FILE   Output CSV file (default: stdout)
+    -l, --limit N       Limit output to first N rows (for testing)
+    --no-decode         Skip decoding feed URLs (faster, but no feed_url column)
+    -h, --help          Show this help message
+
+OUTPUT COLUMNS:
+    table             - Table name (e.g., gtfs_rt__vehicle_positions, gtfs_schedule__stops_txt)
+    date              - Date from dt= partition
+    hour              - Hour from hour= partition
+    feed_url          - Decoded feed URL (from base64url filename)
+    file_path         - Full gs:// path
+    file_size_bytes   - File size in bytes
+    created_time      - File creation timestamp (from GCS metadata)
+    file_type         - Type: "data" (.jsonl.gz), "outcomes" (.jsonl), or "other"
+
+EXAMPLES:
+    $0                              # List all files to stdout
+    $0 --output files.csv           # Save to files.csv
+    $0 --limit 100                  # List first 100 files
+    $0 --bucket my-bucket           # Use different bucket
+    $0 --no-decode --limit 1000     # Fast listing without URL decoding
+
+EOF
+}
+
+# Parse command line arguments
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        -b|--bucket)
+            BUCKET="$2"
+            shift 2
+            ;;
+        -o|--output)
+            OUTPUT_FILE="$2"
+            shift 2
+            ;;
+        -l|--limit)
+            LIMIT="$2"
+            if ! [[ "$LIMIT" =~ ^[0-9]+$ ]] || [ "$LIMIT" -lt 1 ]; then
+                print_error "Limit must be a positive integer"
+                exit 1
+            fi
+            shift 2
+            ;;
+        --no-decode)
+            NO_DECODE=true
+            shift
+            ;;
+        -h|--help)
+            show_usage
+            exit 0
+            ;;
+        *)
+            print_error "Unknown option: $1"
+            show_usage
+            exit 1
+            ;;
+    esac
+done
+
+# Check if gsutil is available
+if ! command -v gsutil &> /dev/null; then
+    print_error "gsutil is not installed or not in PATH"
+    print_error "Install it from: https://cloud.google.com/storage/docs/gsutil_install"
+    exit 1
+fi
+
+# Check if we need base64 (for decoding)
+if [ "$NO_DECODE" = false ]; then
+    if ! command -v base64 &> /dev/null; then
+        print_error "base64 command is not available"
+        exit 1
+    fi
+fi
+
+# Validate bucket access
+print_info "Validating access to gs://$BUCKET..."
+if ! gsutil ls "gs://$BUCKET/" &> /dev/null; then
+    print_error "Cannot access bucket gs://$BUCKET"
+    print_error "Check bucket name and credentials"
+    exit 1
+fi
+
+print_success "Bucket access validated"
+
+# Setup output
+if [ -n "$OUTPUT_FILE" ]; then
+    print_info "Output will be saved to: $OUTPUT_FILE"
+    exec > "$OUTPUT_FILE"
+else
+    print_info "Output will be written to stdout"
+fi
+
+# Print CSV header
+if [ "$NO_DECODE" = true ]; then
+    echo "table,date,hour,file_path,file_size_bytes,created_time,file_type"
+else
+    echo "table,date,hour,feed_url,file_path,file_size_bytes,created_time,file_type"
+fi
+
+# Function to decode base64url
+decode_base64url() {
+    local encoded="$1"
+    # base64url uses - instead of + and _ instead of /, and no padding
+    # Convert to standard base64 and decode
+    local std_base64="${encoded//-/+}"
+    std_base64="${std_base64//_//}"
+
+    # Add padding if needed
+    local padding=$((4 - ${#std_base64} % 4))
+    if [ $padding -ne 4 ]; then
+        std_base64="${std_base64}$(printf '=%.0s' $(seq 1 $padding))"
+    fi
+
+    echo "$std_base64" | base64 -d 2>/dev/null || echo ""
+}
+
+# Function to escape CSV field
+escape_csv() {
+    local field="$1"
+    # If field contains comma, quote, or newline, wrap in quotes and escape quotes
+    if [[ "$field" =~ [,\"] ]]; then
+        field="${field//\"/\"\"}"
+        echo "\"$field\""
+    else
+        echo "$field"
+    fi
+}
+
+# Main processing
+print_info "Fetching file list from gs://$BUCKET..." >&2
+print_info "This may take a while for large buckets..." >&2
+
+row_count=0
+
+# List all files recursively with metadata
+# Temporarily disable pipefail to handle early termination when limit is reached
+set +o pipefail
+gsutil ls -l -r "gs://$BUCKET/**" 2>/dev/null | while IFS= read -r line; do
+    # Skip empty lines and summary lines
+    if [[ -z "$line" ]] || [[ "$line" =~ ^TOTAL: ]] || [[ "$line" =~ /:$ ]]; then
+        continue
+    fi
+
+    # Skip lines that don't contain actual files (like directory markers)
+    if [[ ! "$line" =~ gs:// ]]; then
+        continue
+    fi
+
+    # Parse gsutil -l output format: SIZE  TIMESTAMP  PATH
+    size=$(echo "$line" | awk '{print $1}')
+    created=$(echo "$line" | awk '{print $2}')
+    filepath=$(echo "$line" | awk '{print $3}')
+
+    # Skip if not a jsonl or jsonl.gz file (and not other expected files)
+    if [[ ! "$filepath" =~ \.(jsonl|jsonl\.gz|json)$ ]]; then
+        continue
+    fi
+
+    # Extract path components
+    # Remove gs://bucket/ prefix
+    relative_path="${filepath#gs://$BUCKET/}"
+
+    # Parse Hive-style partitions for parsed buckets
+    # Format: table/dt=DATE/hour=HOUR/base64url.jsonl.gz
+    # Or: table__outcomes/dt=DATE/HOUR.jsonl
+
+    # Extract table (first directory)
+    table=$(echo "$relative_path" | cut -d/ -f1)
+
+    # Skip special directories
+    if [[ "$table" == "dagster" ]] || [[ "$table" == "parsed_and_grouped_files" ]] || [[ "$table" == "raw_files_list" ]]; then
+        continue
+    fi
+
+    # Extract date from dt= partition
+    date=""
+    if [[ "$relative_path" =~ dt=([^/]+) ]]; then
+        date="${BASH_REMATCH[1]}"
+    fi
+
+    # Extract hour from hour= partition
+    hour=""
+    if [[ "$relative_path" =~ hour=([^/]+) ]]; then
+        hour="${BASH_REMATCH[1]}"
+    fi
+
+    # For outcomes files, hour might be in the filename instead
+    if [[ -z "$hour" ]] && [[ "$table" =~ __outcomes$ ]]; then
+        # Extract hour from filename pattern: dt=DATE/TIMESTAMP.jsonl
+        if [[ "$relative_path" =~ /([^/]+)\.jsonl$ ]]; then
+            hour="${BASH_REMATCH[1]}"
+        fi
+    fi
+
+    # Determine file type based on extension and table name
+    file_type="other"
+    if [[ "$filepath" =~ \.jsonl\.gz$ ]]; then
+        file_type="data"
+    elif [[ "$filepath" =~ \.jsonl$ ]] && [[ "$table" =~ __outcomes$ ]]; then
+        file_type="outcomes"
+    elif [[ "$filepath" =~ \.jsonl$ ]]; then
+        file_type="data"
+    fi
+
+    # Extract and decode feed URL from filename
+    feed_url=""
+    if [ "$NO_DECODE" = false ]; then
+        # Extract the base64url encoded part from the filename
+        # Pattern: .../base64url.jsonl.gz or .../base64url.jsonl
+        if [[ "$relative_path" =~ /([^/]+)\.(jsonl\.gz|jsonl)$ ]]; then
+            encoded_url="${BASH_REMATCH[1]}"
+            # Don't try to decode if it looks like a timestamp (outcomes files)
+            if [[ ! "$encoded_url" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T ]]; then
+                feed_url=$(decode_base64url "$encoded_url")
+            fi
+        fi
+    fi
+
+    # Output CSV row
+    if [ "$NO_DECODE" = true ]; then
+        echo "$(escape_csv "$table"),$(escape_csv "$date"),$(escape_csv "$hour"),$(escape_csv "$filepath"),$(escape_csv "$size"),$(escape_csv "$created"),$(escape_csv "$file_type")"
+    else
+        echo "$(escape_csv "$table"),$(escape_csv "$date"),$(escape_csv "$hour"),$(escape_csv "$feed_url"),$(escape_csv "$filepath"),$(escape_csv "$size"),$(escape_csv "$created"),$(escape_csv "$file_type")"
+    fi
+
+    # Track row count and apply limit if specified
+    row_count=$((row_count + 1))
+    if [ -n "$LIMIT" ] && [ "$row_count" -ge "$LIMIT" ]; then
+        print_info "Reached limit of $LIMIT rows" >&2
+        break
+    fi
+
+    # Progress indicator every 100 rows
+    if [ $((row_count % 100)) -eq 0 ]; then
+        print_info "Processed $row_count files..." >&2
+    fi
+done
+set -o pipefail
+
+print_success "Processed $row_count files" >&2
+
+if [ -n "$OUTPUT_FILE" ]; then
+    print_success "CSV written to $OUTPUT_FILE" >&2
+fi
+
+# Exit successfully (ignore SIGPIPE from breaking gsutil pipeline)
+exit 0
