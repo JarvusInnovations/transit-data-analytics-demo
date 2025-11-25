@@ -1,6 +1,5 @@
 [holomapping]
+root = "kubernetes/manifests"
 files = [
-    ".github/workflows/k8s-*.yml",
-    # ".holo/lenses/**",
-    # "kubernetes/**",
+    "*"
 ]
