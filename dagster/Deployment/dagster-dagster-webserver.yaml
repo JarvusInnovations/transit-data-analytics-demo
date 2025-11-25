@@ -28,18 +28,6 @@ spec:
         app.kubernetes.io/name: dagster
         component: dagster-webserver
     spec:
-      affinity:
-        podAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-            - podAffinityTerm:
-                labelSelector:
-                  matchExpressions:
-                    - key: app
-                      operator: In
-                      values:
-                        - postgresql
-                topologyKey: topology.kubernetes.io/zone
-              weight: 100
       containers:
         - command:
             - /bin/bash

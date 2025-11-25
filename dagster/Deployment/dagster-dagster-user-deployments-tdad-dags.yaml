@@ -23,25 +23,14 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/dagster-user-deployment: 9d0b4a8bebabef86b4aae3ba4453b3a678673fbbac69d4b8c99a4dbf499b3de5
+        checksum/dagster-user-deployment: db44a0c30657d0c768f16d8b758a23b548d55c250c1772073ed9cad19dc3325a
       labels:
         app.kubernetes.io/instance: dagster
         app.kubernetes.io/name: dagster-user-deployments
         component: user-deployments
         deployment: tdad-dags
     spec:
-      affinity:
-        podAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-            - podAffinityTerm:
-                labelSelector:
-                  matchExpressions:
-                    - key: app
-                      operator: In
-                      values:
-                        - postgresql
-                topologyKey: topology.kubernetes.io/zone
-              weight: 100
+      affinity: null
       containers:
         - args:
             - dagster
