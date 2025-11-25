@@ -23,7 +23,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/dagster-user-deployment: db44a0c30657d0c768f16d8b758a23b548d55c250c1772073ed9cad19dc3325a
+        checksum/dagster-user-deployment: c36d400e88d41c69acb955484462ed84595b536aa13d04fe4af95b83c061cbb3
       labels:
         app.kubernetes.io/instance: dagster
         app.kubernetes.io/name: dagster-user-deployments
@@ -55,7 +55,7 @@ spec:
                   name: dagster-postgresql-secret
             - name: DAGSTER_CLI_API_GRPC_CONTAINER_CONTEXT
               value: >-
-                {"k8s":{"env":[{"name":"RAW_BUCKET","value":"gs://jarvus-transit-data-demo-raw"},{"name":"PARSED_BUCKET","value":"gs://jarvus-transit-data-demo-parsed"}],"env_config_maps":["dagster-dagster-user-deployments-tdad-dags-user-env"],"image_pull_policy":"Always","namespace":"dagster","resources":{"requests":{"cpu":"100m","memory":"256Mi"}},"service_account_name":"dagster-dagster-user-deployments-user-deployments"}}
+                {"k8s":{"env":[{"name":"RAW_BUCKET","value":"gs://jarvus-transit-data-demo-raw"},{"name":"PARSED_BUCKET","value":"gs://jarvus-transit-data-demo-parsed"}],"env_config_maps":["dagster-dagster-user-deployments-tdad-dags-user-env"],"image_pull_policy":"Always","namespace":"dagster","resources":{"requests":{"cpu":"100m","memory":"2Gi"}},"service_account_name":"dagster-dagster-user-deployments-user-deployments"}}
             - name: RAW_BUCKET
               value: gs://jarvus-transit-data-demo-raw
             - name: PARSED_BUCKET
@@ -86,7 +86,7 @@ spec:
           resources:
             requests:
               cpu: 100m
-              memory: 256Mi
+              memory: 2Gi
           securityContext: null
       imagePullSecrets: []
       nodeSelector: null
