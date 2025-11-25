@@ -1,3 +1,8 @@
+images:
+  # pin metabase version for deliberate upgrades
+  metabase:
+    src: metabase/metabase:v0.57.4.1
+
 ingress:
   enabled: true
   annotations:
