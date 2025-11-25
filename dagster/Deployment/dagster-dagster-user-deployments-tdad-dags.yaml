@@ -1,0 +1,106 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations: null
+  labels:
+    app.kubernetes.io/instance: dagster
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: dagster-user-deployments
+    app.kubernetes.io/version: dev
+    component: user-deployments
+    deployment: tdad-dags
+    helm.sh/chart: dagster-user-deployments-0.0.1-dev
+  name: dagster-dagster-user-deployments-tdad-dags
+  namespace: dagster
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: dagster
+      app.kubernetes.io/name: dagster-user-deployments
+      component: user-deployments
+      deployment: tdad-dags
+  template:
+    metadata:
+      annotations:
+        checksum/dagster-user-deployment: 9d0b4a8bebabef86b4aae3ba4453b3a678673fbbac69d4b8c99a4dbf499b3de5
+      labels:
+        app.kubernetes.io/instance: dagster
+        app.kubernetes.io/name: dagster-user-deployments
+        component: user-deployments
+        deployment: tdad-dags
+    spec:
+      affinity:
+        podAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                        - postgresql
+                topologyKey: topology.kubernetes.io/zone
+              weight: 100
+      containers:
+        - args:
+            - dagster
+            - api
+            - grpc
+            - '-h'
+            - 0.0.0.0
+            - '-p'
+            - '3030'
+            - '--working-directory'
+            - /app
+            - '--module-name'
+            - dags
+          env:
+            - name: DAGSTER_CURRENT_IMAGE
+              value: >-
+                ghcr.io/jarvusinnovations/transit-data-analytics-demo/dags:stable
+            - name: DAGSTER_PG_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: postgresql-password
+                  name: dagster-postgresql-secret
+            - name: DAGSTER_CLI_API_GRPC_CONTAINER_CONTEXT
+              value: >-
+                {"k8s":{"env":[{"name":"RAW_BUCKET","value":"gs://jarvus-transit-data-demo-raw"},{"name":"PARSED_BUCKET","value":"gs://jarvus-transit-data-demo-parsed"}],"env_config_maps":["dagster-dagster-user-deployments-tdad-dags-user-env"],"image_pull_policy":"Always","namespace":"dagster","resources":{"requests":{"cpu":"100m","memory":"256Mi"}},"service_account_name":"dagster-dagster-user-deployments-user-deployments"}}
+            - name: RAW_BUCKET
+              value: gs://jarvus-transit-data-demo-raw
+            - name: PARSED_BUCKET
+              value: gs://jarvus-transit-data-demo-parsed
+          envFrom:
+            - configMapRef:
+                name: dagster-dagster-user-deployments-user-deployments-shared-env
+            - configMapRef:
+                name: dagster-dagster-user-deployments-tdad-dags-user-env
+            - secretRef:
+                name: dagster-celery-config-secret
+                optional: true
+          image: ghcr.io/jarvusinnovations/transit-data-analytics-demo/dags:stable
+          imagePullPolicy: Always
+          name: dagster-user-deployments
+          readinessProbe:
+            exec:
+              command:
+                - dagster
+                - api
+                - grpc-health-check
+                - '-p'
+                - '3030'
+            failureThreshold: 15
+            periodSeconds: 20
+            successThreshold: 1
+            timeoutSeconds: 10
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+          securityContext: null
+      imagePullSecrets: []
+      nodeSelector: null
+      securityContext: null
+      serviceAccountName: dagster-dagster-user-deployments-user-deployments
+      tolerations: null

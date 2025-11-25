@@ -1,0 +1,11 @@
+apiVersion: v1
+data: null
+kind: ConfigMap
+metadata:
+  labels:
+    app: dagster-user-deployments
+    chart: dagster-user-deployments-0.0.1-dev
+    heritage: Helm
+    release: dagster
+  name: dagster-dagster-user-deployments-tdad-dags-user-env
+  namespace: dagster
