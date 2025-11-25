@@ -1,0 +1,5 @@
+[holomapping]
+root = "kubernetes/values"
+files = [
+    "prod-metabase.yml"
+]
