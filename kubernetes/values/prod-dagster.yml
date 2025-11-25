@@ -125,3 +125,5 @@ ingress:
   ingressClassName: nginx
   dagsterWebserver:
     host: dagster.k8s.tdad.jarv.us
+    path: /
+    pathType: Prefix
