@@ -21,7 +21,7 @@ dagster-user-deployments:
         requests:
           cpu: 100m
           memory: 256Mi
-      affinity:
+      {# affinity:
         podAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
             - weight: 100
@@ -32,7 +32,7 @@ dagster-user-deployments:
                       operator: In
                       values:
                         - postgresql
-                topologyKey: topology.kubernetes.io/zone
+                topologyKey: topology.kubernetes.io/zone #}
 
 dagsterDaemon:
   image:
@@ -46,7 +46,7 @@ dagsterDaemon:
     requests:
       cpu: 100m
       memory: 128Mi
-  affinity:
+  {# affinity:
     podAffinity:
       preferredDuringSchedulingIgnoredDuringExecution:
         - weight: 100
@@ -57,7 +57,7 @@ dagsterDaemon:
                   operator: In
                   values:
                     - postgresql
-            topologyKey: topology.kubernetes.io/zone
+            topologyKey: topology.kubernetes.io/zone #}
 
 dagsterWebserver:
   image:
@@ -67,7 +67,7 @@ dagsterWebserver:
     requests:
       cpu: 100m
       memory: 256Mi
-  affinity:
+  {# affinity:
     podAffinity:
       preferredDuringSchedulingIgnoredDuringExecution:
         - weight: 100
@@ -78,7 +78,7 @@ dagsterWebserver:
                   operator: In
                   values:
                     - postgresql
-            topologyKey: topology.kubernetes.io/zone
+            topologyKey: topology.kubernetes.io/zone #}
 
 runLauncher:
   config:
