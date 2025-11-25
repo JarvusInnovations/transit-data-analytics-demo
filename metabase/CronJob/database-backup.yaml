@@ -1,0 +1,95 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: database-backup
+  namespace: metabase
+spec:
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - command:
+                - /bin/sh
+                - '-c'
+                - >
+                  set -e
+
+
+                  echo "Starting backup job..."
+
+
+                  # Handle Google credentials if needed
+
+                  if [ ! -z "$GOOGLE_APPLICATION_CREDENTIALS" ] && [[
+                  "$GOOGLE_APPLICATION_CREDENTIALS" != *.json ]]; then
+                    echo "Writing Google credentials..."
+                    CREDS_JSON="/tmp/google-creds-$$.json"
+                    echo "$GOOGLE_APPLICATION_CREDENTIALS" > "$CREDS_JSON"
+                    export GOOGLE_APPLICATION_CREDENTIALS="$CREDS_JSON"
+                  fi
+
+                  echo "Pinging healthcheck start..."
+
+                  curl -fsS -m 10 --retry 5 -o /dev/null $HEALTHCHECKS_URL/start
+
+
+                  # Backup database
+
+                  echo "Starting database backup..."
+
+                  pg_dump \
+
+                  | restic backup \
+                    --host metabase-database-backup \
+                    --stdin \
+                    --stdin-filename db-dump.sql
+
+                  # Prune old backups
+
+                  echo "Starting backup pruning..."
+
+                  restic forget \
+                    --keep-last 3 \
+                    --keep-daily 7 \
+                    --keep-weekly 52 \
+                    --prune
+                  echo "Pinging healthcheck completion..."
+
+                  curl -fsS -m 10 --retry 5 -o /dev/null $HEALTHCHECKS_URL
+
+
+                  echo "Backup job completed successfully"
+              env:
+                - name: PGHOST
+                  value: database
+                - name: PGPORT
+                  value: '5432'
+                - name: PGUSER
+                  valueFrom:
+                    configMapKeyRef:
+                      key: POSTGRES_USER
+                      name: database-config
+                - name: PGPASSWORD
+                  valueFrom:
+                    configMapKeyRef:
+                      key: POSTGRES_PASSWORD
+                      name: database-config
+                - name: PGDATABASE
+                  valueFrom:
+                    configMapKeyRef:
+                      key: POSTGRES_DB
+                      name: database-config
+                - name: HEALTHCHECKS_URL
+                  value: >-
+                    https://healthchecks.jarv.us/ping/b8631a5d-6f42-42c2-b07d-f1554a8e5e22
+              envFrom:
+                - configMapRef:
+                    name: database-config
+                - secretRef:
+                    name: restic
+              image: ghcr.io/jarvusinnovations/restic-toolkit:latest
+              name: backup
+          restartPolicy: OnFailure
+  schedule: 40 4 * * *
