@@ -1,0 +1,7 @@
+[holomapping]
+holosource = "tdad"
+root = "kubernetes/manifests"
+files = [
+    "**",
+    "!fetcher/**" # gets applied separately with overlays
+]
