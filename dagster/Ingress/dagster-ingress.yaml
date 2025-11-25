@@ -21,6 +21,6 @@ spec:
                 name: dagster-dagster-webserver
                 port:
                   number: 80
-            path: /*
-            pathType: ImplementationSpecific
+            path: /
+            pathType: Prefix
   tls: null
