@@ -1,0 +1,26 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations: null
+  labels:
+    app.kubernetes.io/instance: dagster
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: dagster
+    app.kubernetes.io/version: dev
+    helm.sh/chart: dagster-0.0.1-dev
+  name: dagster-ingress
+  namespace: dagster
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: dagster.k8s.tdad.jarv.us
+      http:
+        paths:
+          - backend:
+              service:
+                name: dagster-dagster-webserver
+                port:
+                  number: 80
+            path: /*
+            pathType: ImplementationSpecific
+  tls: null

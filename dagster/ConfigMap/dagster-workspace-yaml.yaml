@@ -1,0 +1,17 @@
+apiVersion: v1
+data:
+  workspace.yaml: |
+    load_from:
+      - grpc_server:
+          host: tdad-dags
+          port: 3030
+          location_name: tdad-dags
+kind: ConfigMap
+metadata:
+  labels:
+    app: dagster
+    chart: dagster-0.0.1-dev
+    heritage: Helm
+    release: dagster
+  name: dagster-workspace-yaml
+  namespace: dagster

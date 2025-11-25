@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations: null
+  labels:
+    app.kubernetes.io/instance: dagster
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: dagster-user-deployments
+    app.kubernetes.io/version: dev
+    component: user-deployments
+    deployment: tdad-dags
+    helm.sh/chart: dagster-user-deployments-0.0.1-dev
+  name: tdad-dags
+  namespace: dagster
+spec:
+  ports:
+    - name: grpc
+      port: 3030
+      protocol: TCP
+  selector:
+    app.kubernetes.io/instance: dagster
+    app.kubernetes.io/name: dagster-user-deployments
+    component: user-deployments
+    deployment: tdad-dags
+  type: ClusterIP

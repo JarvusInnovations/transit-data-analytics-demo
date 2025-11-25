@@ -1,0 +1,99 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations: null
+  labels:
+    app.kubernetes.io/instance: dagster
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: dagster
+    app.kubernetes.io/version: dev
+    component: dagster-webserver
+    helm.sh/chart: dagster-0.0.1-dev
+  name: dagster-dagster-webserver
+  namespace: dagster
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: dagster
+      app.kubernetes.io/name: dagster
+      component: dagster-webserver
+  template:
+    metadata:
+      annotations:
+        checksum/dagster-instance: e6733c7dfa9e57aa0639954b05111a833c35c696747adddfd8b4fe9000626924
+        checksum/dagster-workspace: 72d6bd47596ae6465d27c9b714b33f4c5270973e83cf94d2defcae75c5e8cfe5
+      labels:
+        app.kubernetes.io/instance: dagster
+        app.kubernetes.io/name: dagster
+        component: dagster-webserver
+    spec:
+      containers:
+        - command:
+            - /bin/bash
+            - '-c'
+            - ' dagster-webserver -h 0.0.0.0 -p 80 -w /dagster-workspace/workspace.yaml'
+          env:
+            - name: DAGSTER_PG_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: postgresql-password
+                  name: dagster-postgresql-secret
+          envFrom:
+            - configMapRef:
+                name: dagster-webserver-env
+          image: docker.io/dagster/dagster-celery-k8s:1.4.10
+          imagePullPolicy: Always
+          name: dagster
+          ports:
+            - containerPort: 80
+              name: http
+              protocol: TCP
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /server_info
+              port: 80
+            periodSeconds: 20
+            successThreshold: 1
+            timeoutSeconds: 10
+          resources:
+            requests:
+              cpu: 1
+              memory: 2Gi
+          securityContext: {}
+          volumeMounts:
+            - mountPath: /opt/dagster/dagster_home/dagster.yaml
+              name: dagster-instance
+              subPath: dagster.yaml
+            - mountPath: /dagster-workspace/
+              name: dagster-workspace-yaml
+      initContainers:
+        - command:
+            - sh
+            - '-c'
+            - >-
+              until pg_isready -h dagster-postgresql -p 5432 -U test; do echo
+              waiting for database; sleep 2; done;
+          image: library/postgres:14.6
+          imagePullPolicy: IfNotPresent
+          name: check-db-ready
+          securityContext: {}
+        - command:
+            - sh
+            - '-c'
+            - >-
+              until nslookup tdad-dags; do echo waiting for user service; sleep
+              2; done
+          image: docker.io/busybox:1.28
+          name: init-user-deployment-tdad-dags
+          securityContext: {}
+      securityContext: {}
+      serviceAccountName: dagster
+      volumes:
+        - configMap:
+            name: dagster-instance
+          name: dagster-instance
+        - configMap:
+            name: dagster-workspace-yaml
+          name: dagster-workspace-yaml

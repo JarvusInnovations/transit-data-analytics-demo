@@ -1,0 +1,28 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  labels:
+    app.kubernetes.io/instance: dagster
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: dagster-user-deployments
+    app.kubernetes.io/version: dev
+    helm.sh/chart: dagster-user-deployments-0.0.1-dev
+  name: dagster-dagster-user-deployments-role
+  namespace: dagster
+rules:
+  - apiGroups:
+      - batch
+    resources:
+      - jobs
+      - jobs/status
+    verbs:
+      - '*'
+  - apiGroups:
+      - ''
+    resources:
+      - pods
+      - pods/log
+      - pods/status
+      - events
+    verbs:
+      - '*'

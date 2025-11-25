@@ -1,0 +1,137 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    app: postgresql
+    chart: postgresql-8.1.0
+    heritage: Helm
+    release: dagster
+  name: dagster-postgresql
+  namespace: dagster
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgresql
+      release: dagster
+      role: master
+  serviceName: dagster-postgresql-headless
+  template:
+    metadata:
+      labels:
+        app: postgresql
+        chart: postgresql-8.1.0
+        heritage: Helm
+        release: dagster
+        role: master
+      name: dagster-postgresql
+    spec:
+      containers:
+        - env:
+            - name: BITNAMI_DEBUG
+              value: 'false'
+            - name: POSTGRESQL_PORT_NUMBER
+              value: '5432'
+            - name: POSTGRESQL_VOLUME_DIR
+              value: /bitnami/postgresql
+            - name: PGDATA
+              value: /bitnami/postgresql/data
+            - name: POSTGRES_USER
+              value: test
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: postgresql-password
+                  name: dagster-postgresql
+            - name: POSTGRES_DB
+              value: test
+            - name: POSTGRESQL_ENABLE_LDAP
+              value: 'no'
+          image: docker.io/library/postgres:14.6
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - '-c'
+                - exec pg_isready -U "test" -d "test" -h 127.0.0.1 -p 5432
+            failureThreshold: 6
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
+          name: dagster-postgresql
+          ports:
+            - containerPort: 5432
+              name: tcp-postgresql
+          readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - '-c'
+                - '-e'
+                - |
+                  pg_isready -U "test" -d "test" -h 127.0.0.1 -p 5432
+            failureThreshold: 6
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
+          resources:
+            requests:
+              cpu: 250m
+              memory: 256Mi
+          securityContext:
+            runAsUser: 1001
+          volumeMounts:
+            - mountPath: /dev/shm
+              name: dshm
+            - mountPath: /bitnami/postgresql
+              name: data
+              subPath: null
+      initContainers:
+        - command:
+            - /bin/sh
+            - '-c'
+            - >
+              mkdir -p /bitnami/postgresql/data
+
+              chmod 700 /bitnami/postgresql/data
+
+              find /bitnami/postgresql -mindepth 0 -maxdepth 1 -not -name
+              ".snapshot" -not -name "lost+found" | \
+                xargs chown -R 1001:1001
+              chmod -R 777 /dev/shm
+          image: docker.io/bitnami/minideb:stretch
+          imagePullPolicy: Always
+          name: init-chmod-data
+          resources:
+            requests:
+              cpu: 250m
+              memory: 256Mi
+          securityContext:
+            runAsUser: 0
+          volumeMounts:
+            - mountPath: /bitnami/postgresql
+              name: data
+              subPath: null
+            - mountPath: /dev/shm
+              name: dshm
+      securityContext:
+        fsGroup: 1001
+      volumes:
+        - emptyDir:
+            medium: Memory
+            sizeLimit: 1Gi
+          name: dshm
+  updateStrategy:
+    type: RollingUpdate
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 8Gi
