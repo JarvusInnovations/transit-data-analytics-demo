@@ -1,0 +1,19 @@
+[hololens]
+container = "ghcr.io/hologit/lenses/helm3:latest"
+
+[hololens.input]
+root = "dagster"
+files = "**"
+
+[hololens.output]
+merge = "replace"
+
+[hololens.helm]
+namespace = "dagster"
+release_name = "dagster"
+namespace_fill = true
+
+chart_path = "helm-chart"
+value_files = [
+    "prod-dagster.yml"
+]
