@@ -20,19 +20,19 @@ dagster-user-deployments:
       resources:
         requests:
           cpu: 100m
-          memory: 2Gi
-      {# affinity:
-        podAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-            - weight: 100
-              podAffinityTerm:
-                labelSelector:
-                  matchExpressions:
-                    - key: app
-                      operator: In
-                      values:
-                        - postgresql
-                topologyKey: topology.kubernetes.io/zone #}
+          memory: 256Mi
+      # affinity:
+      #   podAffinity:
+      #     preferredDuringSchedulingIgnoredDuringExecution:
+      #       - weight: 100
+      #         podAffinityTerm:
+      #           labelSelector:
+      #             matchExpressions:
+      #               - key: app
+      #                 operator: In
+      #                 values:
+      #                   - postgresql
+      #           topologyKey: topology.kubernetes.io/zone
 
 dagsterDaemon:
   image:
@@ -46,18 +46,18 @@ dagsterDaemon:
     requests:
       cpu: 100m
       memory: 128Mi
-  {# affinity:
-    podAffinity:
-      preferredDuringSchedulingIgnoredDuringExecution:
-        - weight: 100
-          podAffinityTerm:
-            labelSelector:
-              matchExpressions:
-                - key: app
-                  operator: In
-                  values:
-                    - postgresql
-            topologyKey: topology.kubernetes.io/zone #}
+  # affinity:
+  #   podAffinity:
+  #     preferredDuringSchedulingIgnoredDuringExecution:
+  #       - weight: 100
+  #         podAffinityTerm:
+  #           labelSelector:
+  #             matchExpressions:
+  #               - key: app
+  #                 operator: In
+  #                 values:
+  #                   - postgresql
+  #           topologyKey: topology.kubernetes.io/zone
 
 dagsterWebserver:
   image:
@@ -67,18 +67,18 @@ dagsterWebserver:
     requests:
       cpu: 100m
       memory: 256Mi
-  {# affinity:
-    podAffinity:
-      preferredDuringSchedulingIgnoredDuringExecution:
-        - weight: 100
-          podAffinityTerm:
-            labelSelector:
-              matchExpressions:
-                - key: app
-                  operator: In
-                  values:
-                    - postgresql
-            topologyKey: topology.kubernetes.io/zone #}
+  # affinity:
+  #   podAffinity:
+  #     preferredDuringSchedulingIgnoredDuringExecution:
+  #       - weight: 100
+  #         podAffinityTerm:
+  #           labelSelector:
+  #             matchExpressions:
+  #               - key: app
+  #                 operator: In
+  #                 values:
+  #                   - postgresql
+  #           topologyKey: topology.kubernetes.io/zone
 
 runLauncher:
   config:
