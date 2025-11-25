@@ -19,7 +19,7 @@ dagster-user-deployments:
           value: 'gs://jarvus-transit-data-demo-parsed'
       resources:
         requests:
-          cpu: 100m
+          cpu: 1
           memory: 2Gi
       # affinity:
       #   podAffinity:
@@ -44,8 +44,8 @@ dagsterDaemon:
         maxConcurrentRuns: 16
   resources:
     requests:
-      cpu: 100m
-      memory: 128Mi
+      cpu: 1
+      memory: 2Gi
   # affinity:
   #   podAffinity:
   #     preferredDuringSchedulingIgnoredDuringExecution:
@@ -65,8 +65,8 @@ dagsterWebserver:
     tag: 1.4.10
   resources:
     requests:
-      cpu: 100m
-      memory: 256Mi
+      cpu: 1
+      memory: 2Gi
   # affinity:
   #   podAffinity:
   #     preferredDuringSchedulingIgnoredDuringExecution:
