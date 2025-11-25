@@ -11,3 +11,7 @@ ingress:
     - secretName: metabase-tls
       hosts:
         - metabase.k8s.tdad.jarv.us
+
+backups:
+  enabled: true
+  healthchecksUrl: https://healthchecks.jarv.us/ping/b8631a5d-6f42-42c2-b07d-f1554a8e5e22
