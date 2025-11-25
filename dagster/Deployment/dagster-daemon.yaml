@@ -55,7 +55,7 @@ spec:
           name: dagster
           resources:
             requests:
-              cpu: 1
+              cpu: 750m
               memory: 1Gi
           securityContext: {}
           volumeMounts:
