@@ -4,7 +4,7 @@ dagster-user-deployments:
     - name: "tdad-dags"
       image:
         repository: "ghcr.io/jarvusinnovations/transit-data-analytics-demo/dags"
-        tag: latest
+        tag: stable
         pullPolicy: Always
       dagsterApiGrpcArgs:
         - "--working-directory"
