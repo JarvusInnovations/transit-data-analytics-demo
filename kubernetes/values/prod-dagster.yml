@@ -127,3 +127,6 @@ ingress:
     host: dagster.k8s.tdad.jarv.us
     path: /
     pathType: Prefix
+    tls:
+      enabled: true
+      secretName: dagster-tls
