@@ -87,7 +87,7 @@ fct_observed_stop_times as (
         {{ dbt_utils.generate_surrogate_key(['schedule_b64_url', 'schedule_dt', 'stop_id']) }} as stop_key,
         _b64_url as rt_b64_url,
         schedule_b64_url,
-        cast(extract(year from service_date) as string) || '-' || cast(extract(quarter from service_date) as string) as pick_label,
+        cast(extract(year from service_date) as string) || '-W' || cast(extract(isoweek from service_date) as string) as pick_label,
         feed_name,
         stop_name,
         dt as rt_dt,
