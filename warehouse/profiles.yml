@@ -1,5 +1,5 @@
 transit_data_analytics_demo:
-  target: "{{ env_var('DBT_TARGET', 'prod') }}"
+  target: "{{ env_var('DBT_TARGET', 'transitdash') }}"
   outputs:
     prod: &prod
       dataset: staging
@@ -16,3 +16,6 @@ transit_data_analytics_demo:
       <<: *prod
       method: service-account
       keyfile: "{{ env_var('BIGQUERY_SERVICE_ACCOUNT') }}"
+    transitdash:
+      <<: *prod
+      dataset: transitdash
