@@ -12,6 +12,10 @@ segment_geos as (
     select * from {{ ref('fct_observed_segment_geographies') }}
 ),
 
+routes as (
+    select * from {{ ref('stg_routes') }}
+),
+
 avg_segments as (
     select
         segments.*,
@@ -45,6 +49,8 @@ metric_segment_performance as (
     select
         avg_segments.feed_key,
         avg_segments.feed_name,
+        avg_segments.route_id,
+        routes.route_short_name,
         segment_geos.segment_linestring,
         avg_segments.segment_key,
         avg_segments.segment_name,
@@ -66,6 +72,10 @@ metric_segment_performance as (
     from avg_segments
     left join segment_geos
         on avg_segments.segment_key = segment_geos.segment_key
+    left join routes
+        on avg_segments.schedule_b64_url = routes._b64_url
+        and avg_segments.schedule_dt = routes.dt
+        and avg_segments.route_id = routes.route_id
     -- drop where we don't have a geography since the point here is mapping
     where segment_geos.segment_linestring is not null
 )
