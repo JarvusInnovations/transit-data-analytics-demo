@@ -23,4 +23,7 @@ spec:
                   number: 80
             path: /
             pathType: Prefix
-  tls: null
+  tls:
+    - hosts:
+        - dagster.k8s.tdad.jarv.us
+      secretName: dagster-tls
