@@ -13,30 +13,24 @@ jobs:
   check_and_build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-python@v4
-      with:
-        python-version: 3.11
-    - uses: abatilo/actions-poetry@v2
-    - name: run mypy and pytest
-      working-directory: dags
+    - uses: actions/checkout@v4
+    - uses: astral-sh/setup-uv@v5
+    - name: run mypy
       run: |
-        poetry self add poetry-plugin-export
-        poetry export --with=dev --without-hashes --format=requirements.txt > requirements.txt
-        poetry run pip install -r requirements.txt
-        poetry run mypy .
-# un-comment and move up once we have tests; pytest exits with an exit code if no tests are found
-#        poetry run pytest
+        uv sync --group dagster-dev
+        uv run mypy dags
       env:
         RAW_BUCKET: gs://this-does-not-exist-raw
         PARSED_BUCKET: gs://this-does-not-exist-parsed
-    - uses: docker/login-action@v2
+    - uses: docker/login-action@v3
       with:
         registry: ghcr.io
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
-    - uses: docker/build-push-action@v4
+    - uses: docker/build-push-action@v6
       with:
-        context: dags
+        context: .
+        file: Containerfile
+        target: dagster-pipelines
         push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         tags: 'ghcr.io/jarvusinnovations/transit-data-analytics-demo/dags:latest'

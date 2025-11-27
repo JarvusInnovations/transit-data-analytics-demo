@@ -1,14 +1,128 @@
-# This exists for configuration of project-wide linters etc.
-[tool.black]
-line-length = 120
+[project]
+name = "transit-data-analytics-demo"
+version = "0.1.0"
+description = "Transit data fetching, processing, and analytics"
+requires-python = "==3.12.*"
+
+[dependency-groups]
+linters = [
+    "mypy>=1.4.1",
+    "ruff>=0.8.0",
+    "sqlfluff>=2.3.0",
+    "sqlfluff-templater-dbt>=2.3.0",
+]
+
+python-testing = [
+    "pytest>=7.4.0",
+    "pytest-spec>=3.2.0",
+    "pytest-dotenv>=0.5.2",
+    "polyfactory>=2.4.0",
+]
+
+fetcher = [
+    "requests>=2.31.0",
+    "huey>=2.4.5",
+    "redis>=4.6.0",
+    "google-cloud-storage>=2.10.0",
+    "pydantic>=1.10.9,<2",
+    "backoff>=2.2.1",
+    "prometheus-client>=0.17.0",
+    "schedule>=1.2.0",
+    "pyyaml>=6.0",
+    "pendulum>=2.1.2",
+    "typer>=0.9.0",
+    "humanize>=4.7.0",
+    "python-dotenv>=1.0.0",
+    "gtfs-realtime-bindings>=1.0.0",
+    "tqdm>=4.65.0",
+    "python-slugify>=8.0.1",
+]
+
+fetcher-dev = [
+    {include-group = "fetcher"},
+    {include-group = "linters"},
+    {include-group = "python-testing"},
+    "types-requests>=2.31.0.1",
+    "types-pyyaml>=6.0.12.10",
+    "types-protobuf>=4.23.0.1",
+    "types-tqdm>=4.65.0.1",
+    "types-python-slugify>=8.0.0.2",
+]
+
+dbt = [
+    "dbt-core>=1.5.0",
+    "dbt-bigquery>=1.5.3",
+]
+
+dbt-dev = [
+    {include-group = "dbt"},
+    {include-group = "linters"},
+]
+
+dagster = [
+    "requests>=2.31.0",
+    "pandas>=2.0.3",
+    "matplotlib>=3.7.2",
+    "faker>=19.2.0",
+    "humanize>=4.7.0",
+    "gtfs-realtime-bindings>=1.0.0",
+    "python-slugify>=8.0.1",
+    "dagster-postgres>=0.20.4",
+    "tabulate>=0.9.0",
+    "dagster>=1.4.11",
+    "dagster-cloud>=1.4.11",
+    "dagster-duckdb>=0.20.11",
+    "dagster-duckdb-pandas>=0.20.11",
+    "dagster-gcp>=0.20.11",
+]
+
+dagster-webserver = [
+    "dagster-webserver>=1.4.3",
+]
+
+dagster-deploy-pipelines = [
+    {include-group = "dagster"},
+    {include-group = "dbt"},
+]
+
+dagster-dev = [
+    {include-group = "dagster"},
+    {include-group = "dagster-webserver"},
+    {include-group = "dbt-dev"},
+    {include-group = "linters"},
+    {include-group = "python-testing"},
+    "pandas-stubs>=2.0.2.230605",
+    "types-requests>=2.31.0.2",
+    "types-python-slugify>=8.0.0.3",
+    "types-pyyaml>=6.0.12.11",
+    "types-protobuf>=4.24.0.1",
+    "types-tqdm>=4.66.0.1",
+    "types-tabulate>=0.9.0.3",
+    "memray>=1.9.1",
+]
+
+dev = [
+    {include-group = "fetcher-dev"},
+    {include-group = "dagster-dev"},
+]
+
+[tool.uv]
+default-groups = ["dev"]
 
 [tool.ruff]
 line-length = 120
+target-version = "py312"
 
 [tool.sqlfluff.core]
 templater = "dbt"
 dialect = "bigquery"
-max_line_length = -1
+max_line_length = 120
 
 [tool.sqlfluff.templater.dbt]
 project_dir = "./warehouse/"
+
+[tool.dagster]
+module_name = "dags"
+
+[tool.mypy]
+plugins = ["pydantic.mypy"]

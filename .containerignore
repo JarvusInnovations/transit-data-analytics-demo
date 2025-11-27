@@ -1,0 +1,39 @@
+# Ignore everything by default
+*
+
+# Include only needed context
+!/pyproject.toml
+!/uv.lock
+!/fetcher/
+!/dags/
+!/warehouse/
+
+# Exclude common junk
+**/__pycache__/
+**/.venv/
+**/.*
+**/*.md
+**/*.pyc
+**/*.pyo
+**/*.egg-info/
+**/.mypy_cache/
+**/.pytest_cache/
+**/.coverage
+**/htmlcov/
+
+# Exclude fetcher junk
+/fetcher/tests/
+/fetcher/docker-compose.yaml
+
+# Exclude dags junk
+/dags/data/
+/dags/tmp*/
+/dags/dags_tests/
+
+# Exclude warehouse junk
+/warehouse/target/
+/warehouse/dbt_packages/
+/warehouse/logs/
+
+# Exclude secrets
+**/.env

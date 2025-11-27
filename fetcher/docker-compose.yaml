@@ -3,9 +3,12 @@ services:
     image: redis:6.2-alpine
     restart: always
   ticker:
-    build: .
+    build:
+      context: ..
+      dockerfile: Containerfile
+      target: fetcher
     env_file:
-      - .env # this really should just be read automatically?
+      - .env
     environment:
       GOOGLE_APPLICATION_CREDENTIALS: /creds/google_application_credentials.json
     volumes:
@@ -16,9 +19,12 @@ services:
       - -m
       - fetcher.ticker
   consumer:
-    build: .
+    build:
+      context: ..
+      dockerfile: Containerfile
+      target: fetcher
     env_file:
-      - .env # this really should just be read automatically?
+      - .env
     environment:
       HUEY_WORKERS: 8
       GOOGLE_APPLICATION_CREDENTIALS: /creds/google_application_credentials.json

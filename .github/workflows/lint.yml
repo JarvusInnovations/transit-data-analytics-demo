@@ -9,28 +9,17 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-python@v4
-      with:
-        python-version: 3.11
-    - uses: abatilo/actions-poetry@v2
-    - name: Lint ci
-      working-directory: ci
-      run: |
-        poetry install
-        poetry run mypy tasks.py --check-untyped-defs
+    - uses: actions/checkout@v4
+    - uses: astral-sh/setup-uv@v5
     - name: Set up dbt
-      working-directory: warehouse
       run: |
         echo "$BOT_GCP_SERVICE_ACCOUNT" > /tmp/keyfile
-        poetry install
-        poetry run dbt deps
+        uv sync --group dbt-dev
+        uv run dbt deps --project-dir warehouse
       env:
         BOT_GCP_SERVICE_ACCOUNT: ${{ secrets.BOT_GCP_SERVICE_ACCOUNT }}
-    # sqlfluff needs dbt to be set up and authenticated
     - uses: pre-commit/action@v3.0.0
       env:
-        # skip sqlfluff for now; it's not authenticating to bigquery properly
         SKIP: sqlfluff-lint
         BIGQUERY_SERVICE_ACCOUNT: /tmp/keyfile
         DBT_PROFILES_DIR: warehouse

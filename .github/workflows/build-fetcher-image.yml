@@ -13,31 +13,27 @@ jobs:
   check_and_build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-python@v4
-      with:
-        python-version: 3.11
-    - uses: abatilo/actions-poetry@v2
+    - uses: actions/checkout@v4
+    - uses: astral-sh/setup-uv@v5
     - name: run mypy and pytest
       id: test
-      working-directory: fetcher
       run: |
-        poetry self add poetry-plugin-export
-        poetry export --with=dev --without-hashes --format=requirements.txt > requirements.txt
-        poetry run pip install -r requirements.txt
-        poetry run mypy .
-        poetry run pytest
-        echo "VERSION=$(poetry version --short)" >> "$GITHUB_OUTPUT"
+        uv sync --group fetcher-dev
+        uv run mypy fetcher
+        uv run pytest fetcher
+        echo "VERSION=$(grep 'version' pyproject.toml | head -1 | cut -d'"' -f2)" >> "$GITHUB_OUTPUT"
       env:
         RAW_BUCKET: gs://this-does-not-exist-raw
         PARSED_BUCKET: gs://this-does-not-exist-parsed
-    - uses: docker/login-action@v2
+    - uses: docker/login-action@v3
       with:
         registry: ghcr.io
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
-    - uses: docker/build-push-action@v4
+    - uses: docker/build-push-action@v6
       with:
-        context: fetcher
+        context: .
+        file: Containerfile
+        target: fetcher
         push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         tags: 'ghcr.io/jarvusinnovations/transit-data-analytics-demo/fetcher:${{ steps.test.outputs.VERSION }}'
