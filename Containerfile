@@ -19,7 +19,7 @@ WORKDIR /app
 
 # Install dependencies
 COPY pyproject.toml uv.lock ./
-RUN --mount=type=cache,target=/root/.cache/uv,U \
+RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --only-group fetcher
 
 # Copy application code
@@ -36,7 +36,7 @@ WORKDIR /opt/app
 
 # Install dbt dependencies
 COPY pyproject.toml uv.lock ./
-RUN --mount=type=cache,target=/root/.cache/uv,U \
+RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --only-group dbt
 
 # Copy and build dbt project
@@ -54,7 +54,7 @@ WORKDIR /app
 
 # Install dbt dependencies
 COPY pyproject.toml uv.lock ./
-RUN --mount=type=cache,target=/root/.cache/uv,U \
+RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --only-group dbt
 
 # Copy dbt project
@@ -74,7 +74,7 @@ WORKDIR /opt/dagster
 
 # Install dagster dependencies
 COPY pyproject.toml uv.lock ./
-RUN --mount=type=cache,target=/root/.cache/uv,U \
+RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --only-group dagster-deploy-pipelines
 
 # Copy pipeline code and dbt project
