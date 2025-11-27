@@ -32,15 +32,28 @@ See [docs/hologit.md](docs/hologit.md) for detailed documentation on Hologit con
 
 ## Key Technologies
 
-- **Python/Poetry**: Main application runtime and dependency management
+- **Python/uv**: Main application runtime and dependency management
+- **asdf**: Tool version management (Python, uv)
 - **Kubernetes/Kustomize**: Container orchestration and configuration management
 - **Docker**: Container runtime for local development and production
 - **GitHub Actions**: CI/CD pipeline for building and deploying
 - **Hologit**: Git-based content composition and transformation
 
+## Dependency Groups
+
+The project uses uv dependency groups to manage dependencies for different components:
+
+- `fetcher` / `fetcher-dev`: Feed fetching service
+- `dagster` / `dagster-dev`: Dagster pipelines
+- `dbt` / `dbt-dev`: dbt data warehouse
+- `dev`: All development dependencies (default)
+
 ## Project Structure
 
 - `fetcher/`: Python application for fetching transit data feeds
+- `dags/`: Dagster pipelines for data processing
+- `warehouse/`: dbt project for data modeling in BigQuery
 - `kubernetes/`: Kubernetes manifests and Kustomize configurations
 - `.holo/`: Hologit configuration for branch composition
 - `.github/workflows/`: GitHub Actions CI/CD pipelines
+- `Containerfile`: Multi-stage container build for all services
