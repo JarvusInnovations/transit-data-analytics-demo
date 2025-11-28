@@ -61,6 +61,8 @@ metric_segment_performance as (
         avg_segments.schedule_b64_url,
         avg_segments.next_stop_id,
         avg_segments.shape_id,
+        -- use minimum of the two stop observation counts as a conservative estimate
+        least(avg_segments.first_stop_obs, avg_segments.second_stop_obs) as ct_observations,
         -- should these be weighted averages based on obs?
         -- done this way we assume these values are populated for every stop on the same shape
         -- when there could be trip patterns where they are/are not
