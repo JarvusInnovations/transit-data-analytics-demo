@@ -32,7 +32,7 @@ fct_observed_segments as (
         feed_name,
         route_id,
         stop_id || "-" || next_stop_id as segment_id,
-        stop_name || "-" || next_stop_name as segment_name,
+        stop_name || "→" || next_stop_name as segment_name,
         schedule_b64_url,
         schedule_dt,
         stop_id,
