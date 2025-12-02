@@ -404,6 +404,14 @@ demo_segment_performance as (
         round(later_pct_on_time - earlier_pct_on_time, 2) as change_pct_on_time,
         round(later_avg_difference_from_schedule_sec - earlier_avg_difference_from_schedule_sec, 2) as change_avg_difference_from_schedule_sec
     from combined
+    -- Filter out invalid on-time percentages (null, 0, or >= 100)
+    where (match_status = 'matched'
+           and earlier_pct_on_time is not null and earlier_pct_on_time > 0 and earlier_pct_on_time < 100
+           and later_pct_on_time is not null and later_pct_on_time > 0 and later_pct_on_time < 100)
+       or (match_status = 'earlier_only'
+           and earlier_pct_on_time is not null and earlier_pct_on_time > 0 and earlier_pct_on_time < 100)
+       or (match_status = 'later_only'
+           and later_pct_on_time is not null and later_pct_on_time > 0 and later_pct_on_time < 100)
 )
 
 select * from demo_segment_performance
