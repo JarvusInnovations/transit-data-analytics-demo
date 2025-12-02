@@ -13,7 +13,7 @@ stg_stops as (
         JSON_VALUE(record, '$.stop_id') as stop_id,
         CAST(JSON_VALUE(record, '$.stop_lat') as numeric) as stop_lat,
         CAST(JSON_VALUE(record, '$.stop_lon') as numeric) as stop_lon,
-        JSON_VALUE(record, '$.stop_name') as stop_name
+        TRIM(JSON_VALUE(record, '$.stop_name')) as stop_name
         -- todo: add additional fields
     from src_stops
 )
