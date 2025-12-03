@@ -412,6 +412,72 @@ demo_segment_performance as (
            and earlier_pct_on_time is not null and earlier_pct_on_time > 0 and earlier_pct_on_time < 100)
        or (match_status = 'later_only'
            and later_pct_on_time is not null and later_pct_on_time > 0 and later_pct_on_time < 100)
+),
+
+-- Aggregate across hour types to create synthetic "all" records
+all_hours as (
+    select
+        feed_name,
+        route_short_name,
+        'all' as hour_type,
+        segment_linestring,
+        match_status,
+        cast(null as string) as match_type,
+        -- Earlier period: use values from any row (same across hour_types)
+        max(earlier_pick_label) as earlier_pick_label,
+        max(earlier_segment_key) as earlier_segment_key,
+        max(earlier_segment_name) as earlier_segment_name,
+        max(earlier_route_id) as earlier_route_id,
+        max(earlier_stop_id) as earlier_stop_id,
+        max(earlier_next_stop_id) as earlier_next_stop_id,
+        max(earlier_shape_id) as earlier_shape_id,
+        max(earlier_schedule_dt) as earlier_schedule_dt,
+        max(earlier_schedule_b64_url) as earlier_schedule_b64_url,
+        max(earlier_schedule_version_count) as earlier_schedule_version_count,
+        -- Weighted metrics for earlier period
+        round(sum(earlier_ct_observations), 0) as earlier_ct_observations,
+        round(sum(earlier_pct_early * earlier_ct_observations) / nullif(sum(earlier_ct_observations), 0), 2) as earlier_pct_early,
+        round(sum(earlier_pct_late * earlier_ct_observations) / nullif(sum(earlier_ct_observations), 0), 2) as earlier_pct_late,
+        round(sum(earlier_pct_on_time * earlier_ct_observations) / nullif(sum(earlier_ct_observations), 0), 2) as earlier_pct_on_time,
+        round(sum(earlier_avg_difference_from_schedule_sec * earlier_ct_observations) / nullif(sum(earlier_ct_observations), 0), 2) as earlier_avg_difference_from_schedule_sec,
+        -- Later period: use values from any row
+        max(later_pick_label) as later_pick_label,
+        max(later_segment_key) as later_segment_key,
+        max(later_segment_name) as later_segment_name,
+        max(later_route_id) as later_route_id,
+        max(later_stop_id) as later_stop_id,
+        max(later_next_stop_id) as later_next_stop_id,
+        max(later_shape_id) as later_shape_id,
+        max(later_schedule_dt) as later_schedule_dt,
+        max(later_schedule_b64_url) as later_schedule_b64_url,
+        -- Weighted metrics for later period
+        round(sum(later_ct_observations), 0) as later_ct_observations,
+        round(sum(later_pct_early * later_ct_observations) / nullif(sum(later_ct_observations), 0), 2) as later_pct_early,
+        round(sum(later_pct_late * later_ct_observations) / nullif(sum(later_ct_observations), 0), 2) as later_pct_late,
+        round(sum(later_pct_on_time * later_ct_observations) / nullif(sum(later_ct_observations), 0), 2) as later_pct_on_time,
+        round(sum(later_avg_difference_from_schedule_sec * later_ct_observations) / nullif(sum(later_ct_observations), 0), 2) as later_avg_difference_from_schedule_sec,
+        -- Change metrics computed from weighted averages
+        round(
+            sum(later_pct_early * later_ct_observations) / nullif(sum(later_ct_observations), 0)
+            - sum(earlier_pct_early * earlier_ct_observations) / nullif(sum(earlier_ct_observations), 0)
+        , 2) as change_pct_early,
+        round(
+            sum(later_pct_late * later_ct_observations) / nullif(sum(later_ct_observations), 0)
+            - sum(earlier_pct_late * earlier_ct_observations) / nullif(sum(earlier_ct_observations), 0)
+        , 2) as change_pct_late,
+        round(
+            sum(later_pct_on_time * later_ct_observations) / nullif(sum(later_ct_observations), 0)
+            - sum(earlier_pct_on_time * earlier_ct_observations) / nullif(sum(earlier_ct_observations), 0)
+        , 2) as change_pct_on_time,
+        round(
+            sum(later_avg_difference_from_schedule_sec * later_ct_observations) / nullif(sum(later_ct_observations), 0)
+            - sum(earlier_avg_difference_from_schedule_sec * earlier_ct_observations) / nullif(sum(earlier_ct_observations), 0)
+        , 2) as change_avg_difference_from_schedule_sec
+    from demo_segment_performance
+    where match_status = 'matched'
+    group by feed_name, route_short_name, segment_linestring, match_status
 )
 
 select * from demo_segment_performance
+union all
+select * from all_hours
