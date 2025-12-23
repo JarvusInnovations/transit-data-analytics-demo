@@ -6,10 +6,10 @@ requires-python = "==3.12.*"
 
 [dependency-groups]
 linters = [
-    "mypy>=1.4.1",
-    "ruff>=0.8.0",
-    "sqlfluff>=2.3.0",
-    "sqlfluff-templater-dbt>=2.3.0",
+    "mypy>=1.19.1",
+    "ruff>=0.14.10",
+    "sqlfluff>=3.5.0",
+    "sqlfluff-templater-dbt>=3.5.0",
 ]
 
 python-testing = [
