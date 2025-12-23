@@ -21,7 +21,7 @@ spec:
         - envFrom:
             - configMapRef:
                 name: metabase-config
-          image: metabase/metabase:v0.57.4.1
+          image: metabase/metabase:v0.57.7
           livenessProbe:
             failureThreshold: 3
             httpGet:
