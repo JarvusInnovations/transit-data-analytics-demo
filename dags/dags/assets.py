@@ -11,6 +11,7 @@ from typing import Optional, List, DefaultDict, Iterable, Union, Dict
 
 import humanize
 import pendulum
+import requests
 from dagster import (
     asset,
     get_dagster_logger,
@@ -252,6 +253,19 @@ def raw_files_list(
             "num_blobs": len(blobs),
         }
     )
+    
+    # Send healthcheck ping
+    healthcheck_base_url = "https://healthchecks.jarv.us/ping/7de2acff-4ae3-491c-ac66-6668b210a9ea"
+    try:
+        if len(blobs) > 0:
+            response = requests.get(healthcheck_base_url, timeout=10)
+            logger.info(f"Healthcheck ping sent successfully (status: {response.status_code})")
+        else:
+            response = requests.get(f"{healthcheck_base_url}/fail", timeout=10)
+            logger.info(f"Healthcheck fail ping sent (status: {response.status_code})")
+    except Exception as e:
+        logger.warning(f"Failed to send healthcheck ping: {e}")
+    
     return aggs
 
 
