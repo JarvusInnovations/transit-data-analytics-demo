@@ -9,8 +9,8 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    - uses: astral-sh/setup-uv@v5
+    - uses: actions/checkout@v6
+    - uses: astral-sh/setup-uv@v7
     - name: Set up dbt
       run: |
         echo "$BOT_GCP_SERVICE_ACCOUNT" > /tmp/keyfile
@@ -18,7 +18,7 @@ jobs:
         uv run dbt deps --project-dir warehouse
       env:
         BOT_GCP_SERVICE_ACCOUNT: ${{ secrets.BOT_GCP_SERVICE_ACCOUNT }}
-    - uses: pre-commit/action@v3.0.0
+    - uses: pre-commit/action@v3.0.1
       env:
         SKIP: sqlfluff-lint
         BIGQUERY_SERVICE_ACCOUNT: /tmp/keyfile
