@@ -23,7 +23,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/dagster-user-deployment: a6d571cff888d21c3df44f63d2540434ab88662d649e19ad0e4269243a88ed8e
+        checksum/dagster-user-deployment: 919a653177249f978c6de8be6141a3e7bd615718e8a32abfdce14879766f0989
       labels:
         app.kubernetes.io/instance: dagster
         app.kubernetes.io/name: dagster-user-deployments
@@ -41,7 +41,7 @@ spec:
             - '-p'
             - '3030'
             - '--working-directory'
-            - /app
+            - /opt/dagster
             - '--module-name'
             - dags
           env:
