@@ -8,7 +8,7 @@ dagster-user-deployments:
         pullPolicy: Always
       dagsterApiGrpcArgs:
         - "--working-directory"
-        - "/app"
+        - "/opt/dagster"
         - "--module-name"
         - "dags"
       port: 3030
