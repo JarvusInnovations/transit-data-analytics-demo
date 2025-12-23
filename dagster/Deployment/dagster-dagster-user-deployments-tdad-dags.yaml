@@ -23,7 +23,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/dagster-user-deployment: e1fa348416ba5a4f810a091d1a1dbb6c1cb9912a399aee61242493e0158031d3
+        checksum/dagster-user-deployment: a6d571cff888d21c3df44f63d2540434ab88662d649e19ad0e4269243a88ed8e
       labels:
         app.kubernetes.io/instance: dagster
         app.kubernetes.io/name: dagster-user-deployments
@@ -47,7 +47,7 @@ spec:
           env:
             - name: DAGSTER_CURRENT_IMAGE
               value: >-
-                ghcr.io/jarvusinnovations/transit-data-analytics-demo/dags:stable
+                ghcr.io/jarvusinnovations/transit-data-analytics-demo/dags:latest
             - name: DAGSTER_PG_PASSWORD
               valueFrom:
                 secretKeyRef:
@@ -68,7 +68,7 @@ spec:
             - secretRef:
                 name: dagster-celery-config-secret
                 optional: true
-          image: ghcr.io/jarvusinnovations/transit-data-analytics-demo/dags:stable
+          image: ghcr.io/jarvusinnovations/transit-data-analytics-demo/dags:latest
           imagePullPolicy: Always
           name: dagster-user-deployments
           readinessProbe:
