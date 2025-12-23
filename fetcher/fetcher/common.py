@@ -103,16 +103,22 @@ class RawFetchedFile(BaseModel):
     @property
     def base64url(self) -> str:
         # TODO: add non-auth query params
-        url = requests.Request(url=self.config.url, params={kv.key: kv.value for kv in self.config.query}).url
+        url = requests.Request(
+            url=self.config.url, params={kv.key: kv.value for kv in self.config.query}
+        ).url
         return base64.urlsafe_b64encode(url.encode("utf-8")).decode("utf-8")
 
     @property
     def filename(self) -> str:
         params_with_page = {
-            **{kv.key: kv.value for kv in self.config.query if kv.value},  # exclude secrets
+            **{
+                kv.key: kv.value for kv in self.config.query if kv.value
+            },  # exclude secrets
             **{kv.key: kv.value for kv in self.page},
         }
-        url = requests.Request(url=self.config.url, params=params_with_page).prepare().url
+        url = (
+            requests.Request(url=self.config.url, params=params_with_page).prepare().url
+        )
         assert url is not None
         b64url = base64.urlsafe_b64encode(url.encode("utf-8")).decode("utf-8")
         return f"{b64url}.json"
@@ -124,7 +130,10 @@ class RawFetchedFile(BaseModel):
     @property
     def gcs_key(self) -> str:
         hive_str = "/".join(
-            [f"{key}={SERIALIZERS[type(getattr(self, key))](getattr(self, key))}" for key in self.partitions]
+            [
+                f"{key}={SERIALIZERS[type(getattr(self, key))](getattr(self, key))}"
+                for key in self.partitions
+            ]
         )
         return f"{self.table}/{hive_str}/{self.filename}"
 

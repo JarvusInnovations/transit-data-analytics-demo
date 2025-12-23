@@ -53,7 +53,9 @@ class HivePartitionedPydanticGCSIOManager(PickledObjectGCSIOManager):
         )
 
     def load_from_path(self, context: InputContext, path: UPath) -> Any:
-        raise NotImplementedError("HivePartitionedGCSIOManager cannot be used to load data")
+        raise NotImplementedError(
+            "HivePartitionedGCSIOManager cannot be used to load data"
+        )
 
     def dump_to_path(self, context: OutputContext, obj: Any, path: UPath) -> None:
         assert isinstance(obj, list)
@@ -79,7 +81,11 @@ defs = Definitions(
     schedules=[
         # see https://github.com/dagster-io/dagster/pull/13071
         build_schedule_from_partitioned_job(
-            define_asset_job("parse_job", selection=AssetSelection.all(), partitions_def=feed_type_hour_partition_def),
+            define_asset_job(
+                "parse_job",
+                selection=AssetSelection.all(),
+                partitions_def=feed_type_hour_partition_def,
+            ),
         ),
     ],
     resources={

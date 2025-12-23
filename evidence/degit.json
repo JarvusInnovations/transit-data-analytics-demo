@@ -1,10 +1,10 @@
 [
-	{
-		"action": "remove",
-		"files": [
-			".devcontainer",
-			".github",
-			"scripts"
-		]
-	}
+  {
+    "action": "remove",
+    "files": [
+      ".devcontainer",
+      ".github",
+      "scripts"
+    ]
+  }
 ]

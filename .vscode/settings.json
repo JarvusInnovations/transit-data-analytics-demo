@@ -1,10 +1,10 @@
 {
-    "sqltools.useNodeRuntime": true,
-    "editor.acceptSuggestionOnEnter": true,
-    "editor.quickSuggestions": {
-        "other": false,
-        "comments": false,
-        "strings": false
-    },
-    "editor.quickSuggestionsDelay": 300
+  "editor.acceptSuggestionOnEnter": "smart",
+  "editor.quickSuggestions": {
+    "comments": false,
+    "other": false,
+    "strings": false
+  },
+  "editor.quickSuggestionsDelay": 300,
+  "sqltools.useNodeRuntime": true
 }

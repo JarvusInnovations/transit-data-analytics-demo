@@ -376,7 +376,7 @@ SELECT
   p.parsed_outcome_files,
   p.parsed_outcome_bytes
 FROM raw_hourly r
-LEFT JOIN parsed_hourly p 
+LEFT JOIN parsed_hourly p
   ON r.environment = p.environment
   AND r.feed_type = REGEXP_EXTRACT(p.table_name, r'^(.+?)(__outcomes)?$', 1)
   AND r.date = p.date
@@ -459,8 +459,8 @@ SELECT
   t.latest_hour as test_latest,
   p.latest_hour as prod_latest
 FROM stats t
-FULL OUTER JOIN stats p 
-  ON t.table_name = p.table_name 
+FULL OUTER JOIN stats p
+  ON t.table_name = p.table_name
   AND t.file_type = p.file_type
   AND p.environment = 'prod'
 WHERE t.environment = 'test'

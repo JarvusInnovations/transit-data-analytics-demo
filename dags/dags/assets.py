@@ -77,7 +77,9 @@ def file_to_records(
                 for zipf_file in zipf.namelist():
                     with zipf.open(zipf_file) as f:
                         contents = f.read()
-                    reader = csv.DictReader(io.TextIOWrapper(io.BytesIO(contents), encoding="utf-8"))
+                    reader = csv.DictReader(
+                        io.TextIOWrapper(io.BytesIO(contents), encoding="utf-8")
+                    )
                     # TODO: this will throw an error if attempting to parse a file we don't enumerate
                     #  we probably want to just throw a warning/generate an outcome rather than stop
                     #  further processing
@@ -119,7 +121,9 @@ def save_hour_agg(
     if records:
         client = client or storage.Client()
         # TODO: add asserts to check all same hour/url/etc.
-        contents = gzip.compress("\n".join([record.json() for record in records]).encode("utf-8"))
+        contents = gzip.compress(
+            "\n".join([record.json() for record in records]).encode("utf-8")
+        )
         content_size = humanize.naturalsize(len(contents))
         agg_path = f"{agg.bucket}/{agg.gcs_key}"
 
@@ -127,7 +131,9 @@ def save_hour_agg(
         start = pendulum.now()
         blob = client.bucket(agg.bucket.removeprefix("gs://")).blob(agg.gcs_key)
         blob.upload_from_string(contents, timeout=timeout, client=client)
-        logger.info(f"Took {humanize.naturaldelta(start.diff().total_seconds())} to save {content_size} to {agg_path}")
+        logger.info(
+            f"Took {humanize.naturaldelta(start.diff().total_seconds())} to save {content_size} to {agg_path}"
+        )
         return len(contents)
 
     logger.warning(f"WARNING: no records found for aggregation {agg}")
@@ -158,7 +164,9 @@ def handle_hour(
     logger.info(f"Handling {len(blobs)=} for {key}")
     client = storage.Client()
     outcomes = []
-    aggs: DefaultDict[Union[FeedType, GtfsScheduleFileType], List[ParsedRecord]] = defaultdict(list)
+    aggs: DefaultDict[Union[FeedType, GtfsScheduleFileType], List[ParsedRecord]] = (
+        defaultdict(list)
+    )
 
     # we could do this streaming, but data should be small enough
     for blob in blobs:
@@ -177,7 +185,9 @@ def handle_hour(
                 for idx, record in enumerate(parsed_file.records)
             ]
             delta = humanize.naturaldelta(start.diff().total_seconds())
-            logger.info(f"took {delta} to get {len(parsed_records)} records for {parsed_file.feed_type}")
+            logger.info(
+                f"took {delta} to get {len(parsed_records)} records for {parsed_file.feed_type}"
+            )
             aggs[parsed_file.feed_type].extend(parsed_records)
             del parsed_file
         outcomes.append(
@@ -235,7 +245,9 @@ def raw_files_list(
     bucket = os.environ["RAW_BUCKET"]
     client = storage.Client()
     logger.info(f"Listing items in {bucket}/{prefix}...")
-    blobs: List[storage.Blob] = list(client.list_blobs(bucket.removeprefix("gs://"), prefix=prefix))
+    blobs: List[storage.Blob] = list(
+        client.list_blobs(bucket.removeprefix("gs://"), prefix=prefix)
+    )
 
     # remove client from blob
     for blob in blobs:
@@ -253,19 +265,23 @@ def raw_files_list(
             "num_blobs": len(blobs),
         }
     )
-    
+
     # Send healthcheck ping
-    healthcheck_base_url = "https://healthchecks.jarv.us/ping/7de2acff-4ae3-491c-ac66-6668b210a9ea"
+    healthcheck_base_url = (
+        "https://healthchecks.jarv.us/ping/7de2acff-4ae3-491c-ac66-6668b210a9ea"
+    )
     try:
         if len(blobs) > 0:
             response = requests.get(healthcheck_base_url, timeout=10)
-            logger.info(f"Healthcheck ping sent successfully (status: {response.status_code})")
+            logger.info(
+                f"Healthcheck ping sent successfully (status: {response.status_code})"
+            )
         else:
             response = requests.get(f"{healthcheck_base_url}/fail", timeout=10)
             logger.info(f"Healthcheck fail ping sent (status: {response.status_code})")
     except Exception as e:
         logger.warning(f"Failed to send healthcheck ping: {e}")
-    
+
     return aggs
 
 
@@ -305,7 +321,9 @@ def parsed_and_grouped_files(
             {
                 "url": url,
                 "successes": len([outcome for outcome in outcomes if outcome.success]),
-                "failures": len([outcome for outcome in outcomes if not outcome.success]),
+                "failures": len(
+                    [outcome for outcome in outcomes if not outcome.success]
+                ),
             }
         )
         all_outcomes.extend(outcomes)

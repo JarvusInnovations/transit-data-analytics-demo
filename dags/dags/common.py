@@ -4,7 +4,18 @@ import base64
 import datetime
 import os
 from enum import StrEnum
-from typing import Dict, Optional, List, ClassVar, Any, Type, Iterable, Callable, Union, Mapping
+from typing import (
+    Dict,
+    Optional,
+    List,
+    ClassVar,
+    Any,
+    Type,
+    Iterable,
+    Callable,
+    Union,
+    Mapping,
+)
 
 import pendulum
 import requests
@@ -135,16 +146,22 @@ class RawFetchedFile(BaseModel):
     @property
     def base64url(self) -> str:
         # TODO: add non-auth query params
-        url = requests.Request(url=self.config.url, params={kv.key: kv.value for kv in self.config.query}).url
+        url = requests.Request(
+            url=self.config.url, params={kv.key: kv.value for kv in self.config.query}
+        ).url
         return base64.urlsafe_b64encode(url.encode("utf-8")).decode("utf-8")
 
     @property
     def filename(self) -> str:
         params_with_page = {
-            **{kv.key: kv.value for kv in self.config.query if kv.value},  # excludes secrets
+            **{
+                kv.key: kv.value for kv in self.config.query if kv.value
+            },  # excludes secrets
             **{kv.key: kv.value for kv in self.page},
         }
-        url = requests.Request(url=self.config.url, params=params_with_page).prepare().url
+        url = (
+            requests.Request(url=self.config.url, params=params_with_page).prepare().url
+        )
         assert url is not None
         b64url = base64.urlsafe_b64encode(url.encode("utf-8")).decode("utf-8")
         return f"{b64url}.json"
@@ -156,7 +173,10 @@ class RawFetchedFile(BaseModel):
     @property
     def gcs_key(self) -> str:
         hive_str = "/".join(
-            [f"{key}={SERIALIZERS[type(getattr(self, key))](getattr(self, key))}" for key in self.partitions]
+            [
+                f"{key}={SERIALIZERS[type(getattr(self, key))](getattr(self, key))}"
+                for key in self.partitions
+            ]
         )
         return f"{self.table}/{hive_str}/{self.filename}"
 
@@ -206,7 +226,10 @@ class HourAgg(BaseModel):
     @property
     def gcs_key(self) -> str:
         hive_str = "/".join(
-            [f"{key}={SERIALIZERS[type(getattr(self, key))](getattr(self, key))}" for key in self.partitions]
+            [
+                f"{key}={SERIALIZERS[type(getattr(self, key))](getattr(self, key))}"
+                for key in self.partitions
+            ]
         )
         hive_table = (
             f"gtfs_schedule__{slugify(self.table, separator='_')}"
@@ -260,7 +283,10 @@ class FeedTypeHourParseOutcomes(BaseModel):
     @property
     def gcs_key(self) -> str:
         hive_str = "/".join(
-            [f"{key}={SERIALIZERS[type(getattr(self, key))](getattr(self, key))}" for key in self.partitions]
+            [
+                f"{key}={SERIALIZERS[type(getattr(self, key))](getattr(self, key))}"
+                for key in self.partitions
+            ]
         )
         return f"{self.table}/{hive_str}/{self.filename}"
 
@@ -269,8 +295,7 @@ class FeedTypeHourParseOutcomes(BaseModel):
 class FeedContents(BaseModel, abc.ABC):
     @property
     @abc.abstractmethod
-    def feed_types(self) -> List[FeedType]:
-        ...
+    def feed_types(self) -> List[FeedType]: ...
 
     @property
     @abc.abstractmethod
@@ -383,7 +408,9 @@ FEED_TYPES: Dict[FeedType, Type[FeedContents]] = {
     feed_type: kls for kls in FeedContents.__subclasses__() for feed_type in kls.feed_types  # type: ignore
 }
 
-missing_feed_types = [feed_type.value for feed_type in FeedType if feed_type not in FEED_TYPES]
+missing_feed_types = [
+    feed_type.value for feed_type in FeedType if feed_type not in FEED_TYPES
+]
 assert not missing_feed_types, f"Missing parse configurations for {missing_feed_types}"
 
 if __name__ == "__main__":
@@ -402,7 +429,9 @@ if __name__ == "__main__":
                 contents=response.content,
             )
             client = storage.Client()
-            typer.secho(f"Saving to {raw.bucket}/{raw.gcs_key}", fg=typer.colors.MAGENTA)
-            client.bucket(raw.bucket.removeprefix("gs://")).blob(raw.gcs_key).upload_from_string(
-                raw.json(), client=client
+            typer.secho(
+                f"Saving to {raw.bucket}/{raw.gcs_key}", fg=typer.colors.MAGENTA
             )
+            client.bucket(raw.bucket.removeprefix("gs://")).blob(
+                raw.gcs_key
+            ).upload_from_string(raw.json(), client=client)

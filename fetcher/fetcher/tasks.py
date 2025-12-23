@@ -46,7 +46,9 @@ def fetch_feed(
     page: List[KeyValue] = [],
     dry: bool = False,
 ):
-    FETCH_REQUEST_DELAY_SECONDS.labels(**config.labels).observe((pendulum.now() - tick).total_seconds())
+    FETCH_REQUEST_DELAY_SECONDS.labels(**config.labels).observe(
+        (pendulum.now() - tick).total_seconds()
+    )
 
     with FETCH_REQUEST_DURATION_SECONDS.labels(**config.labels).time():
         # TODO: the FeedConfig should manage the URL creation generically
@@ -68,12 +70,14 @@ def fetch_feed(
         contents=response.content,
     )
 
-    msg = f"Saved {humanize.naturalsize(len(raw.contents))} to {raw.bucket}/{raw.gcs_key}"
+    msg = (
+        f"Saved {humanize.naturalsize(len(raw.contents))} to {raw.bucket}/{raw.gcs_key}"
+    )
     if dry:
         typer.secho(f"DRY RUN: {msg}")
     else:
         with FETCH_SAVE_DURATION_SECONDS.labels(**config.labels).time():
-            client.bucket(raw.bucket.removeprefix("gs://")).blob(raw.gcs_key).upload_from_string(
-                raw.json(), client=client
-            )
+            client.bucket(raw.bucket.removeprefix("gs://")).blob(
+                raw.gcs_key
+            ).upload_from_string(raw.json(), client=client)
         typer.secho(msg)

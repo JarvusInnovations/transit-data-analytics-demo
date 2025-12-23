@@ -1,20 +1,4 @@
 {
-  "name": "my-evidence-project",
-  "version": "0.0.1",
-  "scripts": {
-    "build": "evidence build",
-    "build:strict": "evidence build:strict",
-    "dev": "evidence dev --open /",
-    "test": "evidence build",
-    "sources": "evidence sources",
-    "sources:strict": "evidence sources --strict",
-    "preview": "evidence preview"
-  },
-  "engines": {
-    "npm": ">=7.0.0",
-    "node": ">=18.0.0"
-  },
-  "type": "module",
   "dependencies": {
     "@evidence-dev/bigquery": "^2.0.10",
     "@evidence-dev/core-components": "^5.2.2",
@@ -31,10 +15,26 @@
     "@evidence-dev/sqlite": "^2.0.7",
     "@evidence-dev/trino": "^1.0.9"
   },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=7.0.0"
+  },
+  "name": "my-evidence-project",
   "overrides": {
+    "axios": "^1.7.4",
     "jsonwebtoken": "9.0.0",
-    "trim@<0.0.3": ">0.0.3",
     "sqlite3": "5.1.5",
-    "axios": "^1.7.4"
-  }
+    "trim@<0.0.3": ">0.0.3"
+  },
+  "scripts": {
+    "build": "evidence build",
+    "build:strict": "evidence build:strict",
+    "dev": "evidence dev --open /",
+    "preview": "evidence preview",
+    "sources": "evidence sources",
+    "sources:strict": "evidence sources --strict",
+    "test": "evidence build"
+  },
+  "type": "module",
+  "version": "0.0.1"
 }

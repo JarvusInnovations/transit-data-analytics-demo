@@ -65,7 +65,7 @@ plugins:
     "@evidence-dev/core-components": {}
 
   datasources:
-    # You can add additional datasources here by adding npm packages. 
+    # You can add additional datasources here by adding npm packages.
     # Make to also add them to `package.json`.
     "@evidence-dev/bigquery": { }
     "@evidence-dev/csv": { }

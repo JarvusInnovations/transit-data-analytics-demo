@@ -39,14 +39,18 @@ def get_configs() -> List[FeedConfig]:
 
 
 def tick(seconds: int, dry: bool, feed_types: List[FeedType]):
-    ts: pendulum.DateTime = pendulum.now(tz=pendulum.UTC).replace(second=seconds, microsecond=0)
+    ts: pendulum.DateTime = pendulum.now(tz=pendulum.UTC).replace(
+        second=seconds, microsecond=0
+    )
     typer.secho(f"Ticking {ts.to_iso8601_string()} for {feed_types=}")
     configs = [config for config in get_configs() if config.feed_type in feed_types]
     fetches = configs_to_urls(configs)
 
     for config, page in fetches:
         fetch_feed(tick=ts, config=config, page=page, dry=dry)
-    print(f"Took {humanize.naturaltime(pendulum.now() - ts)} to enqueue {len(fetches)} fetches.")
+    print(
+        f"Took {humanize.naturaltime(pendulum.now() - ts)} to enqueue {len(fetches)} fetches."
+    )
 
 
 def main(dry: bool = False):

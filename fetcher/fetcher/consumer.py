@@ -2,6 +2,7 @@
 Mostly taken from https://github.com/coleifer/huey/blob/master/huey/bin/huey_consumer.py
 but we want to be able to run a prometheus server.
 """
+
 import logging
 import os
 import sys
