@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v2.3.0
+    rev: v6.0.0
     hooks:
       - id: check-toml
       - id: check-yaml
@@ -12,17 +12,17 @@ repos:
         exclude: package-lock.json
       - id: trailing-whitespace
   - repo: https://github.com/psf/black
-    rev: 23.3.0
+    rev: 25.12.0
     hooks:
       - id: black
         language_version: python3.12
         args: ["--config=./pyproject.toml"]
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.0.275
+    rev: v0.14.10
     hooks:
       - id: ruff
   - repo: https://github.com/sqlfluff/sqlfluff
-    rev: 3.0.7
+    rev: 3.5.0
     hooks:
       - id: sqlfluff-lint
         additional_dependencies: ['dbt-bigquery', 'sqlfluff-templater-dbt']
