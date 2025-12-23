@@ -1,7 +1,7 @@
 images:
   # pin metabase version for deliberate upgrades
   metabase:
-    src: metabase/metabase:v0.57.4.1
+    src: metabase/metabase:v0.57.7
 
 ingress:
   enabled: true
