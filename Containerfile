@@ -78,7 +78,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --only-group dagster-deploy-pipelines
 
 # Copy pipeline code and dbt project
-COPY dags dags
+COPY dags .
 COPY --from=dbt-build /opt/app/warehouse warehouse
 
 EXPOSE 3030

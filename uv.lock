@@ -1114,9 +1114,11 @@ version = "1.0.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "protobuf" },
-    { name = "setuptools" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/3d/55/ed46db9267d2615851bfba3c22b6c0e7f88751efb5d5d1468291935c7f65/gtfs-realtime-bindings-1.0.0.tar.gz", hash = "sha256:2e8ced8904400cc93ab7e8520adb6934cfa601edacc6f593fc2cb4448662bb47", size = 6197, upload-time = "2023-02-23T17:53:20.8Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/b3/67/1f030547f94716b3259d99ad93467a6608703942bc62f35e43b1bb8bc2e9/gtfs_realtime_bindings-1.0.0-py3-none-any.whl", hash = "sha256:0a9b57a103a5401895b65b6051344003b5fb213523ea4383596be017e6d67e2d", size = 5306, upload-time = "2025-12-03T18:45:09.045Z" },
+]
 
 [[package]]
 name = "h11"
@@ -2586,6 +2588,7 @@ dagster = [
     { name = "humanize" },
     { name = "matplotlib" },
     { name = "pandas" },
+    { name = "pendulum" },
     { name = "python-slugify" },
     { name = "requests" },
     { name = "tabulate" },
@@ -2604,6 +2607,7 @@ dagster-deploy-pipelines = [
     { name = "humanize" },
     { name = "matplotlib" },
     { name = "pandas" },
+    { name = "pendulum" },
     { name = "python-slugify" },
     { name = "requests" },
     { name = "tabulate" },
@@ -2626,6 +2630,7 @@ dagster-dev = [
     { name = "mypy" },
     { name = "pandas" },
     { name = "pandas-stubs" },
+    { name = "pendulum" },
     { name = "polyfactory" },
     { name = "pytest" },
     { name = "pytest-dotenv" },
@@ -2782,6 +2787,7 @@ dagster = [
     { name = "humanize", specifier = ">=4.7.0" },
     { name = "matplotlib", specifier = ">=3.7.2" },
     { name = "pandas", specifier = ">=2.0.3" },
+    { name = "pendulum", specifier = ">=2.1.2" },
     { name = "python-slugify", specifier = ">=8.0.1" },
     { name = "requests", specifier = ">=2.31.0" },
     { name = "tabulate", specifier = ">=0.9.0" },
@@ -2800,6 +2806,7 @@ dagster-deploy-pipelines = [
     { name = "humanize", specifier = ">=4.7.0" },
     { name = "matplotlib", specifier = ">=3.7.2" },
     { name = "pandas", specifier = ">=2.0.3" },
+    { name = "pendulum", specifier = ">=2.1.2" },
     { name = "python-slugify", specifier = ">=8.0.1" },
     { name = "requests", specifier = ">=2.31.0" },
     { name = "tabulate", specifier = ">=0.9.0" },
@@ -2822,6 +2829,7 @@ dagster-dev = [
     { name = "mypy", specifier = ">=1.4.1" },
     { name = "pandas", specifier = ">=2.0.3" },
     { name = "pandas-stubs", specifier = ">=2.0.2.230605" },
+    { name = "pendulum", specifier = ">=2.1.2" },
     { name = "polyfactory", specifier = ">=2.4.0" },
     { name = "pytest", specifier = ">=7.4.0" },
     { name = "pytest-dotenv", specifier = ">=0.5.2" },
