@@ -42,3 +42,27 @@ gsutil cat gs://test-jarvus-transit-data-demo-raw/septa__bus_detours/dt=2023-07-
 ```bash
 gsutil cat gs://test-jarvus-transit-data-demo-raw/gtfs_schedule/dt=2023-07-14/hour=2023-07-14T14:00:00-04:00/ts=2023-07-14T14:12:19-04:00/base64url=aHR0cHM6Ly93d3cucmlkZXBydC5vcmcvZGV2ZWxvcGVycmVzb3VyY2VzL0dURlMuemlw/aHR0cHM6Ly93d3cucmlkZXBydC5vcmcvZGV2ZWxvcGVycmVzb3VyY2VzL0dURlMuemlw.json | jq -r .contents | base64 -d > gtfs.zip
 ```
+
+## Infrastructure Teardown (March 2026)
+
+This project's infrastructure was wound down in favor of a replacement project running under a different GCP project. The GCS data and BigQuery datasets were preserved; compute resources (GKE, etc.) were destroyed via OpenTofu.
+
+### What was preserved
+
+- **GCS buckets** — All 8 buckets in `transit-data-analytics-demo` remain intact with their data
+- **BigQuery datasets** — `external_transit_data`, `staging`, `transitdash` remain (no cost when not queried). Tables/views are managed by dbt and can be recreated with `dbt run`
+- **OpenTofu config** — `tf/` contains the full infrastructure definition, ready to re-apply
+
+### Database backups
+
+- **Metabase PostgreSQL** — `gs://transit-data-demo-metadata/backups/metabase-postgresql-20260307.sql.gz` (also backed up via restic to `gs://metabase-restic/`)
+- **Dagster PostgreSQL** — `gs://transit-data-demo-metadata/backups/dagster-postgresql-20260307.sql.gz` (run history and partition materialization state)
+
+### Re-deploying
+
+To bring the infrastructure back up:
+
+1. `cd tf && tofu init && tofu apply` — recreates GKE cluster, service accounts, IAM bindings
+2. Re-deploy Kubernetes workloads (fetcher, dagster, ingress-nginx, cert-manager, etc.)
+3. `cd warehouse && dbt run-operation stage_external_sources && dbt run` — recreates BigQuery tables/views
+4. Optionally restore Dagster DB to recover partition materialization history
