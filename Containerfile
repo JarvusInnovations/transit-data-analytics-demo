@@ -1,5 +1,8 @@
 # Use a Python image with uv pre-installed
-FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim AS base
+FROM ghcr.io/astral-sh/uv:python3.12-bookworm AS base
+
+# Resume using -slim variant after Dagster is rebuilt to current and no longer needs to compile old packages
+#FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim AS base
 
 ENV UV_PROJECT_ENVIRONMENT=/usr/local
 
